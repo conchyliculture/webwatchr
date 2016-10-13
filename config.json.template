@@ -1,0 +1,9 @@
+{
+    "dest_mail": "lol@lol.lol",
+    "pid_file": "webwatchr.pid",
+    "last_dir": ".lasts",
+    "smtp_server": "localhost",
+    "smtp_port": 25,
+    "sites_enabled": "ALL",
+    "sites_disabled": []
+}
