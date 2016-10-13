@@ -2,7 +2,7 @@
 
 Silly script to periodically check webpage changes.
 
-No bullshit gem from hell.
+No bullshit gem from hell. Also very little tested XD
 
 1. Script is run
 2. checks for every new URL to check, if we've waited long enough
