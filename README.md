@@ -20,7 +20,7 @@ then edit config.json to your needs
 
 Run the cron often
 
-    */5 * * * * cd /home/poil/ruby-nokogiri; ruby webwatchr.rb > /dev/null
+    */5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb > /dev/null
 
 # Add a new site to watch
 
