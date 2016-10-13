@@ -1,6 +1,6 @@
 # WebWatchr
 
-Silly script to periodically check webpages modifications.
+Silly script to periodically check webpage changes.
 
 No bullshit gem from hell.
 
