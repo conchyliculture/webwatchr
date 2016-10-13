@@ -6,10 +6,10 @@ No bullshit gem from hell.
 
 # Installation
 
-   apt-get install ruby ruby-nokogiri
-   git clone https://github.com/conchyliculture/webwatchr/
-   cd webwatchr
-   cp config.json.template config.json
+    apt-get install ruby ruby-nokogiri
+    git clone https://github.com/conchyliculture/webwatchr/
+    cd webwatchr
+    cp config.json.template config.json
 
 then edit config.json to your needs
 
