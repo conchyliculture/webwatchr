@@ -1,5 +1,5 @@
 {
-    "dest_mail": "lol@lol.lol",
+    "dest_email": "lol@lol.lol",
     "pid_file": "webwatchr.pid",
     "last_dir": ".lasts",
     "smtp_server": "localhost",
