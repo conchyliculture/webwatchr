@@ -41,7 +41,8 @@ Just edit sites/classe.rb and append new pages to the end as new instances
     
 ## Extract part of the DOM first
 
-Copy `sites/classe.rb` as `sites/mysite.rb` then do
+Copy `sites/classe.rb` as `sites/mysite.rb` then overwrite the `get_content()` method.
+You can use `@parsed_content` which is a Nokogiri parsed HTML document.
 
     $: << File.dirname(__FILE__)
     require "classe.rb"
@@ -56,3 +57,13 @@ Copy `sites/classe.rb` as `sites/mysite.rb` then do
         every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0 
     )
+    
+## I need to do more complex stuff!
+
+If you need to do weird things like authentication, session handling, form posting and whatnots, and still don't want some useless bullshit bloated Gem, you can use https://github.com/jjyg/libhttpclient/
+
+## I need to do more even more complex stuff!
+
+If you need javascript... well... lol.
+
+
