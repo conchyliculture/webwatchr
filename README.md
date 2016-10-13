@@ -58,6 +58,10 @@ You can use `@parsed_content` which is a Nokogiri parsed HTML document.
         test: __FILE__ == $0 
     )
     
+## Test your new thing
+
+Just do `ruby mysite.rb`. It will run, and display what it would send by mail.
+    
 ## I need to do more complex stuff!
 
 If you need to do weird things like authentication, session handling, form posting and whatnots, and still don't want some useless bullshit bloated Gem, you can use https://github.com/jjyg/libhttpclient/
