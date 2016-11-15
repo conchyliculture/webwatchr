@@ -5,17 +5,8 @@ $:<< File.join(File.dirname(__FILE__),"libs")
 require "fileutils"
 require "json"
 
-def is_running?()
-    return File.exists?($CONF["pid_file"])
-end
-
 def init()
     FileUtils.mkdir_p($CONF["last_dir"])
-    if is_running?()
-        puts "Already running"
-        exit
-    end
-    FileUtils.touch $CONF["pid_file"]
     sites=[]
     if $CONF["sites_enabled"] == "ALL"
         sites=Dir.glob("sites/*.rb").map{|s| File.basename(s)} - ["classe.rb"]
@@ -49,9 +40,18 @@ def main()
     end
     
     begin
+    if File.exist?($CONF["pid_file"])
+        puts "Already running"
+        exit
+    end
+    File.open($CONF["pid_file"],'w+') {|f|
+        f.puts($$)
         init()
+    }
     ensure
-        FileUtils.rm $CONF["pid_file"]
+        if File.exists?($CONF["pid_file"])
+            FileUtils.rm $CONF["pid_file"]
+        end
     end
 
 end
