@@ -2,10 +2,17 @@ $: << File.dirname(__FILE__)
 
 require "classe.rb"
 
-$MAXDEALS=10
-$BADCATEGORY=["mode"]
+$MAXDEALS = 10
+$BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger)$/])
 
 class Dealabs < Classe 
+
+    def match_category(cats)
+        cats.each do |cat|
+            return true if cat=~$BADCATEGORY
+        end
+        return false
+    end
 
     def get_content()
         message_html=<<EOM
@@ -18,7 +25,7 @@ EOM
             categories = article.css('div.content_part').css('p.categorie').css('a').map{|x| x.text.downcase}
 
             title = article.css('a.title').text
-            unless (categories & $BADCATEGORY ).empty?
+            if match_category(categories)
                 puts "Ignoring #{title} because #{(categories & $BADCATEGORY)}" if $VERBOSE
                 next
             end
