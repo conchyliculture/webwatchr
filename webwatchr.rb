@@ -31,7 +31,7 @@ def init()
 end
 
 def main()
-    if not File.exists?("config.json")
+    if not File.exist?("config.json")
         $stderr.puts "plz cp config.json.template config.json"
         $stderr.puts "and update it to your needs"
         exit   
@@ -49,7 +49,7 @@ def main()
         init()
     }
     ensure
-        if File.exists?($CONF["pid_file"])
+        if File.exist?($CONF["pid_file"])
             FileUtils.rm $CONF["pid_file"]
         end
     end
