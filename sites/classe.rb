@@ -17,6 +17,7 @@ class Classe
     require "net/smtp"
     require "digest/md5"
     require "nokogiri"
+    require "json"
 
     def fetch_url(url)
         uri = URI(url)
@@ -27,46 +28,42 @@ class Classe
         return Nokogiri::HTML(html)
     end
 
-    def initialize(url:, every:, proque: nil, test: false)
+    def initialize(url:, every:, test: false)
         @url=url
         @http_content=fetch_url(@url)
         @parsed_content=parse_noko(@http_content)
         @wait = every
-        @proque = proque
         @name = url
         md5=Digest::MD5.hexdigest(url)
         @last_file=".lasts/last-#{md5}"
         @test=test
-        if @test
-            puts get_content()
-        else
-            update()
-        end
+        update()
     end
 
     def read_last()
-        time = 9999999999999
-        md5=nil
-        if File.exist?( @last_file)
-            time,md5 = File.open(@last_file,&:readline).strip().split(" ")
+        data={
+            "time" => 9999999999999,
+            "content" => nil,
+        }
+        if File.exist?(@last_file)
+            begin
+                data = JSON.parse(File.read(@last_file))
+            rescue JSON::ParserError
+            end
         end
-        return {"time"=> time.to_i , "md5" => md5}
+        return data
     end
 
-    def update_last(md5)
-        f=File.open(@last_file,"w")
-        f.write("#{Time.now.to_i} #{md5}")
-        f.write("\n")
-        f.write("\n")
-        f.write("\n")
-        f.write("\n")
-        f.write(@content)
-        f.close()
-    end
-
-    def calc_md5_from_content(s)
-        md5 =  Digest::MD5.hexdigest(s)
-        return md5
+    def update_last()
+        data={
+            "time" => Time.now.to_i,
+            "url" => @url,
+            "wait" => @wait,
+            "content" => @content,
+        }
+        File.open(@last_file,"w") do |f|
+            f.write JSON.generate(data)
+        end
     end
 
     def alert()
@@ -75,34 +72,54 @@ class Classe
     end
 
     def get_content()
-        if @proque
-            return instance_eval &@proque
-        else
-            return @http_content
-        end
+        return @http_content
     end
 
     def update()
-        res= read_last()
-        if res["md5"]
-            if @test or (Time.now().to_i >= res["time"] + @wait)
-                puts "It's time to update" if $VERBOSE
-                @content=get_content()
-                md5=calc_md5_from_content(@content)
-                if md5!=res["md5"]
-                    if @test 
-                        puts "Would have sent an email with #{@content}"
-                    else
-                        alert()
-                        update_last(md5)
-                    end
+        new_stuff = false
+        prev = read_last()
+        prev_content = prev["content"]
+        if (Time.now().to_i >= prev["time"] + @wait) or @test # Don't follow time limit if we're testing
+            puts "It's time to update" if $VERBOSE
+            @content = get_content()
+            case @content
+            when String
+                new_stuff = (@content != prev_content)
+            when Array
+                if prev_content
+                    @content = (@content - prev_content)
+                    new_stuff = !@content.empty?
+                else
+                    new_stuff = true
                 end
             end
-        else
-            @content=get_content()
-            md5=calc_md5_from_content(@content)
-            update_last(md5)
+            if new_stuff
+                if @test
+                    # Just show result, don't send email or upsate @last file
+                    puts "Would have sent an email with #{content_to_html()}"
+                else
+                    alert()
+                    update_last()
+                end
+            end
         end
+    end
+
+    def content_to_html()
+        message_html=<<EOM
+<html>
+<body>
+<ul>
+EOM
+        @content.each do |item|
+            message_html +="<li>#{item.to_s}</li>"
+        end
+        message_html+= <<EOM
+</ul>
+</body>
+</html>
+EOM
+        return message_html
     end
 
     def send_mail(dest,from=$from,subject=nil)
@@ -112,7 +129,7 @@ class Classe
         unless @msg
             @msg="Site #{@name} updated"
             if @content
-                @msg+=" with content:\n"+@content.to_s
+                @msg+=" with content:\n"+content_to_html()
             end
         end
 
@@ -134,10 +151,16 @@ END_OF_MESSAGE
 end
 
 # Example call.
-# By default this will make a MD5 on the whole HTML code and alert you
-# only when the MD5 changes. This is trivial and might not work, you 
-# may want to only check the MD5 on part of the HTML, this is explained later.
 #
+# This will fetch the entire google.com page, every 10*60 seconds, and mail
+# the full HTML everytime it changes (probably, everytime)
+#
+# Every 'every' seconds, we pull the html page and extracte "content".
+# using the get_content method. Just overload the method in your class
+# to your usage. It can either return a String or an Array.
+# This 'content' will be compared with the previous stored one, and a mail
+# will be sent with the new String (if get_content() returns a String),
+# or the new items in the Array (if get_content() returns an Array).
 #
 # c = Classe.new(url: "https://www.google.com", 
 #                every: 10*60 # Check every 10 minutes,

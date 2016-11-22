@@ -2,7 +2,7 @@ $: << File.dirname(__FILE__)
 
 require "classe.rb"
 
-$MAXDEALS=5
+$MAXDEALS=10
 $BADCATEGORY=["mode"]
 
 class Dealabs < Classe 

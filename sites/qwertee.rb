@@ -5,13 +5,8 @@ require "classe.rb"
 class Qwertee < Classe 
 
     def get_content()
-        message_html=<<EOM
-<html>
-<body>
-<ul>
-EOM
         shirts=[]
-        Nokogiri.parse(@http_content).xpath("rss/channel/item").each do |entry|
+        @parsed_content.xpath("rss/channel/item").each do |entry|
             shirtName = entry.xpath("title").first.content
             shirtURL = entry.xpath("guid").first.content        
             entry_description = Nokogiri::HTML( entry.xpath("description").first.content )
@@ -19,15 +14,25 @@ EOM
             shirtPhotoURL = entry_description.xpath("//img").first["src"]
 
             shirtPubDate = entry.xpath("pubDate").first.content
-            shirts << { :shirtName => shirtName, :shirtURL => shirtURL, :shirtPhotoURL => shirtPhotoURL }
-            message_html +="<li><a href='#{shirtURL}'><img src='#{shirtPhotoURL}'> </a></li>"
+            shirts << { "shirt_name" => shirtName, "shirt_url" => shirtURL, "shirt_photo_url" => shirtPhotoURL }
+        end
+        return shirts
+    end
+
+    def content_to_html()
+        message_html=<<EOM
+<html>
+<body>
+<ul>
+EOM
+        @content.each do |item|
+            message_html +="<li><a href='#{item["shirt_url"]}'><img src='#{item["shirt_photo_url"]}'> </a></li>\n"
         end
         message_html+= <<EOM
 </ul>
 </body>
 </html>
 EOM
-        @msg= message_html
         return message_html
     end
 
