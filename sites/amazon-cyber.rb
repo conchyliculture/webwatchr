@@ -52,7 +52,7 @@ EOM
 
 end
 
-d=AmazonCyber.new(
+AmazonCyber.new(
     url:  "https://www.amazon.fr/gp/goldbox/",
     every: 30*60,
     test: __FILE__ == $0

@@ -35,7 +35,7 @@ end
 
 # I know I use the RSS page, I could use a RSS reader right?
 # I could also use your mom.
-q=Qwertee.new(url:  "https://www.qwertee.com/rss/",
+Qwertee.new(url:  "https://www.qwertee.com/rss/",
               every: 12*60*60, 
               test: __FILE__ == $0
              )
