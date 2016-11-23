@@ -62,7 +62,7 @@ class Classe
             "content" => @content,
         }
         File.open(@last_file,"w") do |f|
-            f.write JSON.generate(data)
+            f.write JSON.pretty_generate(data)
         end
     end
 
