@@ -131,7 +131,7 @@ EOM
         return message_html
     end
 
-    def send_mail(dest_email: dest, content: nil, from: $from, subject: nil)
+    def send_mail(dest_email: nil, content: nil, from: $from, subject: nil)
         unless subject
             subject= "[Webwatchr] Site #{@name} updated"
         end
