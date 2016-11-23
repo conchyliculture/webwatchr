@@ -139,7 +139,7 @@ EOM
 From: #{from}
 To: #{dest}
 MIME-Version: 1.0
-Content-type: text/html
+Content-type: text/html; charset=UTF-8
 Subject: #{subject}
 
 #{@msg}
