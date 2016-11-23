@@ -3,7 +3,8 @@ $: << File.dirname(__FILE__)
 require "classe.rb"
 
 $MAXDEALS = 10
-$BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger)$/])
+# Here put the categories you're not interested in
+$BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/])
 
 class Dealabs < Classe 
 
