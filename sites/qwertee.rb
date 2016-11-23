@@ -6,7 +6,7 @@ class Qwertee < Classe
 
     def get_content()
         shirts=[]
-        @parsed_content.xpath("rss/channel/item").each do |entry|
+        Nokogiri.parse(@http_content).xpath("rss/channel/item").each do |entry|
             shirtName = entry.xpath("title").first.content
             shirtURL = entry.xpath("guid").first.content        
             entry_description = Nokogiri::HTML( entry.xpath("description").first.content )
