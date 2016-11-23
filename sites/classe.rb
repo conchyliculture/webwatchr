@@ -66,9 +66,9 @@ class Classe
         end
     end
 
-    def alert()
+    def alert(new_stuff)
         puts "Sending a mail!" if $VERBOSE
-        send_mail($CONF["dest_email"])
+        send_mail(dest_email: $CONF["dest_email"],content: new_stuff)
     end
 
     def get_content()
@@ -84,39 +84,42 @@ class Classe
             @content = get_content()
             case @content
             when String
-                new_stuff = (@content != prev_content)
+                if @content != prev_content
+                    new_stuff = @content
+                end
             when Array
                 if prev_content
-                    @content = (@content - prev_content)
-                    new_stuff = !@content.empty?
+                    if ! (@content - prev_content).empty?
+                        new_stuff = (@content - prev_content)
+                    end
                 else
-                    new_stuff = true
+                    new_stuff = @content
                 end
             end
             if new_stuff
                 if @test
                     # Just show result, don't send email or upsate @last file
-                    puts "Would have sent an email with #{content_to_html()}"
+                    puts "Would have sent an email with #{to_html(new_stuff)}"
                 else
-                    alert()
+                    alert(new_stuff)
                     update_last()
                 end
             end
         end
     end
 
-    def content_to_html()
+    def to_html(content)
         message_html = ""
-        case @content
-            when String
-                message_html = @content
-            when Array
-                message_html = <<EOM
+        case content
+        when String
+            message_html = content
+        when Array
+            message_html = <<EOM
 <!DOCTYPE html>
 <meta charset="utf-8">
 <ul style="list-style-type: none;">
 EOM
-            @content.each do |item|
+            content.each do |item|
                 if item["img_src"]
                     message_html +="<li><a href='#{item["href"]}'><img style=\"width:100px\" src='#{item["img_src"]}'>#{item["name"]} </a></li>\n"
                 else
@@ -128,15 +131,13 @@ EOM
         return message_html
     end
 
-    def send_mail(dest,from=$from,subject=nil)
+    def send_mail(dest_email: dest, content: nil, from: $from, subject: nil)
         unless subject
             subject= "[Webwatchr] Site #{@name} updated"
         end
-        unless @msg
-            @msg="Site #{@name} updated"
-            if @content
-                @msg+=" with content:\n"+content_to_html()
-            end
+        @msg="Site #{@name} updated"
+        if content
+            @msg+=" with content:\n"+to_html(content)
         end
 
         msgstr = <<END_OF_MESSAGE
