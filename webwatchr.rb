@@ -2,8 +2,10 @@
 
 $:<< File.dirname(__FILE__)
 $:<< File.join(File.dirname(__FILE__),"libs")
+
 require "fileutils"
 require "json"
+require "timeout"
 
 def init()
     FileUtils.mkdir_p($CONF["last_dir"])
@@ -14,13 +16,16 @@ def init()
         sites=$CONF["sites_enabled"]
     end
 
+    timeout = $CONF["site_timeout"] || 10*60
     sites.each do |site|
         next if $CONF["sites_disabled"].include?(site)
         begin
             if $VERBOSE
                 puts "loading sites/#{site}"
             end
-            load "sites/#{site}"
+            status = Timeout::timeout(timeout) {
+                load "sites/#{site}"
+            }
         rescue Exception=>e
             $stderr.puts "Issue with #{site}"
             $stderr.puts e.message

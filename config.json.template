@@ -4,6 +4,7 @@
     "last_dir": ".lasts",
     "smtp_server": "localhost",
     "smtp_port": 25,
+    "site_timeout": 2*60,
     "sites_enabled": "ALL",
     "sites_disabled": []
 }
