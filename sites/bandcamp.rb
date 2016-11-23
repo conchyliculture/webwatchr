@@ -22,33 +22,15 @@ class Bandcamp < Classe
                 end
                 title = x.css('p.title').text.strip().gsub(/ *\n */,'')
                 price = x.css('span.price').text
-                res << {"url"=> url,
-                        "img_url" => img_url,
-                        "title"=>title,
-                        "price"=>price,
+                res << {"href"=> url,
+                        "img_src" => img_url,
+                        "name" => "#{title} #{price}",
                 }
             end
         else
             $stderr.puts "not implemented"
         end
         return res
-    end
-
-    def content_to_html()
-        message_html=<<EOM
-<html>
-<body>
-<ul>
-EOM
-        @content.each do |item|
-            message_html +="<li><a href='#{item["url"]}'><img src='#{item["img_url"]}'> #{item["title"]} - #{item["price"]} </a></li>\n"
-        end
-        message_html+= <<EOM
-</ul>
-</body>
-</html>
-EOM
-        return message_html
     end
 
     def initialize(band,every,test,merch=false)

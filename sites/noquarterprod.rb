@@ -29,36 +29,14 @@ class NQP < Classe
                 img_url = p.css('a img').attr('src').text
                 title = p.css('a h3').text
                 price = p.css('span.amount').text
-                res << {"url"=> url,
-                        "img_url" => img_url,
-                        "title"=>title,
-                        "price"=>price,
+                res << {"href"=> url,
+                        "img_src" => img_url,
+                        "name" => "#{title} - #{price}",
                 }
             end
             return res.uniq
         end
     end
-
-    def content_to_html()
-        message_html = ""
-        unless @content==""
-            message_html=<<EOM
-<html>
-<body>
-<ul>
-EOM
-            @content.each do |item|
-                message_html +="<li><a href='#{item["url"]}'><img src='#{item["img_url"]}'> #{item["title"]} - #{item["price"]} </a></li>\n"
-            end
-            message_html+= <<EOM
-</ul>
-</body>
-</html>
-EOM
-        end
-        return message_html
-    end
-
 end
 
 

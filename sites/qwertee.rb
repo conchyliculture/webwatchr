@@ -14,24 +14,10 @@ class Qwertee < Classe
             shirtPhotoURL = entry_description.xpath("//img").first["src"]
 
             shirtPubDate = entry.xpath("pubDate").first.content
-            shirts << { "shirt_name" => shirtName, "shirt_url" => shirtURL, "shirt_photo_url" => shirtPhotoURL }
+            shirts << { "name" => shirtName, "href" => shirtURL, "img_src" => shirtPhotoURL }
         end
         return shirts
     end
-
-    def content_to_html()
-        message_html=<<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-<ul>
-EOM
-        @content.each do |item|
-            message_html +="<li><a href='#{item["shirt_url"]}'><img src='#{item["shirt_photo_url"]}'> </a></li>\n"
-        end
-        message_html +="\n</ul>"
-        return message_html
-    end
-
 end
 
 # I know I use the RSS page, I could use a RSS reader right?

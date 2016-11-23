@@ -36,30 +36,14 @@ class AmazonCyber < Classe
                 pic = d["primaryImage"] || d["teaserImage"]
                 price = d["maxCurrentPrice"] || "Later offer"
                 name = d["title"]
-                res << {"url" => url,
-                        "pic" => pic,
-                        "price" => price,
-                        "name" => name,
+                res << {"href" => url,
+                        "img_src" => pic,
+                        "name" => "#{name} - #{price}" ,
                 } 
             end
         end
 
         return res
-    end
-
-    def content_to_html()
-        message_html=<<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-<ul>
-EOM
-        @content.each do |item|
-            message_html += "<li><a href=\"#{item['url']}\"><img width='200px' src=\"#{item['pic']}\"><br/>#{item['name']} - #{item['price']}</a></li>\n"
-        end
-        message_html+= <<EOM
-</ul>
-EOM
-        return message_html
     end
 
 end

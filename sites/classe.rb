@@ -117,7 +117,7 @@ class Classe
 <ul>
 EOM
             @content.each do |item|
-                message_html +="<li>#{item.to_s}</li>"
+                message_html +="<li><a href='#{item["href"]}'><img src='#{item["img_src"]}'>#{item["name"]} </a></li>\n"
             end
             message_html += "\n</ul>"
         end
