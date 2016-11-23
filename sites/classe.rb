@@ -106,15 +106,21 @@ class Classe
     end
 
     def content_to_html()
-        message_html=<<EOM
+        message_html = ""
+        case @content
+            when String
+                message_html = @content
+            when Array
+                message_html = <<EOM
 <!DOCTYPE html>
 <meta charset="utf-8">
 <ul>
 EOM
-        @content.each do |item|
-            message_html +="<li>#{item.to_s}</li>"
+            @content.each do |item|
+                message_html +="<li>#{item.to_s}</li>"
+            end
+            message_html += "\n</ul>"
         end
-        message_html+="\n</ul>"
         return message_html
     end
 
