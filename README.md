@@ -100,30 +100,10 @@ changes, this will send an email with code of this element.
             @parsed_content.css("div.article") do |article|
                 link = article.css("a").attr("href")
                 i = i+1
-                res << {"url" => url , "id" => i}
+                res << {"href" => url , "name" => i.to_s}
             end
             return res
         end
-
-        def content_to_html()
-            # Makes nice HTML to be sent by email
-            message_html = <<EOM
-    <html>
-    <body>
-    <ul>
-    EOM
-            @content.each do |item|
-                message_html +="<li>#{[item['id']]}: <a href='#{item['url']}'>#{item['url']}</a></li>\n"
-            end
-            message_html += <<EOM
-    </ul>
-    </body>
-    </html>
-    EOM
-        return message_html
-
-        end
-    end
 
     s = Mysite.new(
         url: "https://www.mydomistoobig.pt",
