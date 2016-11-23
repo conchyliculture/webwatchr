@@ -16,11 +16,6 @@ class Dealabs < Classe
     end
 
     def get_content()
-        message_html=<<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-<ul>
-EOM
         articles=[]
         Nokogiri.parse(@http_content).css("article").each do |article|
             next if article.attr('class')=~/ expired/
@@ -33,15 +28,11 @@ EOM
             end
             link = article.css('a.title').attr('href').text
             img = article.css('div#over img').attr('src').text
-            articles  << "<li><a href='#{link}'><img src='#{img}'> #{title}  / (#{categories.join('|')})  </a></li>"
+            articles  <<{"url"=> link ,"name"=> "#{title}  / (#{categories.join('|')})", "img_src"=>img } 
             break if articles.size == $MAXDEALS
         end
-        message_html+=articles.join("\n")
-        message_html += "\n</ul>"
-        @msg= message_html
-        return message_html
+        return articles
     end
-
 end
 
 Dealabs.new(url:  "https://www.dealabs.com/",
