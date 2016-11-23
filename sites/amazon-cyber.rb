@@ -11,6 +11,7 @@ class AmazonCyber < Classe
     #   @parsed_content contains the result of Nokogiri.parse(@http_content)
     #
     def get_content()
+        res=[]
         # Selects the content of the first table tag with the CSS class result-summary
         js = @parsed_content.css("script").select{|x| x.content=~/window.gb.widgetsToRegister/}[0].content
         magic = '"dealDetails" : {'
@@ -27,12 +28,7 @@ class AmazonCyber < Classe
             json << b
             break if cpt==0
         end
-        message_html=<<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-<ul>
-EOM
-        json=  JSON.parse(json)
+        json = JSON.parse(json)
         json.each do | deal|
             deal.each do |d|
                 next if d.class == String
@@ -40,13 +36,29 @@ EOM
                 pic = d["primaryImage"] || d["teaserImage"]
                 price = d["maxCurrentPrice"] || "Later offer"
                 name = d["title"]
-                message_html += "<li><a href=\"#{url}\"><img width='200px' src=\"#{pic}\"><br/>#{name} - #{price}</a></li>\n"
+                res << {"url" => url,
+                        "pic" => pic,
+                        "price" => price,
+                        "name" => name,
+                } 
             end
+        end
+
+        return res
+    end
+
+    def content_to_html()
+        message_html=<<EOM
+<!DOCTYPE html>
+<meta charset="utf-8">
+<ul>
+EOM
+        @content.each do |item|
+            message_html += "<li><a href=\"#{item['url']}\"><img width='200px' src=\"#{item['pic']}\"><br/>#{item['name']} - #{item['price']}</a></li>\n"
         end
         message_html+= <<EOM
 </ul>
 EOM
-        @msg= message_html
         return message_html
     end
 
