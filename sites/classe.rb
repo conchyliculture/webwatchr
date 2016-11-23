@@ -118,9 +118,9 @@ class Classe
 EOM
             @content.each do |item|
                 if item["img_src"]
-                    message_html +="<li><a href='#{item["href"]}'>#{item["name"]} </a></li>\n"
-                else
                     message_html +="<li><a href='#{item["href"]}'><img style=\"width:100px\" src='#{item["img_src"]}'>#{item["name"]} </a></li>\n"
+                else
+                    message_html +="<li><a href='#{item["href"]}'>#{item["name"]} </a></li>\n"
                 end
             end
             message_html += "\n</ul>"
