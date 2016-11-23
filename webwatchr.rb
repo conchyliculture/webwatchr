@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 
 $:<< File.dirname(__FILE__)
-$:<< File.join(File.dirname(__FILE__),"libs")
 
 require "fileutils"
 require "json"
