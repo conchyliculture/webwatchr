@@ -26,9 +26,9 @@ class Dealabs < Classe
                 puts "Ignoring #{title} because #{(categories & $BADCATEGORY)}" if $VERBOSE
                 next
             end
-            link = article.css('a.title').attr('href').text
+            link = article.css('a.title').attr('href')
             img = article.css('div#over img').attr('src').text
-            articles  <<{"url"=> link ,"name"=> "#{title}  / (#{categories.join('|')})", "img_src"=>img } 
+            articles  <<{"href"=> link ,"name"=> "#{title}  / (#{categories.join('|')})", "img_src"=>img }
             break if articles.size == $MAXDEALS
         end
         return articles
