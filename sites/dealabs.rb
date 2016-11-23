@@ -16,8 +16,8 @@ class Dealabs < Classe
 
     def get_content()
         message_html=<<EOM
-<html>
-<body>
+<!DOCTYPE html>
+<meta charset="utf-8">
 <ul>
 EOM
         articles=[]
@@ -36,11 +36,7 @@ EOM
             break if articles.size == $MAXDEALS
         end
         message_html+=articles.join("\n")
-        message_html+= <<EOM
-</ul>
-</body>
-</html>
-EOM
+        message_html += "\n</ul>"
         @msg= message_html
         return message_html
     end

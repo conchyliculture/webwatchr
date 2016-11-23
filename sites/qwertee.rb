@@ -21,18 +21,14 @@ class Qwertee < Classe
 
     def content_to_html()
         message_html=<<EOM
-<html>
-<body>
+<!DOCTYPE html>
+<meta charset="utf-8">
 <ul>
 EOM
         @content.each do |item|
             message_html +="<li><a href='#{item["shirt_url"]}'><img src='#{item["shirt_photo_url"]}'> </a></li>\n"
         end
-        message_html+= <<EOM
-</ul>
-</body>
-</html>
-EOM
+        message_html +="\n</ul>"
         return message_html
     end
 
