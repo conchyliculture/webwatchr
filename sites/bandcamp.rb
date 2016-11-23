@@ -9,7 +9,7 @@ class Bandcamp < Classe
         res=[]
         if @merch
             if @http_content=~/You are being redirected, please follow <a href="([^"]+)"/
-                return [@http_content]
+                return @http_content
             end
             @parsed_content.css('ol.merch-grid li').each do |xx|
                 next unless xx.css('p.sold-out').empty?
