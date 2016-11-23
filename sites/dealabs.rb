@@ -15,6 +15,7 @@ class Dealabs < Classe
 EOM
         articles=[]
         Nokogiri.parse(@http_content).css("article").each do |article|
+            next if article.attr('class')=~/ expired/
             categories = article.css('div.content_part').css('p.categorie').css('a').map{|x| x.text.downcase}
 
             title = article.css('a.title').text
