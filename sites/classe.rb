@@ -142,7 +142,7 @@ EOM
 
         msgstr = <<END_OF_MESSAGE
 From: #{from}
-To: #{dest}
+To: #{dest_email}
 MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
 Subject: #{subject}
