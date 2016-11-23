@@ -42,7 +42,7 @@ class Classe
 
     def read_last()
         data={
-            "time" => 9999999999999,
+            "time" => -9999999999999,
             "content" => nil,
         }
         if File.exist?(@last_file)
