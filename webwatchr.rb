@@ -41,7 +41,7 @@ def main()
         $stderr.puts "and update it to your needs"
         exit   
     else
-    $CONF=JSON.parse(File.read("config.json"))
+        $CONF=JSON.parse(File.read("config.json"))
     end
     
     if File.exist?($CONF["pid_file"])
