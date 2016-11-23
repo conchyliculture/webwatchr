@@ -39,15 +39,15 @@ def main()
     $CONF=JSON.parse(File.read("config.json"))
     end
     
-    begin
     if File.exist?($CONF["pid_file"])
         puts "Already running"
         exit
     end
-    File.open($CONF["pid_file"],'w+') {|f|
-        f.puts($$)
-        init()
-    }
+    begin
+        File.open($CONF["pid_file"],'w+') {|f|
+            f.puts($$)
+            init()
+        }
     ensure
         if File.exist?($CONF["pid_file"])
             FileUtils.rm $CONF["pid_file"]
