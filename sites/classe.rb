@@ -114,7 +114,7 @@ class Classe
                 message_html = <<EOM
 <!DOCTYPE html>
 <meta charset="utf-8">
-<ul>
+<ul style="list-style-type: none;">
 EOM
             @content.each do |item|
                 if item["img_src"]
