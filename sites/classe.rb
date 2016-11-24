@@ -151,7 +151,7 @@ Subject: #{subject}
 END_OF_MESSAGE
 
         Net::SMTP.start($CONF["smtp_server"], $CONF["smtp_port"]) do |smtp|
-            smtp.send_message(msgstr, from, dest)
+            smtp.send_message(msgstr, from, dest_email)
             puts "mail sent lol"
         end
     end
