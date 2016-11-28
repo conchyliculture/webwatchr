@@ -120,7 +120,9 @@ changes, this will send an email with code of this element.
 
 ## Test your new thing
 
-Just do `ruby sites/mysite.rb`. It will run, and display what it would send by mail, without updating the state.
+Just do `ruby sites-available/mysite.rb`. It will run, and display what it would send by mail, without updating the state.
+
+If everything looks right, `cd sites-enabled; ln -s ../sites-available/mysite.rb .`
 
 ## I need to do more complex stuff!
 
