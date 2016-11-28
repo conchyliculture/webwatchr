@@ -7,23 +7,27 @@ require "json"
 require "timeout"
 
 def init()
-    FileUtils.mkdir_p($CONF["last_dir"])
-    sites=[]
-    if $CONF["sites_enabled"] == "ALL"
-        sites=Dir.glob("sites/*.rb").map{|s| File.basename(s)} - ["classe.rb"]
-    else
-        sites=$CONF["sites_enabled"]
+
+    $MYDIR=File.dirname(__FILE__)
+
+    FileUtils.mkdir_p(File.join($MYDIR, $CONF["last_dir"]))
+    FileUtils.mkdir_p(File.join($MYDIR, "sites-available"))
+
+    sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
+
+    if sites.empty?
+        $stderr.puts "Didn't find any site to parse. You might want to "
+        $stderr.puts "ln -s sites-available/XXXXXXX.rb sites-enabled "
     end
 
     timeout = $CONF["site_timeout"] || 10*60
     sites.each do |site|
-        next if $CONF["sites_disabled"].include?(site)
         begin
             if $VERBOSE
-                puts "loading sites/#{site}"
+                puts "loading #{File.basename(site)}"
             end
             status = Timeout::timeout(timeout) {
-                load "sites/#{site}"
+                load File.readlink(site)
             }
         rescue Exception=>e
             $stderr.puts "Issue with #{site}"
