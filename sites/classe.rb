@@ -88,6 +88,8 @@ class Classe
                     new_stuff = @content
                 end
             when Array
+                # Clean up eventual Nokogiri objects
+                @content.map{|x| x.update(x){ |k,v| v.to_s}}
                 if prev_content
                     if ! (@content - prev_content).empty?
                         new_stuff = (@content - prev_content)
