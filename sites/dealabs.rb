@@ -23,7 +23,7 @@ class Dealabs < Classe
 
             title = article.css('a.title').text
             if match_category(categories)
-                puts "Ignoring #{title} because #{(categories & $BADCATEGORY)}" if $VERBOSE
+                puts "Ignoring #{title} because #{categories} have bad category" if $VERBOSE
                 next
             end
             link = article.css('a.title').attr('href')
