@@ -15,8 +15,15 @@ No bullshit gem from hell. Also very little tested XD
     git clone https://github.com/conchyliculture/webwatchr/
     cd webwatchr
     cp config.json.template config.json
+    # Take a breath here, it's going to be alright
+    rvm implode
+    gem uninstall --all
+    sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
+    sudo find / -name ".rvm" -exec rm -rf "{}" \;
 
-then edit config.json to your needs
+Then edit config.json to your needs.
+
+Then enable some sites for checking by linking from `sites-available` into `sites-enabled`
 
 Run the cron often
 
@@ -79,7 +86,7 @@ changes, this will send an email with code of this element.
     class Mysite < Classe
         def get_content()
             # Parses the DOM, returns an Array of Hash with articles
-            #    
+            #
             # <div class="article">
             #   <a href="http://lol/article/1.html">Lol 1</a>
             # </div>

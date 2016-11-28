@@ -17,7 +17,7 @@ def init()
 
     if sites.empty?
         $stderr.puts "Didn't find any site to parse. You might want to "
-        $stderr.puts "ln -s sites-available/XXXXXXX.rb sites-enabled "
+        $stderr.puts "cd sites-enabled/; ln -s ../sites-available/something.rb . "
     end
 
     timeout = $CONF["site_timeout"] || 10*60
