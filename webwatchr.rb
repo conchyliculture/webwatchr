@@ -27,7 +27,7 @@ def init()
                 puts "loading #{File.basename(site)}"
             end
             status = Timeout::timeout(timeout) {
-                load File.readlink(site)
+                load site
             }
         rescue Exception=>e
             $stderr.puts "Issue with #{site}"
