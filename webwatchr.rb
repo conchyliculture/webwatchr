@@ -11,7 +11,7 @@ def init()
     $MYDIR=File.dirname(__FILE__)
 
     FileUtils.mkdir_p(File.join($MYDIR, $CONF["last_dir"]))
-    FileUtils.mkdir_p(File.join($MYDIR, "sites-available"))
+    FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
     sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
 
