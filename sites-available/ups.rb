@@ -2,21 +2,61 @@ $: << File.dirname(__FILE__)
 
 require "classe.rb"
 require "date"
-require "pp"
 
 class UPS < Classe
+    require "net/http"
+    require "json"
+    def get_coords(search)
+        url = "http://maps.googleapis.com/maps/api/geocode/json?address=#{search}&sensor=false"
+        j = JSON.parse(Net::HTTP.get(URI.parse(url)))
+        if j["status"]=="OK"
+            # Hoping first result is good
+            return j["results"][0]["geometry"]["location"]
+        end
+        return nil
+    end
+
+    def make_static_url(places)
+        colors=%w{black brown green purple yellow blue gray orange red white}
+
+        url = "http://maps.google.com/maps/api/staticmap?"
+        url << "size=1024x768"
+        url << "&zoom=3"
+        url << "&path=color:0xff0000ff|weight:5"
+        places.reverse.each do |p|
+            url << "|#{p['lat']},#{p['lng']}"
+        end
+
+        i=0
+        places.reverse.each do |p|
+            url << "&markers=color:#{colors[i % colors.size()]}|label:#{i}|#{p['lat']},#{p['lng']}"
+            i+=1
+        end
+
+        url << "&sensor=false"
+        return url
+    end
+
     def get_content()
         res = ""
         table = @parsed_content.css("table.dataTable tr")
         headers = table[0].css("th").map{|x| x.text}
+        places=[]
         table[1..-1].each do |tr|
             row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,'').gsub(/  +/,' ')}
             time = DateTime.strptime("#{row[1]} #{row[2]}","%m/%d/%Y %l:%M %p")
             if row[0] != ""
+
+                t = get_coords(row[0])
+                t["time"] = time
+                places << t
+
                 row[0] = " (#{row[0]})"
             end
             res << "#{time} : #{row[3]}#{row[0]}\n"
         end
+        url = make_static_url(places)
+        res << "\n<br/><img src=\"#{url}\#>\n"
         return res
     end
 end
