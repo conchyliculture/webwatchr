@@ -8,7 +8,7 @@ class UPS < Classe
     require "json"
     def get_coords(search)
         url = "http://maps.googleapis.com/maps/api/geocode/json?address=#{search}&sensor=false"
-        j = JSON.parse(Net::HTTP.get(URI.parse(url)))
+        j = JSON.parse(Net::HTTP.get(URI.parse(url.gsub(' ','+'))))
         if j["status"]=="OK"
             # Hoping first result is good
             return j["results"][0]["geometry"]["location"]
