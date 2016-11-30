@@ -108,11 +108,10 @@ class Classe
                     new_stuff = @content
                 end
             end
-            if new_stuff
-                if @test
-                    # Just show result, don't send email or upsate @last file
-                    puts "Would have sent an email with #{to_html(new_stuff)}"
-                else
+            if @test
+                puts (new_stuff ? "Nothing new\n#{to_html(new_stuff)}" : "Would have sent an email with #{to_html(new_stuff)}")
+            else
+                if new_stuff
                     alert(new_stuff)
                     update_last()
                 end
