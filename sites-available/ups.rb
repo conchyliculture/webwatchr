@@ -40,6 +40,10 @@ class UPS < Classe
     def get_content()
         res = ""
         table = @parsed_content.css("table.dataTable tr")
+        if table.size==0
+            $stderr.puts "Please verify the UPS tracking ID #{@url}"
+            return nil
+        end
         headers = table[0].css("th").map{|x| x.text}
         places=[]
         table[1..-1].each do |tr|
