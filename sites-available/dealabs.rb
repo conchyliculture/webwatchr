@@ -4,7 +4,8 @@ require "classe.rb"
 
 $MAXDEALS = 10
 # Here put the categories you're not interested in
-$BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/])
+$BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
+/^Épicerie$/])
 
 class Dealabs < Classe 
 
