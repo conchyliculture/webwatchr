@@ -58,7 +58,7 @@ class UPS < Classe
             res << "#{time} : #{row[3]}#{row[0]}<br/>\n"
         end
         url = make_static_url(places)
-        res << "\n<br/><img src=\"#{url}\#>\n"
+        res << "\n<br/><a href=#{url}><img src=\"#{url}\" alt='pic'>pic</a>\n"
         return res
     end
 end
