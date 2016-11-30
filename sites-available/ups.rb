@@ -46,15 +46,17 @@ class UPS < Classe
         end
         headers = table[0].css("th").map{|x| x.text}
         places=[]
+        prev_coords = {}
         table[1..-1].each do |tr|
             row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,'').gsub(/  +/,' ')}
             time = DateTime.strptime("#{row[1]} #{row[2]}","%m/%d/%Y %l:%M %p")
             if row[0] != ""
-
                 t = get_coords(row[0])
-                if t
+                t["place"] = row[0]
+                if t and (t["place"] != prev_coords["place"])
                     t["time"] = time
                     places << t
+                    prev_coords = t
                 end
 
                 row[0] = " (#{row[0]})"
@@ -68,7 +70,7 @@ class UPS < Classe
 end
 
 
-$UPS_ID="AAAAAAAAAAAAAAAAAAAAAA"
+$UPS_ID="AAAAAAAAAAAAAAAAAA"
 UPS.new(url:  "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{$UPS_ID}",
               every: 30*60, 
               test: __FILE__ == $0
