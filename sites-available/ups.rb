@@ -24,12 +24,12 @@ class UPS < Classe
         url << "&zoom=3"
         url << "&path=color:0xff0000ff|weight:5"
         places.reverse.each do |p|
-            url << "|#{p['lat']},#{p['lng']}"
+            url << "|#{p}"
         end
 
         i=0
         places.reverse.each do |p|
-            url << "&markers=color:#{colors[i % colors.size()]}|label:#{i}|#{p['lat']},#{p['lng']}"
+            url << "&markers=color:#{colors[i % colors.size()]}|label:#{i}|#{p}"
             i+=1
         end
 
@@ -46,25 +46,20 @@ class UPS < Classe
         end
         headers = table[0].css("th").map{|x| x.text}
         places=[]
-        prev_coords = {}
+        prev_place = ""
         table[1..-1].each do |tr|
             row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,'').gsub(/  +/,' ')}
             time = DateTime.strptime("#{row[1]} #{row[2]}","%m/%d/%Y %l:%M %p")
-            if row[0] != ""
-                t = get_coords(row[0])
-                t["place"] = row[0]
-                if t and (t["place"] != prev_coords["place"])
-                    t["time"] = time
-                    places << t
-                    prev_coords = t
-                end
-
+            place = row[0].gsub(' ','+')
+            if place != "" and (place != prev_place)
+                places << place
+                prev_place = place
                 row[0] = " (#{row[0]})"
             end
             res << "#{time} : #{row[3]}#{row[0]}<br/>\n"
         end
         url = make_static_url(places)
-        res << "\n<br/><a href=#{url}><img src=\"#{url}\" alt='pic'>pic</a>\n"
+        res << "\n<br/><a href=\"#{url}><img src=\"#{url}\" alt='pic'>pic</a>\n"
         return res
     end
 end
