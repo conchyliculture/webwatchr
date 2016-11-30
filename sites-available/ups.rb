@@ -48,12 +48,14 @@ class UPS < Classe
             if row[0] != ""
 
                 t = get_coords(row[0])
-                t["time"] = time
-                places << t
+                if t
+                    t["time"] = time
+                    places << t
+                end
 
                 row[0] = " (#{row[0]})"
             end
-            res << "#{time} : #{row[3]}#{row[0]}\n"
+            res << "#{time} : #{row[3]}#{row[0]}<br/>\n"
         end
         url = make_static_url(places)
         res << "\n<br/><img src=\"#{url}\#>\n"
