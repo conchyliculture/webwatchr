@@ -84,17 +84,27 @@ class Classe
             @content = get_content()
             case @content
             when String
-                if @content != prev_content
+                case prev_content
+                when String
+                    if @content != prev_content
+                        new_stuff = @content
+                    end
+                when Array
+                    new_stuff = @content
+                when nil
                     new_stuff = @content
                 end
             when Array
                 # Clean up eventual Nokogiri objects
                 @content.map{|x| x.update(x){ |k,v| v.to_s}}
-                if prev_content
+                case prev_content
+                when String
+                    new_stuff = @content
+                when Array
                     if ! (@content - prev_content).empty?
                         new_stuff = (@content - prev_content)
                     end
-                else
+                when nil
                     new_stuff = @content
                 end
             end
