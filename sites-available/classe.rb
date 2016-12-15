@@ -21,15 +21,20 @@ class Classe
 
     def fetch_url(url)
         uri = URI(url)
-        return Net::HTTP.get(uri)
+        if @post_data
+            return Net::HTTP.post_form(uri, @post_data).body
+        else
+            return Net::HTTP.get(uri)
+        end
     end
 
     def parse_noko(html)
         return Nokogiri::HTML(html)
     end
 
-    def initialize(url:, every:, test: false)
+    def initialize(url:, every:, post_data: nil, test: false)
         @url=url
+        @post_data = post_data
         @http_content=fetch_url(@url)
         @parsed_content=parse_noko(@http_content)
         @wait = every
