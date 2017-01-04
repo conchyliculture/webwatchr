@@ -5,13 +5,13 @@ require "classe.rb"
 class PostCH < Classe
     def get_content()
         res = []
-        table = @parsed_content.css('table.events_view').map{|row| row.css("td").map{|r| r.text.strip}}
+        table = @parsed_content.css('table.events_view tr').map{|row| row.css("td").map{|r| r.text.strip}}.delete_if{|x| x.empty?}
         if table.size==0
             $stderr.puts "Please verify the PostCH tracking ID"
             return nil
         end
         table.each do |r|
-            res << "#{r[0]} - #{r[1]} : #{r[3]}: #{r[2].split("\n")[-1].strip()} "
+            res << "#{r[0]} - #{r[1]} : #{r[3]}: #{r[2].split("\n")[-1].strip()}<br/>\n"
         end
         return res.join("")
     end
