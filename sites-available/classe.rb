@@ -72,6 +72,7 @@ class Classe
 
     def alert(new_stuff)
         puts "Sending a mail!" if $VERBOSE
+        $CONF["alert_proc"].call({content: new_stuff, name:@name})
         send_mail(dest_email: $CONF["dest_email"],content: new_stuff)
     end
 
@@ -118,7 +119,8 @@ class Classe
                 end
             end
             if @test
-                puts (new_stuff ? "Nothing new\n#{to_html(new_stuff)}" : "Would have sent an email with #{to_html(new_stuff)}")
+                puts (new_stuff ? "Would have sent an email with #{to_html(new_stuff)}" : "Nothing new\n#{to_html(new_stuff)}")
+                alert(new_stuff)
             else
                 if new_stuff
                     alert(new_stuff)
@@ -151,30 +153,6 @@ EOM
         return message_html
     end
 
-    def send_mail(dest_email: nil, content: nil, from: $from, subject: nil)
-        unless subject
-            subject= "[Webwatchr] Site #{@name} updated"
-        end
-        @msg="Site #{@name} updated"
-        if content
-            @msg+=" with content:\n"+to_html(content)
-        end
-
-        msgstr = <<END_OF_MESSAGE
-From: #{from}
-To: #{dest_email}
-MIME-Version: 1.0
-Content-type: text/html; charset=UTF-8
-Subject: #{subject}
-
-#{@msg}
-END_OF_MESSAGE
-
-        Net::SMTP.start($CONF["smtp_server"], $CONF["smtp_port"]) do |smtp|
-            smtp.send_message(msgstr, from, dest_email)
-            puts "mail sent lol"
-        end
-    end
 end
 
 # Example call.
@@ -189,7 +167,7 @@ end
 # will be sent with the new String (if get_content() returns a String),
 # or the new items in the Array (if get_content() returns an Array).
 #
-# c = Classe.new(url: "https://www.google.com", 
-#                every: 10*60 # Check every 10 minutes,
-#                test: __FILE__ == $0  # This is so you can run ruby classe.rb to check your code
-#                ).update
+c = Classe.new(url: "http://yt.renzokuken.eu/", 
+                every: 10*60, # Check every 10 minutes,
+                test: __FILE__ == $0,  # This is so you can run ruby classe.rb to check your code
+                ).update

@@ -1,8 +1,15 @@
 {
-    "dest_email": "lol@lol.lol",
+    "alerts": {
+        "email": {
+            "dest_email": "lol@lol.lol",
+            "smtp_server": "localhost",
+            "smtp_port": 25
+        },
+        "rss" : {
+        }
+    },
+    "default_alert" : ["email"],
     "pid_file": "webwatchr.pid",
     "last_dir": ".lasts",
-    "smtp_server": "localhost",
-    "smtp_port": 25,
     "site_timeout": 120
 }
