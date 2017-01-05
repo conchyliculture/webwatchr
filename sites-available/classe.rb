@@ -72,7 +72,7 @@ class Classe
 
     def alert(new_stuff)
         puts "Sending a mail!" if $VERBOSE
-        $CONF["alert_proc"].call({content: new_stuff, name: @name})
+        $CONF["alert_proc"].call({content: to_html(new_stuff), name: @name})
     end
 
     def get_content()
