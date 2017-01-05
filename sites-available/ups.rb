@@ -69,5 +69,5 @@ $UPS_ID="AAAAAAAAAAAAAAAAAA"
 UPS.new(url:  "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{$UPS_ID}",
               every: 30*60, 
               test: __FILE__ == $0
-             )
+       ).update
 

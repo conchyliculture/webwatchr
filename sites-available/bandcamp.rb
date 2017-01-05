@@ -49,5 +49,5 @@ end
 bandcamp=[
 # 
 ].each do |b|
-    Bandcamp.new(b,12*60*60, __FILE__ == $0,true)
+    Bandcamp.new(b,12*60*60, __FILE__ == $0,true).update
 end

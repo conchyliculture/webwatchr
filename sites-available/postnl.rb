@@ -26,5 +26,5 @@ PostNL.new(url:  "http://www.postnl.post/details/",
            post_data: {"barcodes" => $ID},
               every: 30*60, 
               test: __FILE__ == $0
-             )
+          ).update
 

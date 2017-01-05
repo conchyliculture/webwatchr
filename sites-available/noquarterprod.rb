@@ -43,4 +43,4 @@ end
 NQP.new(url:  "http://www.noquarterprod.com/product-category/carpenter-brut-en/",
               every: 12*60*60, 
               test: __FILE__ == $0
-             )
+       ).update()

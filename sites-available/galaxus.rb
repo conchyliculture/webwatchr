@@ -36,8 +36,8 @@ end
 Galaxus.new(url:  "https://www.galaxus.ch/en/LiveShopping",
               every: 12*60, 
               test: __FILE__ == $0
-             )
+           ).update
 Galaxus.new(url:  "https://www.digitec.ch/en/LiveShopping",
               every: 12*60, 
               test: __FILE__ == $0
-             )
+           ).update

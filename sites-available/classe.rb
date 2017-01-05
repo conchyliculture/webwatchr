@@ -42,7 +42,6 @@ class Classe
         md5=Digest::MD5.hexdigest(url)
         @last_file=".lasts/last-#{md5}"
         @test=test
-        update()
     end
 
     def read_last()
@@ -188,4 +187,4 @@ end
 # c = Classe.new(url: "https://www.google.com", 
 #                every: 10*60 # Check every 10 minutes,
 #                test: __FILE__ == $0  # This is so you can run ruby classe.rb to check your code
-#                )
+#                ).update

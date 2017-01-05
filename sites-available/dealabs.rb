@@ -39,4 +39,4 @@ end
 Dealabs.new(url:  "https://www.dealabs.com/",
               every: 30*60, 
               test: __FILE__ == $0
-             )
+           ).update
