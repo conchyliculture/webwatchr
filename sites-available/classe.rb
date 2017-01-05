@@ -80,11 +80,16 @@ class Classe
         return @http_content
     end
 
+    def should_check?(prev_time)
+        return Time.now().to_i >= prev_time + @wait
+    end
+
     def update()
         new_stuff = false
         prev = read_last()
         prev_content = prev["content"]
-        if (Time.now().to_i >= prev["time"] + @wait) or @test # Don't follow time limit if we're testing
+        if should_check?(prev["time"]) or @test # Don't follow time limit if we're testing
+
             puts "It's time to update" if $VERBOSE
             @content = get_content()
             case @content
