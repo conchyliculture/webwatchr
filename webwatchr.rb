@@ -6,11 +6,11 @@ require "fileutils"
 require "json"
 require "timeout"
 
-def send_mail(dest_email: nil, content: nil, from: $from, subject:nil , smtp: , smtp_port:,)
+def send_mail(content: , from:nil , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
-To: #{dest_email}
+To: #{to}
 MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
 Subject: #{subject}
@@ -19,23 +19,24 @@ Subject: #{subject}
 END_OF_MESSAGE
 
     Net::SMTP.start(smtp_server, smtp_port) do |smtp|
-        smtp.send_message(msgstr, from, dest_email)
+        smtp.send_message(msgstr, from, to)
     end
 end
 
 def make_alert(c)
     res_proc = nil
-    c["default_alert"].each do |a| 
+    c["default_alert"].each do |a|
         case a
         when "email"
-            res_proc = Proc.new { |new_args|
-
-                subject = new_args[:subject]
-                unless subject
-                    subject= "[Webwatchr] Site #{new_args[:name]} updated"
+			res_proc = Proc.new { |args|
+                unless args[:subject]
+                    args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
                 end
-                args[:content] = new_args[:content]
-                args[:subject] = subject
+                args.delete(:name)
+                args[:smtp_server] = $CONF["alerts"]["email"]["smtp_server"]
+                args[:smtp_port] = $CONF["alerts"]["email"]["smtp_port"]
+                args[:to] = $CONF["alerts"]["email"]["dest_email"]
+                pp args
                 send_mail(args)
             }
         when "rss"
@@ -46,6 +47,7 @@ def make_alert(c)
             raise Exception("Unknown alert method : #{a}")
         end
     end
+    return res_proc
 end
 
 def init()
@@ -86,11 +88,11 @@ def main()
     if not File.exist?("config.json")
         $stderr.puts "plz cp config.json.template config.json"
         $stderr.puts "and update it to your needs"
-        exit   
+        exit
     else
         $CONF=JSON.parse(File.read("config.json"))
     end
-    
+
     if File.exist?($CONF["pid_file"])
         puts "Already running"
         exit
