@@ -29,6 +29,17 @@ Run the cron often
 
     */5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb > /dev/null
 
+# Supported websites
+
+* Bandcamp merch pages
+* [Dealabs](https://www.dealabs.com)
+* DHL tracking
+* [galaxus/digitec daily deals](https://www.galaxus.com/LiveShopping/)
+* [Noquarterprod](https://www.noquarterprod.com)
+* postNL tracking
+* [Qwertee](https://www.qwertee.com)
+* UPS tracking
+
 # Add a new site to watch
 
 ## Watch the whole HTML source of a page

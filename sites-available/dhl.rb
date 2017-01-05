@@ -16,11 +16,9 @@ class DHL < Classe
 
 end
 
-# Uncomment to actually run the thing
-#
 # trackingnb=1234567890
 # d=DHL.new(url:  "http://www.dhl.com/en/express/tracking.html?AWB=#{trackingnb}&brand=DHL",
 #              every: 10*60, 
 #              test: __FILE__ == $0
-#             )
+#             ).update
 

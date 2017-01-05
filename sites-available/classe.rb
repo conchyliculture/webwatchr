@@ -21,15 +21,20 @@ class Classe
 
     def fetch_url(url)
         uri = URI(url)
-        return Net::HTTP.get(uri)
+        if @post_data
+            return Net::HTTP.post_form(uri, @post_data).body
+        else
+            return Net::HTTP.get(uri)
+        end
     end
 
     def parse_noko(html)
         return Nokogiri::HTML(html)
     end
 
-    def initialize(url:, every:, test: false)
+    def initialize(url:, every:, post_data: nil, test: false)
         @url=url
+        @post_data = post_data
         @http_content=fetch_url(@url)
         @parsed_content=parse_noko(@http_content)
         @wait = every
@@ -37,7 +42,6 @@ class Classe
         md5=Digest::MD5.hexdigest(url)
         @last_file=".lasts/last-#{md5}"
         @test=test
-        update()
     end
 
     def read_last()
@@ -84,25 +88,34 @@ class Classe
             @content = get_content()
             case @content
             when String
-                if @content != prev_content
+                case prev_content
+                when String
+                    if @content != prev_content
+                        new_stuff = @content
+                    end
+                when Array
+                    new_stuff = @content
+                when nil
                     new_stuff = @content
                 end
             when Array
                 # Clean up eventual Nokogiri objects
                 @content.map{|x| x.update(x){ |k,v| v.to_s}}
-                if prev_content
+                case prev_content
+                when String
+                    new_stuff = @content
+                when Array
                     if ! (@content - prev_content).empty?
                         new_stuff = (@content - prev_content)
                     end
-                else
+                when nil
                     new_stuff = @content
                 end
             end
-            if new_stuff
-                if @test
-                    # Just show result, don't send email or upsate @last file
-                    puts "Would have sent an email with #{to_html(new_stuff)}"
-                else
+            if @test
+                puts (new_stuff ? "Nothing new\n#{to_html(new_stuff)}" : "Would have sent an email with #{to_html(new_stuff)}")
+            else
+                if new_stuff
                     alert(new_stuff)
                     update_last()
                 end
@@ -174,4 +187,4 @@ end
 # c = Classe.new(url: "https://www.google.com", 
 #                every: 10*60 # Check every 10 minutes,
 #                test: __FILE__ == $0  # This is so you can run ruby classe.rb to check your code
-#                )
+#                ).update

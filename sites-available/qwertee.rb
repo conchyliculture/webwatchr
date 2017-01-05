@@ -25,4 +25,4 @@ end
 Qwertee.new(url:  "https://www.qwertee.com/rss/",
               every: 12*60*60, 
               test: __FILE__ == $0
-             )
+           ).update
