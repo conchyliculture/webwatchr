@@ -31,12 +31,16 @@ class TestClasse < Test::Unit::TestCase
 
     def testLol
         url = "http://localhost:8001/lol"
+        wait = 10*60
 
         c = Classe.new( url: url,
-                  every: 10*60,
+                  every: wait,
                   test: true
                  )
-        assert_equal({"content"=>nil, "time"=>-9999999999999},c.read_last())
+        empty_last = {"content"=>nil, "time"=>-9999999999999}
+        assert_equal(empty_last,c.read_last())
+        assert_equal(true, c.should_check?(empty_last["time"]))
+        assert_equal(false, c.should_check?((Time.now() - wait + 30).to_i))
         html = c.fetch_url(url)
         assert_equal("<html>\n<title>test</title>\nqsedf q*sdfkq sd\nfq\ns\nd fq\nsd \n\n\n", html)
         assert_equal("test", c.parse_noko(html).css('title').text)
