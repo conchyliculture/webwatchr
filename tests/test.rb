@@ -23,6 +23,7 @@ class TestClasse < Test::Unit::TestCase
             s.start
         end
         sleep(1)
+        $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
     end
 
     def teardown()
