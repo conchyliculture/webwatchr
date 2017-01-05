@@ -32,6 +32,7 @@ class Classe
         return Nokogiri::HTML(html)
     end
 
+    attr_accessor :last_file
     def initialize(url:, every:, post_data: nil, test: false)
         @url=url
         @post_data = post_data
