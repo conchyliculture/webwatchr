@@ -130,7 +130,6 @@ class Classe
             end
             if @test
                 puts (new_stuff ? "Would have sent an email with #{to_html(new_stuff)}" : "Nothing new\n#{to_html(new_stuff)}")
-                alert(new_stuff)
             else
                 if new_stuff
                     alert(new_stuff)
