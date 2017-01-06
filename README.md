@@ -25,11 +25,13 @@ Then edit config.json to your needs.
 
 Then enable some sites for checking by linking from `sites-available` into `sites-enabled`
 
-Run the cron often
+Run the cron often:
 
     */5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb > /dev/null
 
 # Supported websites
+
+This means these website will only extract "interesting" information from the page, and won't use the whole html page.
 
 * Bandcamp merch pages
 * [Dealabs](https://www.dealabs.com)
@@ -44,31 +46,34 @@ Run the cron often
 
 ## Watch the whole HTML source of a page
 
-Just edit sites/classe.rb and append new pages to the end as new instances
+Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances
 
+    #/usr/bin/ruby
+    require_relative "classe.rb"
     c1 = Classe.new(
         url: "https://www.google.com",
         every: 10*60 # Check every 10 minutes,
-        test: __FILE__ == $0  # This is so you can run ruby classe.rb to check your code
-    )
+        test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
+    ).update
     c2 = Classe.new(
         url: "https://www.google.es",
         every: 10*60 # Check every 10 minutes,
-        test: __FILE__ == $0  # This is so you can run ruby classe.rb to check your code
-    )
+        test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
+    ).update
 
 ## Extract part of the DOM first
 
-Basically, just make a new `sites/mysite.rb` using one of the two examples,
-then overwrite the `get_content()` method. Override the `content_to_html()`
-method if you want to change how the content of the mail will be generated.
+Basically, just make a new `sites/mysite.rb` using one of the two examples, below
+then overwrite the `get_content()` method.
+
+Also override the `content_to_html()` method if you want to change how the new content will be showed to you.
 
 You can use `@parsed_content` which is a Nokogiri parsed HTML document.
 
 ### The interesting content is a String
 
 In the following example, everytime the first `<table>` element appearing on the DOM
-changes, this will send an email with the HTML code of this element.
+changes, this will use the HTML code of this element as the content to check for update.
 
     $: << File.dirname(__FILE__)
     require "classe.rb"
@@ -84,12 +89,12 @@ changes, this will send an email with the HTML code of this element.
         url: "https://www.mydomistoobig.pt",
         every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0
-    )
+    ).update
 
 ### The interesting content is a list of Things
 
-In the following example, everytime the Array returned by `get_content()`
-changes, this will send an email with code of this element.
+In the following example, you fetch an array of things at every run of the code. 
+Only new elements (from the previous run) will be sent to you.
 
     $: << File.dirname(__FILE__)
     require "classe.rb"
@@ -118,7 +123,7 @@ changes, this will send an email with code of this element.
             @parsed_content.css("div.article") do |article|
                 link = article.css("a").attr("href")
                 i = i+1
-                res << {"href" => url , "name" => i.to_s}
+                res << {"href" => url , "name" => i.to_s} # Magic keys for a nice html ul-li display
             end
             return res
         end
@@ -127,11 +132,11 @@ changes, this will send an email with code of this element.
         url: "https://www.mydomistoobig.pt",
         every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0
-    )
+    ).update()
 
 ## Test your new thing
 
-Just do `ruby sites-available/mysite.rb`. It will run, and display what it would send by mail, without updating the state.
+Just do `ruby sites-available/mysite.rb`. It will run, and display what it would alert you with, without updating the state.
 
 If everything looks right, `cd sites-enabled; ln -s ../sites-available/mysite.rb .`
 
