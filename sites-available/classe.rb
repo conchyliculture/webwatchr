@@ -20,12 +20,22 @@ class Classe
     require "json"
 
     def fetch_url(url)
+        res = ""
         uri = URI(url)
         if @post_data
-            return Net::HTTP.post_form(uri, @post_data).body
+            res= Net::HTTP.post_form(uri, @post_data).body
         else
-            return Net::HTTP.get(uri)
+            Net::HTTP.start(uri.host, uri.port) do |http|
+                response = Net::HTTP.get_response(uri)
+                res  = response.body
+                if res
+                    if response["Content-Encoding"]
+                        res = res.force_encoding(response["Content-Encoding"])
+                    end
+                end
+            end
         end
+        res
     end
 
     def parse_noko(html)
