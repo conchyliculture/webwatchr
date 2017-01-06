@@ -3,7 +3,6 @@
 require "fileutils"
 require "logger"
 require "pp"
-require "sequel"
 require "test/unit"
 
 $: << File.join(File.dirname(__FILE__),"..")
@@ -27,7 +26,7 @@ class TestClasse < Test::Unit::TestCase
         @serv_thread.kill if @serv_thread
         @serv_thread = Thread.new do
             s = WEBrick::HTTPServer.new(:AccessLog => [],
-                                       # :Logger => WEBrick::Log::new("/dev/null", 7),
+                                        :Logger => WEBrick::Log::new("/dev/null", 7),
                                         :Port => 8001,
                                        )
             s.mount "/", TestFileHandler, $wwwroot
