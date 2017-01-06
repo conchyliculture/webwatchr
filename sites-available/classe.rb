@@ -154,20 +154,3 @@ EOM
     end
 
 end
-
-# Example call.
-#
-# This will fetch the entire google.com page, every 10*60 seconds, and mail
-# the full HTML everytime it changes (probably, everytime)
-#
-# Every 'every' seconds, we pull the html page and extracte "content".
-# using the get_content method. Just overload the method in your class
-# to your usage. It can either return a String or an Array.
-# This 'content' will be compared with the previous stored one, and a mail
-# will be sent with the new String (if get_content() returns a String),
-# or the new items in the Array (if get_content() returns an Array).
-#
-c = Classe.new(url: "http://yt.renzokuken.eu/", 
-                every: 10*60, # Check every 10 minutes,
-                test: __FILE__ == $0,  # This is so you can run ruby classe.rb to check your code
-                ).update
