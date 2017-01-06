@@ -56,7 +56,7 @@ def init()
     FileUtils.mkdir_p(File.join($MYDIR, $CONF["last_dir"]))
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
-    sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
+    sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb")).delete("classe.rb")
 
     if sites.empty?
         $stderr.puts "Didn't find any site to parse. You might want to "
