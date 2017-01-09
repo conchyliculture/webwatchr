@@ -20,7 +20,7 @@ class Site
         @name = url
         md5 = Digest::MD5.hexdigest(url)
         @last_file = ".lasts/last-#{md5}"
-        if $CONF
+        if $CONF and $CONF["last_dir"]
             @last_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
         end
         @test=test
@@ -94,23 +94,31 @@ class Site
     end
 
     def update()
-        new_stuff = false
-        prev = read_last()
-        prev_content = prev["content"]
-        if should_check?(prev["time"]) or @test
-            new_stuff = get_new(previous: prev_content)
-            if new_stuff
-                if @test
-                    puts "Would have sent an email with #{to_html(new_stuff)}"
+        begin
+            new_stuff = false
+            prev = read_last()
+            prev_content = prev["content"]
+            if should_check?(prev["time"]) or @test
+                new_stuff = get_new(previous: prev_content)
+                if new_stuff
+                    if @test
+                        puts "Would have sent an email with #{to_html(new_stuff)}"
+                    else
+                        alert(new_stuff)
+                        update_last()
+                    end
                 else
-                    alert(new_stuff)
-                    update_last()
-                end
-            else
-                if @test
-                    puts "Nothing new"
+                    if @test
+                        puts "Nothing new"
+                    end
                 end
             end
+        rescue Exception => e
+            $stderr.puts "#{self} Failed on #{@url}"
+            $stderr.puts e.class
+            $stderr.puts e.message
+            $stderr.puts e.backtrace
+            $stderr.puts "Last_file : #{@last_file}"
         end
     end
 
@@ -145,6 +153,9 @@ class Site
             new_stuff = @content
             if previous and (! (@content - previous).empty?)
                 new_stuff = (@content - previous)
+            end
+            if new_stuff.empty?
+                return nil
             end
             return new_stuff
         end
