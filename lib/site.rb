@@ -144,7 +144,7 @@ class Site
             @content = get_content()
             new_stuff = @content
             if previous and (! (@content - previous).empty?)
-                new_stuff = (@content - prev_content)
+                new_stuff = (@content - previous)
             end
             return new_stuff
         end
