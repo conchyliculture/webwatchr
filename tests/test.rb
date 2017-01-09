@@ -63,9 +63,8 @@ class TestClasse < Test::Unit::TestCase
     def testContentIsString
 
         content_html = "👌 👌 👌 💯 💯 💯 💯 -KYop-R11Iqo.mp"
-        whole_html = """<!DOCTYPE html>
-<meta charset=\"utf-8\">
-<title>test</title><div class='content'>#{content_html}</div>"""
+        whole_html = Site::HTML_HEADER.dup
+        whole_html += "<title>test</title><div class='content'>#{content_html}</div>"
         File.open(File.join($wwwroot, $content_is_string), "w") do |f|
             f.write whole_html
         end
@@ -86,7 +85,7 @@ class TestClasse < Test::Unit::TestCase
         assert_equal("test", c.parse_noko(html).css('title').text)
         assert_block{c.last_file().end_with?("last-2182cd5c8685baed48f692ed72d7a89f")}
         c.update()
-        first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n#{content_html}"
+        first_pass_content = Site::HTML_HEADER + content_html
         assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url}\"}", result)
 
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
@@ -112,9 +111,8 @@ class TestClasse < Test::Unit::TestCase
     end
 
     def testContentIsArray
-        whole_html = """<!DOCTYPE html>
-<meta charset=\"utf-8\">
-<title>test</title>👌 👌 👌 💯 💯 💯 💯 -KYop-R11Iqo.mp"""
+        whole_html = Site::HTML_HEADER.dup
+        whole_html += "<title>test</title>👌 👌 👌 💯 💯 💯 💯 -KYop-R11Iqo.mp"""
         whole_html += "<div> lol - lilo</div> <div> fi - fu</div>"
         File.open(File.join($wwwroot, $content_is_array), "w") do |f|
             f.write whole_html
@@ -136,7 +134,7 @@ class TestClasse < Test::Unit::TestCase
         assert_equal("test", c.parse_noko(html).css('title').text)
         assert_block{c.last_file().end_with?("last-35e711989b197f20f3d4936e91a2c079")}
         c.update()
-        expected_html = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<ul style=\"list-style-type: none;\">\n<li><a href=' lol '> lilo </a></li>\n<li><a href=' fi '> fu </a></li>\n\n</ul>"
+        expected_html = Site::HTML_HEADER.dup + "<ul style=\"list-style-type: none;\">\n<li><a href=' lol '> lilo </a></li>\n<li><a href=' fi '> fu </a></li>\n\n</ul>"
 		assert_equal("{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}", result)
 
         File.open(File.join($wwwroot,$content_is_array),"a+") do |f|

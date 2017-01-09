@@ -8,6 +8,8 @@ require "nokogiri"
 
 class Site
 
+    Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
+
     attr_accessor :last_file, :url, :wait
     def initialize(url:, every: 60*60, post_data: nil, test: false)
         @url = url
@@ -18,7 +20,7 @@ class Site
         @name = url
         md5 = Digest::MD5.hexdigest(url)
         @last_file = "last-#{md5}"
-        if $CONF 
+        if $CONF
             @last_file = File.join($CONF["last_dir"] || ".", @last_file)
         end
         @test=test
@@ -98,7 +100,7 @@ class Site
         if should_check?(prev["time"]) or @test
             new_stuff = get_new(previous: prev_content)
             if new_stuff
-                if @test 
+                if @test
                     puts "Would have sent an email with #{to_html(new_stuff)}"
                 else
                     alert(new_stuff)
@@ -113,12 +115,8 @@ class Site
     end
 
     def to_html(content)
-        message_html = <<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-<ul style="list-style-type: none;">
-EOM
-        message_html += to_html(@content)
+        message_html = Site::HTML_HEADER.dup
+        message_html += @content
         return message_html
     end
 
@@ -134,10 +132,7 @@ EOM
         end
 
         def to_html(content)
-            message_html = <<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-EOM
+            message_html = Site::HTML_HEADER.dup
             message_html += content
             return message_html
         end
@@ -154,11 +149,8 @@ EOM
         end
 
         def to_html(content)
-            message_html = <<EOM
-<!DOCTYPE html>
-<meta charset="utf-8">
-<ul style="list-style-type: none;">
-EOM
+            message_html = Site::HTML_HEADER.dup
+            message_html << "<ul style=\"list-style-type: none;\">\n"
             content.each do |item|
                 if item["img_src"]
                     message_html +="<li><a href='#{item["href"]}'><img style=\"width:100px\" src='#{item["img_src"]}'>#{item["name"]} </a></li>\n"
