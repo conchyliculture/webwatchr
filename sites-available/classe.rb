@@ -51,7 +51,7 @@ class Classe
         @wait = every
         @name = url
         md5=Digest::MD5.hexdigest(url)
-        @last_file=File.join($CONF["last_dir"],"last-#{md5}")
+        @last_file = File.join($CONF["last_dir"],"last-#{md5}")
         @test=test
     end
 
