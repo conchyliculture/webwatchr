@@ -13,6 +13,10 @@ class TestClasse < Test::Unit::TestCase
     require "webrick"
     $wwwroot = File.join(File.dirname(__FILE__), 'www-root')
     $wwwport = 8001
+    $content_is_string = "content_is_string.html"
+    $content_is_array = "content_is_array.html"
+    $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
+    $CONF["last_dir"] = Dir.mktmpdir
     class TestFileHandler < WEBrick::HTTPServlet::FileHandler
         def do_GET(req, res)
             res.status = 200
@@ -36,19 +40,7 @@ class TestClasse < Test::Unit::TestCase
     end
 
     def setup
-        $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
-        $CONF["last_dir"] = Dir.mktmpdir
-        $content_is_string = "content_is_string.html"
-        File.open(File.join($wwwroot, $content_is_string), "w") do |f|
-            f.puts """<!DOCTYPE html>
-            <meta charset=\"utf-8\">
-            <title>test</title>
-            👌 👌 👌 💯 💯 💯 💯 -KYop-R11Iqo.mp"""
-        end
-        $content_is_array = "content_is_array.html"
-        File.open(File.join($wwwroot, $content_is_array), "w") do |f|
-            f.puts """<!DOCTYPE html> <meta charset=\"utf-8\"> <title>test</title> <U+1F44C> <U+1F44C> <U+1F44C> <U+1F4AF> <U+1F4AF> <U+1F4AF> <U+1F4AF> -KYop-R11Iqo.mp <div> lol - lilo</div> <div> fi - fu</div>"""
-        end
+        FileUtils.mkdir_p($CONF["last_dir"])
 
         restart_webrick()
     end
@@ -64,6 +56,12 @@ class TestClasse < Test::Unit::TestCase
     end
 
     def testContentIsString
+        File.open(File.join($wwwroot, $content_is_string), "w") do |f|
+            f.puts """<!DOCTYPE html>
+            <meta charset=\"utf-8\">
+            <title>test</title>
+            👌 👌 👌 💯 💯 💯 💯 -KYop-R11Iqo.mp"""
+        end
         url = "http://localhost:#{$wwwport}/#{$content_is_string}"
         wait = 10*60
 
@@ -79,14 +77,18 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert_equal(File.read(File.join($wwwroot,$content_is_string)), html)
         assert_equal("test", c.parse_noko(html).css('title').text)
-        assert_block{c.last_file().end_with?(".lasts/last-2182cd5c8685baed48f692ed72d7a89f")}
+        assert_block{c.last_file().end_with?("last-2182cd5c8685baed48f692ed72d7a89f")}
         c.update()
-        assert_equal("{:content=>#{File.read(File.join($wwwroot,$content_is_string)).inspect}, :name=>\"#{url}\"}", result)
+        first_pass_content = "{:content=>#{File.read(File.join($wwwroot,$content_is_string)).inspect}"
+        assert_equal("#{first_pass_content}, :name=>\"#{url}\"}", result)
 
         File.open(File.join($wwwroot,$content_is_string),"a+") do |f|
             f.puts "new!"
         end
         c = Classe.new(url: url)
+        c.update()
+        assert_equal("#{first_pass_content}, :name=>\"#{url}\"}", result)
+        c.wait = 0
         c.update()
         assert_equal("{:content=>#{File.read(File.join($wwwroot,$content_is_string)).inspect}, :name=>\"http://localhost:#{$wwwport}/#{$content_is_string}\"}", result)
     end
@@ -103,6 +105,9 @@ class TestClasse < Test::Unit::TestCase
     end
 
     def testContentIsArray
+        File.open(File.join($wwwroot, $content_is_array), "w") do |f|
+            f.puts """<!DOCTYPE html> <meta charset=\"utf-8\"> <title>test</title> <U+1F44C> <U+1F44C> <U+1F44C> <U+1F4AF> <U+1F4AF> <U+1F4AF> <U+1F4AF> -KYop-R11Iqo.mp <div> lol - lilo</div> <div> fi - fu</div>"""
+        end
         url = "http://localhost:#{$wwwport}/#{$content_is_array}"
         wait = 10*60
 
@@ -110,10 +115,7 @@ class TestClasse < Test::Unit::TestCase
 
         $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8')}
 
-        c = TestArraySite.new( url: url,
-                  every: wait,
-                  test: true
-                 )
+        c = TestArraySite.new(url: url)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
         assert_equal(empty_last,c.read_last())
         assert_equal(true, c.should_check?(empty_last["time"]))
@@ -121,7 +123,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert_equal("<!DOCTYPE html> <meta charset=\"utf-8\"> <title>test</title> <U+1F44C> <U+1F44C> <U+1F44C> <U+1F4AF> <U+1F4AF> <U+1F4AF> <U+1F4AF> -KYop-R11Iqo.mp <div> lol - lilo</div> <div> fi - fu</div>\n", html)
         assert_equal("test", c.parse_noko(html).css('title').text)
-        assert_block{ c.last_file().end_with?(".lasts/last-35e711989b197f20f3d4936e91a2c079")}
+        assert_block{c.last_file().end_with?("last-35e711989b197f20f3d4936e91a2c079")}
         c.update()
         expected_result ="""<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<ul style=\"list-style-type: none;\">\n<li><a href=' lol '> lilo </a></li>\n<li><a href=' fi '> fu </a></li>\n\n</ul>"""
 		assert_equal("{:content=>#{expected_result.inspect}, :name=>\"#{url}\"}", result)
@@ -129,12 +131,12 @@ class TestClasse < Test::Unit::TestCase
         File.open(File.join($wwwroot,$content_is_array),"a+") do |f|
             f.puts "<div>new! - new </div>"
         end
-        c = TestArraySite.new( url: url,
-                  every: wait,
-                  test: true
-                 )
+        c = TestArraySite.new(url: url)
         c.update()
-        expected_result = expected_result.gsub("\n</ul>","<li><a href='new! '> new  </a></li>\n\n</ul>")
+		assert_equal("{:content=>#{expected_result.inspect}, :name=>\"#{url}\"}", result)
+        c.wait = 0
+        c.update()
+        expected_result ="""<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<ul style=\"list-style-type: none;\">\n<li><a href='new! '> new  </a></li>\n\n</ul>"""
         assert_equal("{:content=>#{expected_result.inspect}, :name=>\"http://localhost:#{$wwwport}/#{$content_is_array}\"}", result)
     end
 end
