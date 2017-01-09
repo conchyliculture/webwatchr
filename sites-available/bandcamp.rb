@@ -4,12 +4,14 @@
 require_relative "../lib/site.rb"
 
 class Bandcamp < Site::Articles
+    require "net/http"
+    require "nokogiri"
 
     def get_content()
         res=[]
         if @merch
             if @http_content=~/You are being redirected, please follow <a href="([^"]+)"/
-                return @http_content
+                @parsed_content = Nokogiri::HTML.parse(Net::HTTP.get(URI.parse($1)))
             end
             @parsed_content.css('ol.merch-grid li').each do |xx|
                 next unless xx.css('p.sold-out').empty?
