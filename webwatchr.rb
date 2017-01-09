@@ -74,6 +74,10 @@ def init()
             status = Timeout::timeout(timeout) {
                 load site
             }
+        rescue Net::ReadTimeout => e
+            # Do nothing, try later
+            # TODO
+            # Log Something when we have logs
         rescue Exception=>e
             $stderr.puts "Issue with #{site} : #{e}"
             $stderr.puts e.message
