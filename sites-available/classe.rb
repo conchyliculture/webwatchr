@@ -1,7 +1,8 @@
 #!/usr/bin/ruby
+# encoding: utf-8
 
 class Classe
-    
+
     # This class provides basically everything you need.
     #
     # To make a new site to watch, just make a new ruby file next to it
@@ -12,7 +13,7 @@ class Classe
     # end
     #
     # d = Lol.new()
-    
+
     require "net/http"
     require "net/smtp"
     require "digest/md5"

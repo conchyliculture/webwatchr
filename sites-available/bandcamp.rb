@@ -1,7 +1,7 @@
-$: << File.dirname(__FILE__)
+#!/usr/bin/ruby
+# encoding: utf-8
 
-require "classe.rb"
-require "pp"
+require_relative "../sites-available/classe.rb"
 
 class Bandcamp < Classe
 
@@ -42,12 +42,12 @@ end
 
 
 # Insert your fav groups here
-# ex: bandcamp = [ 
-# "group1", 
+# ex: bandcamp = [
+# "group1",
 # "group2"
 # ]
 bandcamp=[
-# 
+#
 ].each do |b|
     Bandcamp.new(b,12*60*60, __FILE__ == $0,true).update
 end

@@ -1,7 +1,7 @@
-$: << File.dirname(__FILE__)
-require "pp"
+#!/usr/bin/ruby
+# encoding: utf-8
 
-require "classe.rb"
+require_relative "../sites-available/classe.rb"
 
 class Galaxus < Classe
 
@@ -13,19 +13,18 @@ class Galaxus < Classe
                 if img =~ /data:image\/gif;base64/
                     img = "https:"+a.css("div.lazy-image img").attr("data-src").value()
                 end
-                site_base = URI.parse(@url) 
+                site_base = URI.parse(@url)
                 site_base = site_base.to_s.sub(site_base.request_uri,"")
                 url = site_base + "/" + a.css("a.overlay")[0].attr('href')
                 title = a.css("h5.product-name").text.split("\n").join("")
-                price = "?" 
+                price = "?"
                 if a.css("div.product-price")
                     price = a.css("div.product-price").text.split(".–")[0].strip
                 end
                 res << {"href" => url,
                         "img_src" => img,
                         "name" => "#{title} - #{price}" ,
-                } 
-                pp res
+                }
             end
         end
         return res
@@ -34,10 +33,10 @@ end
 
 
 Galaxus.new(url:  "https://www.galaxus.ch/en/LiveShopping",
-              every: 12*60, 
+              every: 12*60,
               test: __FILE__ == $0
            ).update
 Galaxus.new(url:  "https://www.digitec.ch/en/LiveShopping",
-              every: 12*60, 
+              every: 12*60,
               test: __FILE__ == $0
            ).update

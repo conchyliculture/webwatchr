@@ -1,7 +1,7 @@
-$: << File.dirname(__FILE__)
+#!/usr/bin/ruby
+# encoding: utf-8
 
-require "classe.rb"
-require "pp"
+require_relative "../sites-available/classe.rb"
 
 class PostNL < Classe
     def get_content()
@@ -24,7 +24,7 @@ end
 $ID="RSAAAAAAAAAAAAA"
 PostNL.new(url:  "http://www.postnl.post/details/",
            post_data: {"barcodes" => $ID},
-              every: 30*60, 
+              every: 30*60,
               test: __FILE__ == $0
           ).update
 

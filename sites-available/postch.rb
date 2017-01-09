@@ -1,6 +1,7 @@
-$: << File.dirname(__FILE__)
+#!/usr/bin/ruby
+# encoding: utf-8
 
-require "classe.rb"
+require_relative "../sites-available/classe.rb"
 
 class PostCH < Classe
     def get_content()
@@ -19,7 +20,7 @@ end
 
 post_id="99.60.00000.00000000"
 PostCH.new(url:  "https://service.post.ch/EasyTrack/submitParcelData.do?formattedParcelCodes=#{post_id}",
-              every: 30*60, 
+              every: 30*60,
               test: __FILE__ == $0
           ).update
 

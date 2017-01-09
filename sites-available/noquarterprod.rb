@@ -1,6 +1,7 @@
-$: << File.dirname(__FILE__)
+#!/usr/bin/ruby
+# encoding: utf-8
 
-require "classe.rb"
+require_relative "../sites-available/classe.rb"
 
 class NQP < Classe
     require "net/http"
@@ -14,7 +15,7 @@ class NQP < Classe
     def get_products(noko)
         res = []
         real_products = noko.css("li.purchasable")
-        if real_products.empty? 
+        if real_products.empty?
             noko.css("li.product a").each do |p|
                 url = p.attr('href')
                 next if @alread_fetched_urls.include?(url)
@@ -41,6 +42,6 @@ end
 
 
 NQP.new(url:  "http://www.noquarterprod.com/product-category/carpenter-brut-en/",
-              every: 12*60*60, 
+              every: 12*60*60,
               test: __FILE__ == $0
        ).update()

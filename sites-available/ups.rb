@@ -1,9 +1,10 @@
-$: << File.dirname(__FILE__)
+#!/usr/bin/ruby
+# encoding: utf-8
 
-require "classe.rb"
-require "date"
+require_relative "../sites-available/classe.rb"
 
 class UPS < Classe
+    require "date"
     require "net/http"
     require "json"
     def get_coords(search)
@@ -67,7 +68,7 @@ end
 
 $UPS_ID="AAAAAAAAAAAAAAAAAA"
 UPS.new(url:  "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{$UPS_ID}",
-              every: 30*60, 
+              every: 30*60,
               test: __FILE__ == $0
        ).update
 
