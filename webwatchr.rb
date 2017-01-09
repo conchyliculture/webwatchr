@@ -53,7 +53,10 @@ def init()
 
     $MYDIR=File.dirname(__FILE__)
 
-    FileUtils.mkdir_p(File.join($MYDIR, $CONF["last_dir"]))
+    unless $CONF["last_dir"]
+        $CONF["last_dir"] = File.join($MYDIR, ".lasts")
+    end
+    FileUtils.mkdir_p($CONF["last_dir"])
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
     sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb")).delete("classe.rb")
