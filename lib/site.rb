@@ -139,10 +139,11 @@ class Site
     end
 
     class Site::Articles < Site
-        def new_stuff(previous: nil)
+        def get_new(previous: nil)
             new_stuff = nil
             @content = get_content()
-            if ! (@content - prev_content).empty?
+            new_stuff = @content
+            if previous and (! (@content - previous).empty?)
                 new_stuff = (@content - prev_content)
             end
             return new_stuff
