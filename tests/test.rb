@@ -37,6 +37,8 @@ class TestClasse < Test::Unit::TestCase
 
 
     def setup
+        $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
+        $CONF["last_dir"] = Dir.mktmpdir
         $content_is_string = "content_is_string.html"
         File.open(File.join($wwwroot, $content_is_string), "w") do |f|
             f.puts """<!DOCTYPE html>
@@ -50,15 +52,16 @@ class TestClasse < Test::Unit::TestCase
         end
 
         restart_webrick()
-        $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
     end
 
     def teardown()
         @serv_thread.exit
-        $content_is_string = "content_is_string.html"
-        File.open(File.join($wwwroot, $content_is_string), "w") do |f|
-            f.puts ""
+        [$content_is_string, $content_is_array].each do |tf|
+            File.open(File.join($wwwroot, tf), "w") do |f|
+                f.puts ""
+            end
         end
+        FileUtils.remove_entry_secure($CONF["last_dir"])
     end
 
     def testContentIsString
@@ -80,7 +83,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert_equal(File.read(File.join($wwwroot,$content_is_string)), html)
         assert_equal("test", c.parse_noko(html).css('title').text)
-        assert_equal(".lasts/last-2182cd5c8685baed48f692ed72d7a89f",c.last_file)
+        assert_block{c.last_file().end_with?(".lasts/last-2182cd5c8685baed48f692ed72d7a89f")}
         c.update()
         assert_equal("{:content=>#{File.read(File.join($wwwroot,$content_is_string)).inspect}, :name=>\"#{url}\"}", result)
 
@@ -125,7 +128,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert_equal("<!DOCTYPE html> <meta charset=\"utf-8\"> <title>test</title> <U+1F44C> <U+1F44C> <U+1F44C> <U+1F4AF> <U+1F4AF> <U+1F4AF> <U+1F4AF> -KYop-R11Iqo.mp <div> lol - lilo</div> <div> fi - fu</div>\n", html)
         assert_equal("test", c.parse_noko(html).css('title').text)
-        assert_equal(".lasts/last-35e711989b197f20f3d4936e91a2c079",c.last_file)
+        assert_block{ c.last_file().end_with?(".lasts/last-35e711989b197f20f3d4936e91a2c079")}
         c.update()
         expected_result ="""<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<ul style=\"list-style-type: none;\">\n<li><a href=' lol '> lilo </a></li>\n<li><a href=' fi '> fu </a></li>\n\n</ul>"""
 		assert_equal("{:content=>#{expected_result.inspect}, :name=>\"#{url}\"}", result)
