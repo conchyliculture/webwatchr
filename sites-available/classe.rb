@@ -42,7 +42,7 @@ class Classe
         return Nokogiri::HTML(html)
     end
 
-    attr_accessor :last_file
+    attr_accessor :last_file, :wait
     def initialize(url:, every: 60*60, post_data: nil, test: false)
         @url=url
         @post_data = post_data
@@ -51,7 +51,7 @@ class Classe
         @wait = every
         @name = url
         md5=Digest::MD5.hexdigest(url)
-        @last_file=File.join($CONF["last_dir"],".lasts/last-#{md5}")
+        @last_file=File.join($CONF["last_dir"],"last-#{md5}")
         @test=test
     end
 
@@ -99,7 +99,6 @@ class Classe
         prev = read_last()
         prev_content = prev["content"]
         if should_check?(prev["time"]) or @test # Don't follow time limit if we're testing
-
             puts "It's time to update" if $VERBOSE
             @content = get_content()
             case @content
