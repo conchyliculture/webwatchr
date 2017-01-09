@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
-class NQP < Classe
+class NQP < Site::Articles
     require "net/http"
     require "nokogiri"
 

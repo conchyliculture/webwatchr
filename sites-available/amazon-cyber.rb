@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
-class AmazonCyber < Classe
+class AmazonCyber < Site::Articles
     require "json"
 
     # Here we want to do something different: calculate a Hash of only part of the HTML

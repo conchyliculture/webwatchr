@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
-class Bandcamp < Classe
+class Bandcamp < Site::Articles
 
     def get_content()
         res=[]

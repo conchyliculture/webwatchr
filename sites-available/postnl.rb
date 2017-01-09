@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
-class PostNL < Classe
+class PostNL < Site::String
     def get_content()
         res = []
         table = @parsed_content.css("tbody tr").map{|row| row.css("td").map{|r| r.text.strip}}

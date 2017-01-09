@@ -1,14 +1,14 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
 $MAXDEALS = 10
 # Here put the categories you're not interested in
 $BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
 /^Épicerie$/])
 
-class Dealabs < Classe 
+class Dealabs < Site::Articles 
 
     def match_category(cats)
         cats.each do |cat|

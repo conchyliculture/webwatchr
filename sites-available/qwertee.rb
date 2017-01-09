@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
-class Qwertee < Classe
+class Qwertee < Site::Articles
 
     def get_content()
         shirts=[]

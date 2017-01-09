@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require_relative "../sites-available/classe.rb"
+require_relative "../lib/site.rb"
 
-class PostCH < Classe
+class PostCH < Site::String
     def get_content()
         res = []
         table = @parsed_content.css('table.events_view tr').map{|row| row.css("td").map{|r| r.text.strip}}.delete_if{|x| x.empty?}

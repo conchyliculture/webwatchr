@@ -1,5 +1,5 @@
 .lasts
 libs
 config.json
-sites-enabled
+sites-enabled/.empty
 TODO
