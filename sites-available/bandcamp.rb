@@ -11,23 +11,37 @@ class Bandcamp < Site::Articles
         res=[]
         if @merch
             if @http_content=~/You are being redirected, please follow <a href="([^"]+)"/
-                @parsed_content = Nokogiri::HTML.parse(Net::HTTP.get(URI.parse($1)))
-            end
-            @parsed_content.css('ol.merch-grid li').each do |xx|
-                next unless xx.css('p.sold-out').empty?
-                x = xx.css('a')
-                url = x.attr('href').text
-                img = x.css('img')
-                img_url = img.attr('src').text
-                if img_url =~ /\/img\/43.gif/
-                    img_url = img.attr('data-original')
+				new_url = $1
+                @http_content = Net::HTTP.get(URI.parse(new_url))
+                @parsed_content = Nokogiri::HTML.parse(@http_content)
+                item = @parsed_content.css('div#merch-item')
+                if item.css(".notable").text == "Sold Out"
+                    return []
                 end
-                title = x.css('p.title').text.strip().gsub(/ *\n */,'')
-                price = x.css('span.price').text
+                url = new_url
+                title = item.css("h2.title").text
+                img_url = item.css("img.main-art").attr("src").text
                 res << {"href"=> url,
                         "img_src" => img_url,
-                        "name" => "#{title} #{price}",
-                }
+                        "name" => title
+				}
+            else
+				@parsed_content.css('ol.merch-grid li').each do |xx|
+					next unless xx.css('p.sold-out').empty?
+					x = xx.css('a')
+					url = x.attr('href').text
+					img = x.css('img')
+					img_url = img.attr('src').text
+					if img_url =~ /\/img\/43.gif/
+						img_url = img.attr('data-original')
+					end
+					title = x.css('p.title').text.strip().gsub(/ *\n */,'')
+					price = x.css('span.price').text
+					res << {"href"=> url,
+							"img_src" => img_url,
+							"name" => "#{title} #{price}",
+					}
+				end
             end
         else
             $stderr.puts "not implemented"
@@ -49,6 +63,7 @@ end
 # "group2"
 # ]
 bandcamp=[
+    "lazerhawk",
 #
 ].each do |b|
     Bandcamp.new(b,12*60*60, __FILE__ == $0,true).update
