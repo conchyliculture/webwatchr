@@ -34,7 +34,7 @@ class NQP < Site::Articles
                     "href"=>url,
                     "img_src"=>img_url,
                     "title"=>"#{title} - #{price}",
-                }
+                })
             end
         end
     end
