@@ -63,12 +63,12 @@ class Site
         return data
     end
 
-    def update_last()
+    def update_last(stuff)
         data={
             "time" => Time.now.to_i,
             "url" => @url,
             "wait" => @wait,
-            "content" => @content,
+            "content" => stuff,
         }
         File.open(@last_file,"w") do |f|
             f.write JSON.pretty_generate(data)
@@ -103,9 +103,10 @@ class Site
                 if new_stuff
                     if @test
                         puts "Would have sent an email with #{to_html(new_stuff)}"
+                        update_last(new_stuff)
                     else
                         alert(new_stuff)
-                        update_last()
+                        update_last(new_stuff)
                     end
                 else
                     if @test
@@ -147,14 +148,26 @@ class Site
     end
 
     class Site::Articles < Site
+
+        def validate(item)
+            raise Exception.new("Needs at least \"id\" key") unless item["id"]
+        end
+
+        def add_article(item)
+            validate(item)
+            (@content ||= []) << item
+        end
+
         def get_new(previous: nil)
             new_stuff = nil
-            @content = get_content()
-            new_stuff = @content
-            if previous and (! (@content - previous).empty?)
-                new_stuff = (@content - previous)
+            get_content()
+            if previous
+                previous_ids = previous.map{|h| h["id"]}
+                new_stuff = @content.delete_if{|item| previous_ids.include?(item["id"])}
+            else
+                new_stuff = @content
             end
-            if new_stuff.empty?
+            if (!new_stuff) or  new_stuff.empty?
                 return nil
             end
             return new_stuff
@@ -164,13 +177,23 @@ class Site
             message_html = Site::HTML_HEADER.dup
             message_html << "<ul style=\"list-style-type: none;\">\n"
             content.each do |item|
-                if item["img_src"]
-                    message_html +="<li><a href='#{item["href"]}'><img style=\"width:100px\" src='#{item["img_src"]}'>#{item["name"]} </a></li>\n"
-                else
-                    message_html +="<li><a href='#{item["href"]}'>#{item["name"]} </a></li>\n"
+                msg = "<li id='#{item["id"]}'>"
+                if item["url"]
+                    msg += "<a href='#{item["url"]}'>"
                 end
+                if item["img_src"]
+                     msg += "<img style=\"width:100px\" src='#{item["img_src"]}'/>"
+                end
+                if item["title"]
+                    msg += "#{item["title"]}"
+                end
+                if item["url"]
+                    msg += "</a>"
+                end
+                msg += "</li>\n"
+                message_html += msg
             end
-            message_html += "\n</ul>"
+            message_html += "</ul>"
             return message_html
         end
     end

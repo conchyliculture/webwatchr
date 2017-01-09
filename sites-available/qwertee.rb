@@ -6,7 +6,6 @@ require_relative "../lib/site.rb"
 class Qwertee < Site::Articles
 
     def get_content()
-        shirts=[]
         Nokogiri.parse(@http_content).xpath("rss/channel/item").each do |entry|
             shirtName = entry.xpath("title").first.content
             shirtURL = entry.xpath("guid").first.content
@@ -15,9 +14,13 @@ class Qwertee < Site::Articles
             shirtPhotoURL = entry_description.xpath("//img").first["src"]
 
             shirtPubDate = entry.xpath("pubDate").first.content
-            shirts << { "name" => shirtName, "href" => shirtURL, "img_src" => shirtPhotoURL }
+            add_article({
+                "name" => shirtName,
+                "id" => shirtURL,
+                "href" => shirtURL,
+                "img_src" => shirtPhotoURL
+            })
         end
-        return shirts
     end
 end
 

@@ -16,18 +16,19 @@ class Galaxus < Site::Articles
                 site_base = URI.parse(@url)
                 site_base = site_base.to_s.sub(site_base.request_uri,"")
                 url = site_base + "/" + a.css("a.overlay")[0].attr('href')
-                title = a.css("h5.product-name").text.split("\n").join("")
+                title = a.css("h5.product-name").text.split("\n").join("").gsub("\r","")
                 price = "?"
                 if a.css("div.product-price")
                     price = a.css("div.product-price").text.split(".–")[0].strip
                 end
-                res << {"href" => url,
-                        "img_src" => img,
-                        "name" => "#{title} - #{price}" ,
-                }
+                add_article({
+                    "id" = url,
+                    "url" = url,
+                    "img_src" = img,
+                    "title" = "#{title} - #{price}"
+                })
             end
         end
-        return res
     end
 end
 

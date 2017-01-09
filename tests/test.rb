@@ -103,8 +103,8 @@ class TestClasse < Test::Unit::TestCase
         def get_content()
             res=[]
             @parsed_content.css("div").each do |x|
-                a,b = x.text.split('-')
-                res << {'href' => a,"name"=>b}
+                a,b = x.text.split('-').map{|s| s.strip()}
+                add_article({'id' => a, "url" => a, "title"=>b})
             end
             return res
         end
@@ -134,7 +134,11 @@ class TestClasse < Test::Unit::TestCase
         assert_equal("test", c.parse_noko(html).css('title').text)
         assert_block{c.last_file().end_with?("last-35e711989b197f20f3d4936e91a2c079")}
         c.update()
-        expected_html = Site::HTML_HEADER.dup + "<ul style=\"list-style-type: none;\">\n<li><a href=' lol '> lilo </a></li>\n<li><a href=' fi '> fu </a></li>\n\n</ul>"
+        expected_html = Site::HTML_HEADER.dup + [
+            "<ul style=\"list-style-type: none;\">",
+            "<li id='lol'><a href='lol'>lilo</a></li>",
+            "<li id='fi'><a href='fi'>fu</a></li>",
+            "</ul>"].join("\n")
 		assert_equal("{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}", result)
 
         File.open(File.join($wwwroot,$content_is_array),"a+") do |f|
@@ -145,7 +149,10 @@ class TestClasse < Test::Unit::TestCase
 		assert_equal("{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}", result)
         c.wait = 0
         c.update()
-        expected_html.gsub!("\n</ul>", "<li><a href='new! '> new  </a></li>\n\n</ul>")
+        expected_html = Site::HTML_HEADER.dup + [
+            "<ul style=\"list-style-type: none;\">",
+            "<li id='new!'><a href='new!'>new</a></li>",
+            "</ul>"].join("\n")
         assert_equal("{:content=>#{expected_html.inspect}, :name=>\"http://localhost:#{$wwwport}/#{$content_is_array}\"}", result)
     end
 end

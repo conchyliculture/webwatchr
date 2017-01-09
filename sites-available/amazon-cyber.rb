@@ -37,14 +37,14 @@ class AmazonCyber < Site::Articles
                 pic = d["primaryImage"] || d["teaserImage"]
                 price = d["maxCurrentPrice"] || "Later offer"
                 name = d["title"]
-                res << {"href" => url,
-                        "img_src" => pic,
-                        "name" => "#{name} - #{price}" ,
-                } 
+                add_article({
+                    "id"=>"url",
+                    "href" => url,
+                    "img_src" => pic,
+                    "name" => "#{name} - #{price}" ,
+                })
             end
         end
-
-        return res
     end
 
 end

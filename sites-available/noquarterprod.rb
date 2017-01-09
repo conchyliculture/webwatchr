@@ -21,21 +21,21 @@ class NQP < Site::Articles
                 next if @alread_fetched_urls.include?(url)
                 @alread_fetched_urls << url
                 root = Nokogiri::HTML(Net::HTTP.get(URI(url)))
-                res = res.concat(get_products(root))
+                get_products(root)
             end
-            return res
         else
             real_products.each do |p|
                 url = p.css('a').attr('href').text
                 img_url = p.css('a img').attr('src').text
                 title = p.css('a h3').text
                 price = p.css('span.amount').text
-                res << {"href"=> url,
-                        "img_src" => img_url,
-                        "name" => "#{title} - #{price}",
+                add_article({
+                    "id"=>url,
+                    "href"=>url,
+                    "img_src"=>img_url,
+                    "title"=>"#{title} - #{price}",
                 }
             end
-            return res.uniq
         end
     end
 end

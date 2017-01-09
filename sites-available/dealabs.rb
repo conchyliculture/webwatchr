@@ -30,10 +30,14 @@ class Dealabs < Site::Articles
             end
             link = article.css('a.title').attr('href')
             img = article.css('div#over img').attr('src').text
-            articles  <<{"href"=> link ,"name"=> "#{title}  / (#{categories.join('|')})", "img_src"=>img }
+            add_article({
+                "id"=>link,
+                "href"=>link,
+                "title"=>"#{title}  / (#{categories.join('|')})",
+                "img_src"=>img
+            })
             break if articles.size == $MAXDEALS
         end
-        return articles
     end
 end
 

@@ -37,16 +37,17 @@ class Bandcamp < Site::Articles
 					end
 					title = x.css('p.title').text.strip().gsub(/ *\n */,'')
 					price = x.css('span.price').text
-					res << {"href"=> url,
-							"img_src" => img_url,
-							"name" => "#{title} #{price}",
-					}
+					add_article({
+                        "id"=> url,
+                        "href"=> url,
+                        "img_src" => img_url,
+                        "title" => "#{title} #{price}",
+					})
 				end
             end
         else
             $stderr.puts "not implemented"
         end
-        return res
     end
 
     def initialize(band,every,test,merch=false)
@@ -63,7 +64,6 @@ end
 # "group2"
 # ]
 bandcamp=[
-    "lazerhawk",
 #
 ].each do |b|
     Bandcamp.new(b,12*60*60, __FILE__ == $0,true).update
