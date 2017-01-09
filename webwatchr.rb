@@ -75,7 +75,7 @@ def init()
                 load site
             }
         rescue Exception=>e
-            $stderr.puts "Issue with #{site}"
+            $stderr.puts "Issue with #{site} : #{e}"
             $stderr.puts e.message
             $stderr.puts e.backtrace
         end
