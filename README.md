@@ -46,27 +46,29 @@ This means these website will only extract "interesting" information from the pa
 
 ## Watch the whole HTML source of a page
 
-Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances
+Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances. 
+By default it will check each page every hour.
 
     #/usr/bin/ruby
-    require_relative "classe.rb"
-    c1 = Classe.new(
+    # encoding: utf-8
+    require_relative "../lib/site.rb"
+
+    Site::String.new(
         url: "https://www.google.com",
-        every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
     ).update
-    c2 = Classe.new(
+
+    Site::String.new(
         url: "https://www.google.es",
-        every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
     ).update
 
 ## Extract part of the DOM first
 
-Basically, just make a new `sites/mysite.rb` using one of the two examples, below
+Basically, just make a new `sites-enabled/mysite.rb` using one of the two examples below
 then overwrite the `get_content()` method.
 
-Also override the `content_to_html()` method if you want to change how the new content will be showed to you.
+Also override the `to_html()` method if you want to change how the new content will be shown to you.
 
 You can use `@parsed_content` which is a Nokogiri parsed HTML document.
 
@@ -75,31 +77,36 @@ You can use `@parsed_content` which is a Nokogiri parsed HTML document.
 In the following example, everytime the first `<table>` element appearing on the DOM
 changes, this will use the HTML code of this element as the content to check for update.
 
-    $: << File.dirname(__FILE__)
-    require "classe.rb"
+    #/usr/bin/ruby
+    # encoding: utf-8
 
-    class Mysite < Classe
+    require_relative "../lib/site.rb"
+
+    # We use Site::String, as the result of get_content() will be a String
+    class Mysite < Site::String
         def get_content()
             # @parse_content is the result of Nokogiri.parse(html of https://www.mydomistoobig.pt)
             return @parsed_content.css("table.result-summary")[0].to_s
         end
     end
 
-    s=Mysite.new(
+    Mysite.new(
         url: "https://www.mydomistoobig.pt",
         every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0
     ).update
 
-### The interesting content is a list of Things
+### The interesting content is a list of Articles
 
 In the following example, you fetch an array of things at every run of the code. 
 Only new elements (from the previous run) will be sent to you.
 
-    $: << File.dirname(__FILE__)
-    require "classe.rb"
+    #!/usr/bin/ruby
+    # encoding: utf-8
 
-    class Mysite < Classe
+    require ../lib/site.rb"
+
+    class Mysite < Site::Articles # This time, get_content returns an Array of articles
         def get_content()
             # Parses the DOM, returns an Array of Hash with articles
             #
@@ -128,7 +135,7 @@ Only new elements (from the previous run) will be sent to you.
             return res
         end
 
-    s = Mysite.new(
+    Mysite.new(
         url: "https://www.mydomistoobig.pt",
         every: 10*60 # Check every 10 minutes,
         test: __FILE__ == $0
