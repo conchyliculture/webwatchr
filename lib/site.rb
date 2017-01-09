@@ -19,9 +19,9 @@ class Site
         @wait = every
         @name = url
         md5 = Digest::MD5.hexdigest(url)
-        @last_file = "last-#{md5}"
+        @last_file = ".lasts/last-#{md5}"
         if $CONF
-            @last_file = File.join($CONF["last_dir"] || ".", @last_file)
+            @last_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
         end
         @test=test
     end
