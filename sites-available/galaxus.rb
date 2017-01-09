@@ -22,10 +22,10 @@ class Galaxus < Site::Articles
                     price = a.css("div.product-price").text.split(".–")[0].strip
                 end
                 add_article({
-                    "id" = url,
-                    "url" = url,
-                    "img_src" = img,
-                    "title" = "#{title} - #{price}"
+                    "id" => url,
+                    "url" => url,
+                    "img_src" => img,
+                    "title" => "#{title} - #{price}"
                 })
             end
         end
