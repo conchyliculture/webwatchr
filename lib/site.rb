@@ -151,6 +151,8 @@ class Site
 
         def validate(item)
             raise Exception.new("Needs at least \"id\" key") unless item["id"]
+            id = item["id"]
+            raise Exception.new("\"id\" key needs to be a String and not #{id.class}") unless id.kind_of?(String)
         end
 
         def add_article(item)
