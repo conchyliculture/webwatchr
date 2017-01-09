@@ -3,7 +3,7 @@
 
 require_relative "../lib/site.rb"
 
-class PostNL < Site::String
+class PostNL < Site::SimpleString
     def get_content()
         res = []
         table = @parsed_content.css("tbody tr").map{|row| row.css("td").map{|r| r.text.strip}}

@@ -54,7 +54,7 @@ class TestClasse < Test::Unit::TestCase
         FileUtils.remove_entry_secure($CONF["last_dir"])
     end
 
-    class TestStringSite < Site::String
+    class TestStringSite < Site::SimpleString
         def get_content()
             @parsed_content.css("div.content").text
         end

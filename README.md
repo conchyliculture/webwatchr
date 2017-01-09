@@ -53,12 +53,12 @@ By default it will check each page every hour.
     # encoding: utf-8
     require_relative "../lib/site.rb"
 
-    Site::String.new(
+    Site::SimpleString.new(
         url: "https://www.google.com",
         test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
     ).update
 
-    Site::String.new(
+    Site::SimpleString.new(
         url: "https://www.google.es",
         test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
     ).update
@@ -82,8 +82,8 @@ changes, this will use the HTML code of this element as the content to check for
 
     require_relative "../lib/site.rb"
 
-    # We use Site::String, as the result of get_content() will be a String
-    class Mysite < Site::String
+    # We use Site::SimpleString, as the result of get_content() will be a String
+    class Mysite < Site::SimpleString
         def get_content()
             # @parse_content is the result of Nokogiri.parse(html of https://www.mydomistoobig.pt)
             return @parsed_content.css("table.result-summary")[0].to_s

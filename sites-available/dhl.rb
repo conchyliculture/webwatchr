@@ -3,7 +3,7 @@
 
 require_relative "../lib/site.rb"
 
-class DHL < Site::String
+class DHL < Site::SimpleString
 
     # Here we want to do something different: calculate a Hash of only part of the HTML
     # There classic way to do it is to overload get_content() and make it return only part of the DOM, as string

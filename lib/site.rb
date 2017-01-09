@@ -129,7 +129,7 @@ class Site
         return message_html
     end
 
-    class Site::String < Site
+    class Site::SimpleString < Site
 
         def get_new(previous: nil)
             new_stuff = nil

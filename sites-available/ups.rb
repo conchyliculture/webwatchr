@@ -3,7 +3,7 @@
 
 require_relative "../lib/site.rb"
 
-class UPS < Site::String
+class UPS < Site::SimpleString
     require "date"
     require "net/http"
     require "json"
