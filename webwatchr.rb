@@ -5,6 +5,7 @@ $:<< File.dirname(__FILE__)
 require "fileutils"
 require "json"
 require "net/http"
+require "net/smtp"
 require "timeout"
 
 def send_mail(content: , from:nil , to:, subject: , smtp_server: , smtp_port:)
