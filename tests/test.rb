@@ -35,7 +35,6 @@ class TestClasse < Test::Unit::TestCase
         sleep(1)
     end
 
-
     def setup
         $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
         $CONF["last_dir"] = Dir.mktmpdir
@@ -72,10 +71,7 @@ class TestClasse < Test::Unit::TestCase
 
         $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8')}
 
-        c = Classe.new( url: url,
-                  every: wait,
-                  test: true
-                 )
+        c = Classe.new(url: url)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
         assert_equal(empty_last,c.read_last())
         assert_equal(true, c.should_check?(empty_last["time"]))
@@ -90,10 +86,7 @@ class TestClasse < Test::Unit::TestCase
         File.open(File.join($wwwroot,$content_is_string),"a+") do |f|
             f.puts "new!"
         end
-        c = Classe.new( url: url,
-                  every: wait,
-                  test: true
-                 )
+        c = Classe.new(url: url)
         c.update()
         assert_equal("{:content=>#{File.read(File.join($wwwroot,$content_is_string)).inspect}, :name=>\"http://localhost:#{$wwwport}/#{$content_is_string}\"}", result)
     end

@@ -43,7 +43,7 @@ class Classe
     end
 
     attr_accessor :last_file
-    def initialize(url:, every:, post_data: nil, test: false)
+    def initialize(url:, every: 60*60, post_data: nil, test: false)
         @url=url
         @post_data = post_data
         @http_content=fetch_url(@url)
