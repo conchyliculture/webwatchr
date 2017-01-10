@@ -1,14 +1,31 @@
 #!/usr/bin/ruby
 
-$:<< File.dirname(__FILE__)
-
 require "fileutils"
 require "json"
 require "net/http"
 require "net/smtp"
 require "timeout"
 
-def send_mail(content: , from:nil , to:, subject: , smtp_server: , smtp_port:)
+# Connects to a SMTP server to send an email
+#
+# ==== Arguments
+#
+# * +content+       - The content to send, as String
+# * +from+          - The From: email address to use, as String
+# * +to+            - The To: email address to use, as String
+# * +subject+       - The Subject: to use, as String
+# * +smtp_server+   - The smtp_server, as String
+# * +smtp_port+     - The smtp_port, as Fixnum
+#
+# ==== Examples
+#
+#    send_mail( content: "Update on this website",
+#                   from: "webwatchr@lol.lol",
+#                   to:   "me@lol.lol",
+#                   smtp_server: "localhost",
+#                   smtp_port: 25)
+#
+def send_mail(content: , from: , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
@@ -53,7 +70,7 @@ end
 
 def init()
 
-    $MYDIR=File.dirname(__FILE__)
+    $MYDIR = File.dirname(__FILE__)
 
     unless $CONF["last_dir"]
         $CONF["last_dir"] = File.join($MYDIR, ".lasts")
@@ -61,7 +78,7 @@ def init()
     FileUtils.mkdir_p($CONF["last_dir"])
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
-    sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb")).delete("classe.rb")
+    sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
 
     if sites.empty?
         $stderr.puts "Didn't find any site to parse. You might want to "

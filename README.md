@@ -2,12 +2,12 @@
 
 Silly script to periodically check webpage changes.
 
-No bullshit gem from hell. Also very little tested XD
+No bullshit gem from hell.
 
 1. Script is run
 2. checks for every new URL to check, if we've waited long enough
-3. pulls whole HTML (or part of it) and Hashes it
-4. if hash is different, sends an email with the whole HTML (or part of it)
+3. pulls interesting HTML from that page
+4. if content is different, alerts you with the new content
 
 # Installation
 
@@ -15,19 +15,18 @@ No bullshit gem from hell. Also very little tested XD
     git clone https://github.com/conchyliculture/webwatchr/
     cd webwatchr
     cp config.json.template config.json
+
     # Take a breath here, it's going to be alright
     rvm implode
     gem uninstall --all
     sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
     sudo find / -name ".rvm" -exec rm -rf "{}" \;
 
-Then edit config.json to your needs.
-
-Then enable some sites for checking by linking from `sites-available` into `sites-enabled`
+Then edit config.json to your needs, and enable some sites for checking by symlinking from `sites-available` into `sites-enabled`
 
 Run the cron often:
 
-    */5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb > /dev/null
+    */5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb
 
 # Supported websites
 
@@ -46,7 +45,7 @@ This means these website will only extract "interesting" information from the pa
 
 ## Watch the whole HTML source of a page
 
-Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances. 
+Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances.
 By default it will check each page every hour.
 
     #/usr/bin/ruby
@@ -68,9 +67,10 @@ By default it will check each page every hour.
 Basically, just make a new `sites-enabled/mysite.rb` using one of the two examples below
 then overwrite the `get_content()` method.
 
-Also override the `to_html()` method if you want to change how the new content will be shown to you.
+Use `@parsed_content` which is a Nokogiri parsed HTML document. Checkout `sites-available/dhl.rb` which is a simple example.
 
-You can use `@parsed_content` which is a Nokogiri parsed HTML document.
+Also override the `to_html()` method if you want to change how the new content will be formatted.
+
 
 ### The interesting content is a String
 
@@ -82,7 +82,7 @@ changes, this will use the HTML code of this element as the content to check for
 
     require_relative "../lib/site.rb"
 
-    # We use Site::SimpleString, as the result of get_content() will be a String
+    # We subclass Site::SimpleString, as the result of get_content() will be a String
     class Mysite < Site::SimpleString
         def get_content()
             # @parse_content is the result of Nokogiri.parse(html of https://www.mydomistoobig.pt)
@@ -96,20 +96,24 @@ changes, this will use the HTML code of this element as the content to check for
         test: __FILE__ == $0
     ).update
 
+Move that into `sites-enabled`, and you're good to go.
+
+
 ### The interesting content is a list of Articles
 
-In the following example, you fetch an array of things at every run of the code. 
-Only new elements (from the previous run) will be sent to you.
+In the following example, you fetch an array of things, that I call "articles" at every run of the code.
+Only new elements that have never been seen will be sent.
 
     #!/usr/bin/ruby
     # encoding: utf-8
 
     require ../lib/site.rb"
 
-    class Mysite < Site::Articles # This time, get_content returns an Array of articles
+    class Mysite < Site::Articles # This time, get_content returns an Array of Hash ( == "articles")
         def get_content()
             # Parses the DOM, returns an Array of Hash with articles
             #
+            # If DOM is:
             # <div class="article">
             #   <a href="http://lol/article/1.html">Lol 1</a>
             # </div>
@@ -118,21 +122,26 @@ Only new elements (from the previous run) will be sent to you.
             # </div>
             #
             # returns:
-            # [{'id' => 1, 'url' => 'http://lol/article/1.html'},
-            #   'id' => 2, 'url' => 'http://lol/article/2.html'}]
+            # [{'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/1.html'},
+            #   'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/2.html'}]
             #
             # If for example this previously only returned the following
-            # [{'id' => 1, 'url' => 'http://lol/article/1.html'}]
+            # [{'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/1.html'}]
             # A mail will be sent containing just HTML for the second article
 
-            i = 0
             res = []
             @parsed_content.css("div.article") do |article|
                 link = article.css("a").attr("href")
-                i = i+1
-                res << {"href" => url , "name" => i.to_s} # Magic keys for a nice html ul-li display
+                title = article.css("a").content
+
+                add_article({
+                    "id"=> link, # This needs to be unique, per Article
+                    # Magic keys for a nice html ul-li display
+                    "href" => link,
+                    "title" => title
+                })
             end
-            return res
+            # This time we don't return anything
         end
 
     Mysite.new(
@@ -141,7 +150,7 @@ Only new elements (from the previous run) will be sent to you.
         test: __FILE__ == $0
     ).update()
 
-## Test your new thing
+## Test your new site
 
 Just do `ruby sites-available/mysite.rb`. It will run, and display what it would alert you with, without updating the state.
 
