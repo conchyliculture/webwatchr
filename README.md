@@ -11,7 +11,7 @@ No bullshit gem from hell.
 
 # Installation
 
-```bash
+```shell
 apt-get install ruby ruby-nokogiri
 git clone https://github.com/conchyliculture/webwatchr/
 cd webwatchr
