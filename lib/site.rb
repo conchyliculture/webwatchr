@@ -191,7 +191,7 @@ class Site
             data["url"] = @url
             data["wait"] = @wait
             (data["content"] ||= []).concat(stuff)
-            @logger.debug "Appending #{stuff.size} to #{@last_file}"
+            @logger.debug "Appending #{stuff.size} new items to #{@last_file}"
             File.open(@last_file,"w") do |f|
                 f.write JSON.pretty_generate(data)
             end
