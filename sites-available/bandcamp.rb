@@ -8,7 +8,6 @@ class Bandcamp < Site::Articles
     require "nokogiri"
 
     def get_content()
-        res=[]
         if @merch
             if @http_content=~/You are being redirected, please follow <a href="([^"]+)"/
 				new_url = $1
@@ -21,10 +20,12 @@ class Bandcamp < Site::Articles
                 url = new_url
                 title = item.css("h2.title").text
                 img_url = item.css("img.main-art").attr("src").text
-                res << {"href"=> url,
-                        "img_src" => img_url,
-                        "name" => title
-				}
+                add_article({
+                    "id"=> url,
+                    "href"=> url,
+                    "img_src" => img_url,
+                    "title" => title
+				})
             else
 				@parsed_content.css('ol.merch-grid li').each do |xx|
 					next unless xx.css('p.sold-out').empty?

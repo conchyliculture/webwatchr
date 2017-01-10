@@ -12,7 +12,6 @@ class AmazonCyber < Site::Articles
     #   @parsed_content contains the result of Nokogiri.parse(@http_content)
     #
     def get_content()
-        res=[]
         # Selects the content of the first table tag with the CSS class result-summary
         js = @parsed_content.css("script").select{|x| x.content=~/window.gb.widgetsToRegister/}[0].content
         magic = '"dealDetails" : {'
@@ -41,7 +40,7 @@ class AmazonCyber < Site::Articles
                     "id"=>"url",
                     "href" => url,
                     "img_src" => pic,
-                    "name" => "#{name} - #{price}" ,
+                    "title" => "#{name} - #{price}" ,
                 })
             end
         end

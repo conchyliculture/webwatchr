@@ -15,7 +15,7 @@ class Qwertee < Site::Articles
 
             shirtPubDate = entry.xpath("pubDate").first.content
             add_article({
-                "name" => shirtName,
+                "title" => shirtName,
                 "id" => shirtURL,
                 "href" => shirtURL,
                 "img_src" => shirtPhotoURL
