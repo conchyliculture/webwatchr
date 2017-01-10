@@ -178,7 +178,7 @@ class Site
             else
                 new_stuff = @content
             end
-            if new_stuff.empty?
+            if (not new_stuff) or new_stuff.empty?
                 return nil
             end
             return new_stuff
