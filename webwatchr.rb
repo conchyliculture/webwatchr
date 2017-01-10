@@ -2,11 +2,11 @@
 
 require "fileutils"
 require "json"
+require "logger"
 require "net/http"
 require "net/smtp"
 require "timeout"
 
-require_relative "lib/logger.rb"
 
 trap("INT") do
     $logger.err("User interrupted")
@@ -131,7 +131,7 @@ def main()
         $CONF=JSON.parse(File.read("config.json"))
     end
 
-    $logger = MyLogger.new(logfile: $CONF["log"])
+    $logger = Logger.new($CONF["log"] || STDOUT)
 
     if File.exist?($CONF["pid_file"])
         $logger.info "Already running. Quitting"
