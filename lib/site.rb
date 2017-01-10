@@ -163,6 +163,7 @@ class Site
         def get_new(previous: nil)
             new_stuff = nil
             get_content()
+            puts to_html(@content) if @test
             if previous
                 previous_ids = previous.map{|h| h["id"]}
                 new_stuff = @content.delete_if{|item| previous_ids.include?(item["id"])}
