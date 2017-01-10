@@ -28,6 +28,6 @@ end
 # I could also use your mom.
 Qwertee.new(
     url:  "https://www.qwertee.com/rss/",
-    every: 12*60*60,
+    every: 6*60*60,
     test: __FILE__ == $0
 ).update
