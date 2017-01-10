@@ -48,19 +48,21 @@ This means these website will only extract "interesting" information from the pa
 Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances.
 By default it will check each page every hour.
 
-    #/usr/bin/ruby
-    # encoding: utf-8
-    require_relative "../lib/site.rb"
+```ruby
+#/usr/bin/ruby
+# encoding: utf-8
+require_relative "../lib/site.rb"
 
-    Site::SimpleString.new(
-        url: "https://www.google.com",
-        test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
-    ).update
+Site::SimpleString.new(
+    url: "https://www.google.com",
+    test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
+).update
 
-    Site::SimpleString.new(
-        url: "https://www.google.es",
-        test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
-    ).update
+Site::SimpleString.new(
+    url: "https://www.google.es",
+    test: __FILE__ == $0  # This is so you can run ruby mysites.rb to check your code
+).update
+```
 
 ## Extract part of the DOM first
 
@@ -77,24 +79,26 @@ Also override the `to_html()` method if you want to change how the new content w
 In the following example, everytime the first `<table>` element appearing on the DOM
 changes, this will use the HTML code of this element as the content to check for update.
 
-    #/usr/bin/ruby
-    # encoding: utf-8
+```ruby
+#/usr/bin/ruby
+# encoding: utf-8
 
-    require_relative "../lib/site.rb"
+require_relative "../lib/site.rb"
 
-    # We subclass Site::SimpleString, as the result of get_content() will be a String
-    class Mysite < Site::SimpleString
-        def get_content()
-            # @parse_content is the result of Nokogiri.parse(html of https://www.mydomistoobig.pt)
-            return @parsed_content.css("table.result-summary")[0].to_s
-        end
+# We subclass Site::SimpleString, as the result of get_content() will be a String
+class Mysite < Site::SimpleString
+    def get_content()
+        # @parse_content is the result of Nokogiri.parse(html of https://www.mydomistoobig.pt)
+        return @parsed_content.css("table.result-summary")[0].to_s
     end
+end
 
-    Mysite.new(
-        url: "https://www.mydomistoobig.pt",
-        every: 10*60 # Check every 10 minutes,
-        test: __FILE__ == $0
-    ).update
+Mysite.new(
+    url: "https://www.mydomistoobig.pt",
+    every: 10*60 # Check every 10 minutes,
+    test: __FILE__ == $0
+).update
+```
 
 Move that into `sites-enabled`, and you're good to go.
 
