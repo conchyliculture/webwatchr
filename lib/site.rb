@@ -3,6 +3,7 @@
 
 require "digest/md5"
 require "json"
+require "logger"
 require "net/http"
 require "nokogiri"
 
@@ -12,6 +13,7 @@ class Site
 
     attr_accessor :last_file, :url, :wait
     def initialize(url:, every: 60*60, post_data: nil, test: false)
+        @logger = $logger || Logger.new(STDOUT)
         @url = url
         @post_data = post_data
         @http_content = fetch_url(@url)
@@ -23,6 +25,7 @@ class Site
         if $CONF and $CONF["last_dir"]
             @last_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
         end
+        @logger.debug "using #{@last_file} to store updates"
         @test=test
     end
 
@@ -42,6 +45,7 @@ class Site
                 end
             end
         end
+        @logger.debug "Fetched #{url}"
         res
     end
 
@@ -76,7 +80,7 @@ class Site
     end
 
     def alert(new_stuff)
-        puts "Sending a mail!" if $VERBOSE
+        @logger.debug "Alerting new stuff"
         $CONF["alert_proc"].call({content: to_html(new_stuff), name: @name})
     end
 
@@ -99,11 +103,11 @@ class Site
             prev = read_last()
             prev_content = prev["content"]
             if should_check?(prev["time"]) or @test
+                @logger.info "Time to update" unless @test
                 new_stuff = get_new(previous: prev_content)
                 if new_stuff
                     if @test
                         puts "Would have sent an email with #{to_html(new_stuff)}"
-                        save_last_file(new_stuff)
                     else
                         alert(new_stuff)
                         save_last_file(new_stuff)
@@ -112,6 +116,7 @@ class Site
                     if @test
                         puts "Nothing new"
                     end
+                    @logger.info "Nothing new"
                 end
             end
         rescue Exception => e
@@ -156,6 +161,7 @@ class Site
         end
 
         def add_article(item)
+            @logger.debug "Found article #{item['id']}"
             validate(item)
             (@content ||= []) << item
         end
@@ -163,7 +169,6 @@ class Site
         def get_new(previous: nil)
             new_stuff = nil
             get_content()
-            puts to_html(@content) if @test
             if previous
                 previous_ids = previous.map{|h| h["id"]}
                 new_stuff = @content.delete_if{|item| previous_ids.include?(item["id"])}
@@ -185,6 +190,7 @@ class Site
             data["url"] = @url
             data["wait"] = @wait
             (data["content"] ||= []).concat(stuff)
+            @logger.debug "Appending #{stuff.size} to #{@last_file}"
             File.open(@last_file,"w") do |f|
                 f.write JSON.pretty_generate(data)
             end
