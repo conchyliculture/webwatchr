@@ -104,7 +104,7 @@ def init()
     timeout = $CONF["site_timeout"] || 10*60
     sites.each do |site|
         begin
-            $logger.info "loading #{File.basename(site)}"
+            $logger.debug "loading #{File.basename(site)} file"
             status = Timeout::timeout(timeout) {
                 load site
             }
