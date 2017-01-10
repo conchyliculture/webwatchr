@@ -114,9 +114,9 @@ def init()
             # TODO
             # Log Something when we have logs
         rescue Exception=>e
-            $stderr.err "Issue with #{site} : #{e}"
-            $stderr.err e.message
-            $stderr.debug e.backtrace
+            $logger.err "Issue with #{site} : #{e}"
+            $logger.err e.message
+            $logger.debug e.backtrace
         end
     end
 
