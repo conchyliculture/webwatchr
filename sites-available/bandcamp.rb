@@ -22,7 +22,7 @@ class Bandcamp < Site::Articles
                 img_url = item.css("img.main-art").attr("src").text
                 add_article({
                     "id"=> url,
-                    "href"=> url,
+                    "url"=> url,
                     "img_src" => img_url,
                     "title" => title
 				})
@@ -40,7 +40,7 @@ class Bandcamp < Site::Articles
 					price = x.css('span.price').text
 					add_article({
                         "id"=> url,
-                        "href"=> url,
+                        "url"=> url,
                         "img_src" => img_url,
                         "title" => "#{title} #{price}",
 					})

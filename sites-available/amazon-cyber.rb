@@ -38,7 +38,7 @@ class AmazonCyber < Site::Articles
                 name = d["title"]
                 add_article({
                     "id"=>"url",
-                    "href" => url,
+                    "url" => url,
                     "img_src" => pic,
                     "title" => "#{name} - #{price}" ,
                 })

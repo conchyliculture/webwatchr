@@ -31,7 +31,7 @@ class NQP < Site::Articles
                 price = p.css('span.amount').text
                 add_article({
                     "id"=>url,
-                    "href"=>url,
+                    "url"=>url,
                     "img_src"=>img_url,
                     "title"=>"#{title} - #{price}",
                 })

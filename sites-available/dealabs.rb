@@ -32,7 +32,7 @@ class Dealabs < Site::Articles
             img = article.css('div#over img').attr('src').text
             add_article({
                 "id"=>link,
-                "href"=>link,
+                "url"=>link,
                 "title"=>"#{title}  / (#{categories.join('|')})",
                 "img_src"=>img
             })

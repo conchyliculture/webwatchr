@@ -17,7 +17,7 @@ class Qwertee < Site::Articles
             add_article({
                 "title" => shirtName,
                 "id" => shirtURL,
-                "href" => shirtURL,
+                "url" => shirtURL,
                 "img_src" => shirtPhotoURL
             })
         end
