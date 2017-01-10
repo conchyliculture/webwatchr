@@ -131,7 +131,7 @@ def main()
         $CONF=JSON.parse(File.read("config.json"))
     end
 
-    $logger = MyLogger.new(log_file: $CONF["log"])
+    $logger = MyLogger.new(logfile: $CONF["log"])
 
     if File.exist?($CONF["pid_file"])
         $logger.info "Already running. Quitting"
