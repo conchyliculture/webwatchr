@@ -99,17 +99,17 @@ changes, this will use the HTML code of this element as the content to check for
 Move that into `sites-enabled`, and you're good to go.
 
 
-### The interesting content is a list of Articles
+### The page is a list of things and you want to know when a new thing is posted
 
 In the following example, you fetch an array of things, that I call "articles" at every run of the code.
-Only new elements that have never been seen will be sent.
+Only new articles that have never been seen will be sent.
 
     #!/usr/bin/ruby
     # encoding: utf-8
 
     require ../lib/site.rb"
 
-    class Mysite < Site::Articles # This time, get_content returns an Array of Hash ( == "articles")
+    class Mysite < Site::Articles # This time, get_content calls add_article() on a Hash of stuff ( == "articles")
         def get_content()
             # Parses the DOM, returns an Array of Hash with articles
             #
@@ -136,8 +136,8 @@ Only new elements that have never been seen will be sent.
 
                 add_article({
                     "id"=> link, # This needs to be unique, per Article
-                    # Magic keys for a nice html ul-li display
-                    "href" => link,
+                    # Magic keys for a nice html ul/li message
+                    "url" => link,
                     "title" => title
                 })
             end
@@ -169,3 +169,9 @@ If you need javascript... well... lol.
 ## Tests?
 
 run `ruby tests/test.rb`
+
+## Logs ?
+
+You can use the @logger Logger object in your mysite.rb.
+
+Set the log file in config.json under the "log" key
