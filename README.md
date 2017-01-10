@@ -149,7 +149,8 @@ Mysite.new(
     url: "https://www.mydomistoobig.pt",
     every: 10*60 # Check every 10 minutes,
     test: __FILE__ == $0
-).update() ```
+).update()
+```
 
 ## Test your new site
 
