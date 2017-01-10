@@ -97,13 +97,13 @@ class Site
 
     def update()
         begin
-            @http_content = fetch_url(@url)
-            @parsed_content = parse_noko(@http_content)
             new_stuff = false
             prev = read_last()
             prev_content = prev["content"]
             if should_check?(prev["time"]) or @test
                 @logger.info "Time to update" unless @test
+                @http_content = fetch_url(@url)
+                @parsed_content = parse_noko(@http_content)
                 new_stuff = get_new(previous: prev_content)
                 if new_stuff
                     if @test
