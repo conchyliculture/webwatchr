@@ -163,3 +163,9 @@ If you need to do weird things like authentication, session handling, form posti
 ## I need to do more even more complex stuff!
 
 If you need javascript... well... lol.
+
+# FAQ
+
+## Tests?
+
+run `ruby tests/test.rb`

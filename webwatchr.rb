@@ -6,6 +6,13 @@ require "net/http"
 require "net/smtp"
 require "timeout"
 
+require_relative "lib/logger.rb"
+
+trap(INT) do
+    $logger.err("User interrupted")
+    exit
+end
+
 # Connects to a SMTP server to send an email
 #
 # ==== Arguments
@@ -40,9 +47,10 @@ END_OF_MESSAGE
     begin
         Net::SMTP.start(smtp_server, smtp_port) do |smtp|
             smtp.send_message(msgstr, from, to)
+            $logger.debug("Sending mail to #{to}")
         end
     rescue Net::SMTPFatalError => e
-        $stderr.puts "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
+        $logger.err "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
     end
 end
 
@@ -74,6 +82,7 @@ def make_alert(c)
 end
 
 def init()
+    $logger.debug("Starting Webwatchr")
 
     $MYDIR = File.dirname(__FILE__)
 
@@ -95,20 +104,19 @@ def init()
     timeout = $CONF["site_timeout"] || 10*60
     sites.each do |site|
         begin
-            if $VERBOSE
-                puts "loading #{File.basename(site)}"
-            end
+            $logger.info "loading #{File.basename(site)}"
             status = Timeout::timeout(timeout) {
                 load site
             }
         rescue Net::ReadTimeout, Errno::ENETUNREACH => e
+            $logger.warn "Failed pulling #{site}: #{e.message}"
             # Do nothing, try later
             # TODO
             # Log Something when we have logs
         rescue Exception=>e
-            $stderr.puts "Issue with #{site} : #{e}"
-            $stderr.puts e.message
-            $stderr.puts e.backtrace
+            $stderr.err "Issue with #{site} : #{e}"
+            $stderr.err e.message
+            $stderr.debug e.backtrace
         end
     end
 
@@ -123,8 +131,10 @@ def main()
         $CONF=JSON.parse(File.read("config.json"))
     end
 
+    $logger = MyLogger.new(log_file: $CONF["log"])
+
     if File.exist?($CONF["pid_file"])
-        puts "Already running"
+        $logger.info "Already running. Quitting"
         exit
     end
     begin
@@ -137,7 +147,7 @@ def main()
             FileUtils.rm $CONF["pid_file"]
         end
     end
-
+    $logger.info("Webwatcher finished working")
 end
 
 main()
