@@ -11,16 +11,18 @@ No bullshit gem from hell.
 
 # Installation
 
-    apt-get install ruby ruby-nokogiri
-    git clone https://github.com/conchyliculture/webwatchr/
-    cd webwatchr
-    cp config.json.template config.json
+```bash
+apt-get install ruby ruby-nokogiri
+git clone https://github.com/conchyliculture/webwatchr/
+cd webwatchr
+cp config.json.template config.json
 
-    # Take a breath here, it's going to be alright
-    rvm implode
-    gem uninstall --all
-    sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
-    sudo find / -name ".rvm" -exec rm -rf "{}" \;
+# Take a breath here, it's going to be alright
+rvm implode
+gem uninstall --all
+sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
+sudo find / -name ".rvm" -exec rm -rf "{}" \;
+```
 
 Then edit config.json to your needs, and enable some sites for checking by symlinking from `sites-available` into `sites-enabled`
 
