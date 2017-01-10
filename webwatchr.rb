@@ -37,8 +37,12 @@ Subject: #{subject}
 #{content}
 END_OF_MESSAGE
 
-    Net::SMTP.start(smtp_server, smtp_port) do |smtp|
-        smtp.send_message(msgstr, from, to)
+    begin
+        Net::SMTP.start(smtp_server, smtp_port) do |smtp|
+            smtp.send_message(msgstr, from, to)
+        end
+    rescue Net::SMTPFatalError => e
+        $stderr.puts "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
     end
 end
 
