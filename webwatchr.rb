@@ -79,7 +79,7 @@ def init()
             status = Timeout::timeout(timeout) {
                 load site
             }
-        rescue Net::ReadTimeout => e
+        rescue Net::ReadTimeout, Errno::ENETUNREACH => e
             # Do nothing, try later
             # TODO
             # Log Something when we have logs
