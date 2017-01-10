@@ -8,7 +8,7 @@ require "timeout"
 
 require_relative "lib/logger.rb"
 
-trap(INT) do
+trap("INT") do
     $logger.err("User interrupted")
     exit
 end
