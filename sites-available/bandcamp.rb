@@ -7,6 +7,11 @@ class Bandcamp < Site::Articles
     require "net/http"
     require "nokogiri"
 
+    def initialize(band,every,test,merch=false)
+        @merch = merch
+        super(url: "https://#{band}.bandcamp.com/#{'merch' if @merch}", every: every,test: test)
+    end
+
     def get_content()
         if @merch
             if @http_content=~/You are being redirected, please follow <a href="([^"]+)"/
@@ -40,33 +45,31 @@ class Bandcamp < Site::Articles
 					title = x.css('p.title').text.strip().gsub(/ *\n */,'')
 					price = x.css('span.price').text
 					add_article({
-                        "id"=> url,
-                        "url"=> url,
+                        "id" => url,
+                        "url" => url,
                         "img_src" => img_url,
                         "title" => "#{title} #{price}",
 					})
 				end
             end
         else
-            $stderr.puts "not implemented"
+            $stderr.puts "I only support /merch bandcamp links"
         end
     end
-
-    def initialize(band,every,test,merch=false)
-        @merch=merch
-        super(url: "https://#{band}.bandcamp.com/#{'merch' if @merch}", every: every,test: test)
-    end
-
 end
 
-
-# Insert your fav groups here
+# Insert your favorite groups here
 # ex: bandcamp = [
 # "group1",
 # "group2"
 # ]
 bandcamp=[
 #
-].each do |b|
-    Bandcamp.new(b,12*60*60, __FILE__ == $0,true).update
+].each do |band|
+    Bandcamp.new(
+        band,
+        12*60*60,
+        __FILE__ == $0,
+        true
+    ).update
 end

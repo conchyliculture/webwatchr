@@ -24,9 +24,10 @@ class Qwertee < Site::Articles
     end
 end
 
-# I know I use the RSS page, I could use a RSS reader right?
+# I know I use the RSS page, which mean I could just use a RSS reader right?
 # I could also use your mom.
-Qwertee.new(url:  "https://www.qwertee.com/rss/",
-              every: 12*60*60,
-              test: __FILE__ == $0
-           ).update
+Qwertee.new(
+    url:  "https://www.qwertee.com/rss/",
+    every: 12*60*60,
+    test: __FILE__ == $0
+).update

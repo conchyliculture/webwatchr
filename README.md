@@ -175,6 +175,20 @@ If you need javascript... well... lol.
 
 # FAQ
 
+## POST?
+
+If you need to actually fetch your URL using a POST HTTP request, add `post_data` as argument, when instanciating your new class:
+
+```ruby
+postnl_id="RSAAAAAAAAAAAAA"
+PostNL.new(
+    url:  "http://www.postnl.post/details/",
+    post_data: {"barcodes" => postnl_id},
+    every: 30*60,
+    test: __FILE__ == $0
+).update
+```
+
 ## Tests?
 
 run `ruby tests/test.rb`

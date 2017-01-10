@@ -78,9 +78,9 @@ class TestClasse < Test::Unit::TestCase
 
         c = TestStringSite.new(url: url)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
-        assert_equal(empty_last,c.read_last())
-        assert_equal(true, c.should_check?(empty_last["time"]))
-        assert_equal(false, c.should_check?((Time.now() - wait + 30).to_i))
+        assert_equal(empty_last,c.read_state_file())
+        assert_equal(true, c.should_update?(empty_last["time"]))
+        assert_equal(false, c.should_update?((Time.now() - wait + 30).to_i))
         html = c.fetch_url(url)
         assert_equal(whole_html, html)
         assert_equal("test", c.parse_noko(html).css('title').text)
@@ -131,9 +131,9 @@ class TestClasse < Test::Unit::TestCase
 
         c = TestArraySite.new(url: url)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
-        assert_equal(empty_last,c.read_last())
-        assert_equal(true, c.should_check?(empty_last["time"]))
-        assert_equal(false, c.should_check?((Time.now() - wait + 30).to_i))
+        assert_equal(empty_last,c.read_state_file())
+        assert_equal(true, c.should_update?(empty_last["time"]))
+        assert_equal(false, c.should_update?((Time.now() - wait + 30).to_i))
         html = c.fetch_url(url)
         assert_equal(whole_html, html)
         assert_equal("test", c.parse_noko(html).css('title').text)
@@ -142,7 +142,7 @@ class TestClasse < Test::Unit::TestCase
         # First full run, Get 2 things
         c.update()
         expected_html = Site::HTML_HEADER.dup + [
-            "<ul style=\"list-style-type: none;\">",
+            "<ul style='list-style-type: none;'>",
             "<li id='lol'><a href='lol'>lilo</a></li>",
             "<li id='fi'><a href='fi'>fu</a></li>",
             "</ul>"].join("\n")
@@ -168,7 +168,7 @@ class TestClasse < Test::Unit::TestCase
         # This time we set new things, and wait is 0 so we are good to go
         c.update()
         expected_html = Site::HTML_HEADER.dup + [
-            "<ul style=\"list-style-type: none;\">",
+            "<ul style='list-style-type: none;'>",
             "<li id='new!'><a href='new!'>new</a></li>",
             "</ul>"].join("\n")
         assert_equal(true, called)

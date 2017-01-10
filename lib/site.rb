@@ -19,11 +19,13 @@ class Site
         @test = test
         @url = url
         @wait = every
+
         md5 = Digest::MD5.hexdigest(url)
         @state_file = ".lasts/last-#{md5}"
         if $CONF and $CONF["last_dir"]
             @state_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
         end
+
         @logger.debug "using #{@state_file} to store updates"
     end
 
@@ -49,7 +51,7 @@ class Site
         return Nokogiri::HTML(html)
     end
 
-    def read_last()
+    def read_state_file()
         data = {
             "time" => -9999999999999,
             "content" => nil,
@@ -63,7 +65,7 @@ class Site
         return data
     end
 
-    def save_last_file(stuff)
+    def save_state_file(stuff)
         data={
             "time" => Time.now.to_i,
             "url" => @url,
@@ -77,38 +79,38 @@ class Site
 
     def alert(new_stuff)
         @logger.debug "Alerting new stuff"
-        $CONF["alert_proc"].call({content: to_html(new_stuff), name: @name})
+        $CONF["alert_proc"].call({content: format(new_stuff), name: @name})
     end
 
     def get_content()
         return @http_content
     end
 
-    def should_check?(prev_time)
-        return Time.now().to_i >= prev_time + @wait
+    def should_update?(prevous_time)
+        return Time.now().to_i >= prevous_time + @wait
     end
 
-    def get_new(previous: nil)
+    def get_new(previous_content=nil)
         @content = get_content()
         return @content
     end
 
     def update()
-        begin
-            new_stuff = false
-            prev = read_last()
-            prev_content = prev["content"]
-            if should_check?(prev["time"]) or @test
+        new_stuff = false
+        previous = read_state_file()
+        previous_content = previous["content"]
+        if should_update?(previous["time"]) or @test
+            begin
                 @logger.info "Time to update" unless @test
                 @http_content = fetch_url(@url)
                 @parsed_content = parse_noko(@http_content)
-                new_stuff = get_new(previous: prev_content)
+                new_stuff = get_new(previous_content)
                 if new_stuff
                     if @test
-                        puts "Would have sent an email with #{to_html(new_stuff)}"
+                        puts "Would have sent an email with #{format(new_stuff)}"
                     else
                         alert(new_stuff)
-                        save_last_file(new_stuff)
+                        save_state_file(new_stuff)
                     end
                 else
                     if @test
@@ -116,19 +118,19 @@ class Site
                     end
                     @logger.info "Nothing new"
                 end
-            else
-                @logger.info "Too soon to update"
+            rescue Exception => e
+                $stderr.puts "#{self} Failed on #{@url}"
+                $stderr.puts e.class
+                $stderr.puts e.message
+                $stderr.puts e.backtrace
+                $stderr.puts "state_file : #{@state_file}"
             end
-        rescue Exception => e
-            $stderr.puts "#{self} Failed on #{@url}"
-            $stderr.puts e.class
-            $stderr.puts e.message
-            $stderr.puts e.backtrace
-            $stderr.puts "state_file : #{@state_file}"
+        else
+            @logger.info "Too soon to update"
         end
     end
 
-    def to_html(content)
+    def format(content)
         message_html = Site::HTML_HEADER.dup
         message_html += @content
         return message_html
@@ -136,16 +138,16 @@ class Site
 
     class Site::SimpleString < Site
 
-        def get_new(previous: nil)
+        def get_new(previous_content=nil)
             new_stuff = nil
             @content = get_content()
-            if @content != previous
+            if @content != previous_content
                 new_stuff = @content
             end
             return new_stuff
         end
 
-        def to_html(content)
+        def format(content)
             message_html = Site::HTML_HEADER.dup
             message_html += content
             return message_html
@@ -167,22 +169,22 @@ class Site
             (@content ||= []) << item
         end
 
-        def get_new(previous: nil)
-            new_stuff = nil
+        def get_new(previous_content)
+            new_stuff = []
             get_content()
-            if previous
-                previous_ids = previous.map{|h| h["id"]}
+            if previous_content
+                previous_ids = previous_content.map{|h| h["id"]}
                 new_stuff = @content.delete_if{|item| previous_ids.include?(item["id"])}
             else
                 new_stuff = @content
             end
-            if (!new_stuff) or  new_stuff.empty?
+            if new_stuff.empty?
                 return nil
             end
             return new_stuff
         end
 
-        def save_last_file(stuff)
+        def save_state_file(stuff)
             data = {}
             if File.exist?(@state_file)
                 data = JSON.parse(File.read(@state_file))
@@ -192,21 +194,21 @@ class Site
             data["wait"] = @wait
             (data["content"] ||= []).concat(stuff)
             @logger.debug "Appending #{stuff.size} new items to #{@state_file}"
-            File.open(@state_file,"w") do |f|
+            File.open(@state_file, "w") do |f|
                 f.write JSON.pretty_generate(data)
             end
         end
 
-        def to_html(content)
+        def format(content)
             message_html = Site::HTML_HEADER.dup
-            message_html << "<ul style=\"list-style-type: none;\">\n"
+            message_html << "<ul style='list-style-type: none;'>\n"
             content.each do |item|
                 msg = "<li id='#{item["id"]}'>"
                 if item["url"]
                     msg += "<a href='#{item["url"]}'>"
                 end
                 if item["img_src"]
-                     msg += "<img style=\"width:100px\" src='#{item["img_src"]}'/>"
+                     msg += "<img style='width:100px' src='#{item["img_src"]}'/>"
                 end
                 if item["title"]
                     msg += "#{item["title"]}"

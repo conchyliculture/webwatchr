@@ -6,12 +6,8 @@ require_relative "../lib/site.rb"
 class AmazonCyber < Site::Articles
     require "json"
 
-    # Here we want to do something different: calculate a Hash of only part of the HTML
-    # There classic way to do it is to overload get_content() and make it return only part of the DOM, as string
-    #   @http_content contains the whole html page
-    #   @parsed_content contains the result of Nokogiri.parse(@http_content)
-    #
     def get_content()
+        @logger.warn "This site is probably not working"
         # Selects the content of the first table tag with the CSS class result-summary
         js = @parsed_content.css("script").select{|x| x.content=~/window.gb.widgetsToRegister/}[0].content
         magic = '"dealDetails" : {'

@@ -13,11 +13,10 @@ class NQP < Site::Articles
     end
 
     def get_products(noko)
-        res = []
         real_products = noko.css("li.purchasable")
         if real_products.empty?
             noko.css("li.product a").each do |p|
-                url = p.attr('href')
+                url = p.attr("href")
                 next if @alread_fetched_urls.include?(url)
                 @alread_fetched_urls << url
                 root = Nokogiri::HTML(Net::HTTP.get(URI(url)))
@@ -25,10 +24,10 @@ class NQP < Site::Articles
             end
         else
             real_products.each do |p|
-                url = p.css('a').attr('href').text
-                img_url = p.css('a img').attr('src').text
-                title = p.css('a h3').text
-                price = p.css('span.amount').text
+                url = p.css("a").attr("href").text
+                img_url = p.css("a img").attr("src").text
+                title = p.css("a h3").text
+                price = p.css("span.amount").text
                 add_article({
                     "id"=>url,
                     "url"=>url,
@@ -40,8 +39,8 @@ class NQP < Site::Articles
     end
 end
 
-
-NQP.new(url:  "http://www.noquarterprod.com/product-category/carpenter-brut-en/",
-              every: 12*60*60,
-              test: __FILE__ == $0
-       ).update()
+NQP.new(
+    url:  "http://www.noquarterprod.com/product-category/carpenter-brut-en/",
+    every: 12*60*60,
+    test: __FILE__ == $0
+).update
