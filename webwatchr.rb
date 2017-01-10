@@ -59,6 +59,7 @@ def make_alert(c)
                 args[:smtp_server] = $CONF["alerts"]["email"]["smtp_server"]
                 args[:smtp_port] = $CONF["alerts"]["email"]["smtp_port"]
                 args[:to] = $CONF["alerts"]["email"]["dest_email"]
+                args[:from] = $CONF["alerts"]["email"]["from_email"]
                 send_mail(args)
             }
         when "rss"
