@@ -11,5 +11,6 @@
     "default_alert" : ["email"],
     "pid_file": "webwatchr.pid",
     "last_dir": ".lasts",
-    "site_timeout": 120
+    "site_timeout": 120,
+    "log": "webwatchr.log"
 }
