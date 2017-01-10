@@ -158,7 +158,11 @@ class TestClasse < Test::Unit::TestCase
             "<li id='new!'><a href='new!'>new</a></li>",
             "</ul>"].join("\n")
         assert_equal("{:content=>#{expected_html.inspect}, :name=>\"http://localhost:#{$wwwport}/#{$content_is_array}\"}", result)
-        expected_last = {"url"=>"http://localhost:8001/content_is_array.html", "wait"=>0, "content"=>[{"id"=>"new!", "url"=>"new!", "title"=>"new"}]}
+        expected_last = {"url"=>"http://localhost:8001/content_is_array.html",
+                         "wait"=>0,
+                         "content"=>[{"id"=>"lol", "title"=>"lilo", "url"=>"lol"},
+                                    {"id"=>"fi", "title"=>"fu", "url"=>"fi"},
+                                    {"id"=>"new!", "title"=>"new", "url"=>"new!"}]}
         result_last = JSON.parse(File.read(c.last_file))
         result_last.delete("time")
         assert_equal(expected_last, result_last)

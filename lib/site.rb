@@ -175,6 +175,20 @@ class Site
             return new_stuff
         end
 
+        def save_last_file(stuff)
+            data = {}
+            if File.exist?(@last_file)
+                data = JSON.parse(File.read(@last_file))
+            end
+            data["time"] = Time.now.to_i
+            data["url"] = @url
+            data["wait"] = @wait
+            (data["content"] ||= []).concat(stuff)
+            File.open(@last_file,"w") do |f|
+                f.write JSON.pretty_generate(data)
+            end
+        end
+
         def to_html(content)
             message_html = Site::HTML_HEADER.dup
             message_html << "<ul style=\"list-style-type: none;\">\n"
