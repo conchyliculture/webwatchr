@@ -63,7 +63,7 @@ class Site
         return data
     end
 
-    def update_last(stuff)
+    def save_last_file(stuff)
         data={
             "time" => Time.now.to_i,
             "url" => @url,
@@ -103,10 +103,10 @@ class Site
                 if new_stuff
                     if @test
                         puts "Would have sent an email with #{to_html(new_stuff)}"
-                        update_last(new_stuff)
+                        save_last_file(new_stuff)
                     else
                         alert(new_stuff)
-                        update_last(new_stuff)
+                        save_last_file(new_stuff)
                     end
                 else
                     if @test
