@@ -125,8 +125,8 @@ class TestClasse < Test::Unit::TestCase
         wait = 10*60
 
         result = ""
-
-        $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8')}
+        called = false
+        $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8'); called = true}
 
         c = TestArraySite.new(url: url)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
@@ -137,6 +137,8 @@ class TestClasse < Test::Unit::TestCase
         assert_equal(whole_html, html)
         assert_equal("test", c.parse_noko(html).css('title').text)
         assert_block{c.last_file().end_with?("last-35e711989b197f20f3d4936e91a2c079")}
+
+        # First full run, Get 2 things
         c.update()
         expected_html = Site::HTML_HEADER.dup + [
             "<ul style=\"list-style-type: none;\">",
@@ -144,20 +146,32 @@ class TestClasse < Test::Unit::TestCase
             "<li id='fi'><a href='fi'>fu</a></li>",
             "</ul>"].join("\n")
 		assert_equal("{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}", result)
+        assert_equal(true, called)
+
+        result = ""
+        called = false
 
         File.open(File.join($wwwroot,$content_is_array),"a+") do |f|
             f.write "<div>new! - new </div>"
         end
         c = TestArraySite.new(url: url)
+        # Second run don't d anything because we shouldn't rerun
         c.update()
-		assert_equal("{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}", result)
+        assert_equal(false, called)
+		assert_equal("", result)
+
+        result = ""
+        called = false
+
         c.wait = 0
+        # This time we set new things, and wait is 0 so we are good to go
         c.update()
         expected_html = Site::HTML_HEADER.dup + [
             "<ul style=\"list-style-type: none;\">",
             "<li id='new!'><a href='new!'>new</a></li>",
             "</ul>"].join("\n")
-        assert_equal("{:content=>#{expected_html.inspect}, :name=>\"http://localhost:#{$wwwport}/#{$content_is_array}\"}", result)
+        assert_equal(true, called)
+        assert_equal("{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}", result)
         expected_last = {"url"=>"http://localhost:8001/content_is_array.html",
                          "wait"=>0,
                          "content"=>[{"id"=>"lol", "title"=>"lilo", "url"=>"lol"},
@@ -166,5 +180,20 @@ class TestClasse < Test::Unit::TestCase
         result_last = JSON.parse(File.read(c.last_file))
         result_last.delete("time")
         assert_equal(expected_last, result_last)
+
+        result = ""
+        called = false
+
+        c = TestArraySite.new(url: url)
+        # Now, we don't call the alert Proc because we have no new things
+        c.update()
+        expected_html = Site::HTML_HEADER.dup + [
+            "<ul style=\"list-style-type: none;\">",
+            "</ul>"].join("\n")
+        assert_equal(false, called)
+		assert_equal("", result)
+
+        result = ""
+        called = false
     end
 end
