@@ -110,7 +110,8 @@ Only new articles that have never been seen will be sent.
 
 require ../lib/site.rb"
 
-class Mysite < Site::Articles # This time, get_content calls add_article() on a Hash of stuff ( == "articles")
+class Mysite < Site::Articles 
+        # This time, get_content calls add_article() on a Hash of "articles"
     def get_content()
         # Parses the DOM, returns an Array of Hash with articles
         #
