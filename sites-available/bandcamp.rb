@@ -34,7 +34,10 @@ class Bandcamp < Site::Articles
 				})
             else
 				@parsed_content.css('ol.merch-grid li').each do |xx|
-					next unless xx.css('p.sold-out').empty?
+					unless xx.css('p.sold-out').empty?
+                        @logger.debug "That item is sold out =("
+                        next
+                    end
 					x = xx.css('a')
                     url = "http://"+URI.parse(@url).host+x.attr('href').text
 					img = x.css('img')
