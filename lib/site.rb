@@ -163,6 +163,7 @@ class Site
         def add_article(item)
             @logger.debug "Found article #{item['id']}"
             validate(item)
+            item["_timestamp"] = Time.now().to_i
             (@content ||= []) << item
         end
 
