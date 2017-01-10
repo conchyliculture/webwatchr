@@ -84,7 +84,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert_equal(whole_html, html)
         assert_equal("test", c.parse_noko(html).css('title').text)
-        assert_block{c.last_file().end_with?("last-2182cd5c8685baed48f692ed72d7a89f")}
+        assert_block{c.state_file().end_with?("last-2182cd5c8685baed48f692ed72d7a89f")}
         c.update()
         first_pass_content = Site::HTML_HEADER + content_html
         assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url}\"}", result)
@@ -99,7 +99,7 @@ class TestClasse < Test::Unit::TestCase
         c.update()
         assert_equal("{:content=>#{(first_pass_content+" new ! ").inspect}, :name=>\"#{url}\"}", result)
         expected_last = {"url"=>"http://localhost:8001/content_is_string.html", "wait"=>0, "content"=>content_html+" new ! "}
-        result_last = JSON.parse(File.read(c.last_file))
+        result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
         assert_equal(expected_last, result_last)
     end
@@ -137,7 +137,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert_equal(whole_html, html)
         assert_equal("test", c.parse_noko(html).css('title').text)
-        assert_block{c.last_file().end_with?("last-35e711989b197f20f3d4936e91a2c079")}
+        assert_block{c.state_file.end_with?("last-35e711989b197f20f3d4936e91a2c079")}
 
         # First full run, Get 2 things
         c.update()
@@ -178,7 +178,7 @@ class TestClasse < Test::Unit::TestCase
                          "content"=>[{"id"=>"lol", "title"=>"lilo", "url"=>"lol"},
                                     {"id"=>"fi", "title"=>"fu", "url"=>"fi"},
                                     {"id"=>"new!", "title"=>"new", "url"=>"new!"}]}
-        result_last = JSON.parse(File.read(c.last_file))
+        result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
         result_last["content"].each do |item|
             item.delete("_timestamp")

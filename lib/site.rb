@@ -11,40 +11,38 @@ class Site
 
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
-    attr_accessor :last_file, :url, :wait
+    attr_accessor :state_file, :url, :wait
     def initialize(url:, every: 60*60, post_data: nil, test: false)
         @logger = $logger || Logger.new(STDOUT)
-        @url = url
-        @post_data = post_data
-        @wait = every
         @name = url
+        @post_data = post_data
+        @test = test
+        @url = url
+        @wait = every
         md5 = Digest::MD5.hexdigest(url)
-        @last_file = ".lasts/last-#{md5}"
+        @state_file = ".lasts/last-#{md5}"
         if $CONF and $CONF["last_dir"]
-            @last_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
+            @state_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
         end
-        @logger.debug "using #{@last_file} to store updates"
-        @test=test
+        @logger.debug "using #{@state_file} to store updates"
     end
 
     def fetch_url(url)
-        res = ""
+        html = ""
         uri = URI(url)
         if @post_data
-            res= Net::HTTP.post_form(uri, @post_data).body
+            res = Net::HTTP.post_form(uri, @post_data).body
         else
             Net::HTTP.start(uri.host, uri.port) do |http|
                 response = Net::HTTP.get_response(uri)
-                res  = response.body
-                if res
-                    if response["Content-Encoding"]
-                        res = res.force_encoding(response["Content-Encoding"])
-                    end
+                html  = response.body
+                if html and response["Content-Encoding"]
+                    html = html.force_encoding(response["Content-Encoding"])
                 end
             end
         end
         @logger.debug "Fetched #{url}"
-        res
+        return html
     end
 
     def parse_noko(html)
@@ -52,13 +50,13 @@ class Site
     end
 
     def read_last()
-        data={
+        data = {
             "time" => -9999999999999,
             "content" => nil,
         }
-        if File.exist?(@last_file)
+        if File.exist?(@state_file)
             begin
-                data = JSON.parse(File.read(@last_file))
+                data = JSON.parse(File.read(@state_file))
             rescue JSON::ParserError
             end
         end
@@ -72,7 +70,7 @@ class Site
             "wait" => @wait,
             "content" => stuff,
         }
-        File.open(@last_file,"w") do |f|
+        File.open(@state_file,"w") do |f|
             f.write JSON.pretty_generate(data)
         end
     end
@@ -126,7 +124,7 @@ class Site
             $stderr.puts e.class
             $stderr.puts e.message
             $stderr.puts e.backtrace
-            $stderr.puts "Last_file : #{@last_file}"
+            $stderr.puts "state_file : #{@state_file}"
         end
     end
 
@@ -186,15 +184,15 @@ class Site
 
         def save_last_file(stuff)
             data = {}
-            if File.exist?(@last_file)
-                data = JSON.parse(File.read(@last_file))
+            if File.exist?(@state_file)
+                data = JSON.parse(File.read(@state_file))
             end
             data["time"] = Time.now.to_i
             data["url"] = @url
             data["wait"] = @wait
             (data["content"] ||= []).concat(stuff)
-            @logger.debug "Appending #{stuff.size} new items to #{@last_file}"
-            File.open(@last_file,"w") do |f|
+            @logger.debug "Appending #{stuff.size} new items to #{@state_file}"
+            File.open(@state_file,"w") do |f|
                 f.write JSON.pretty_generate(data)
             end
         end

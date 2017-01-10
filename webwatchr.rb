@@ -72,7 +72,7 @@ def make_alert(c)
             }
         when "rss"
             res_proc = Proc.new { |args|
-                gen_rss(args)
+    #            gen_rss(args)
             }
         else
             raise Exception("Unknown alert method : #{a}")
@@ -82,7 +82,7 @@ def make_alert(c)
 end
 
 def init()
-    $logger.debug("Starting Webwatchr")
+    $logger.debug("Starting WebWatchr")
 
     $MYDIR = File.dirname(__FILE__)
 
@@ -92,11 +92,11 @@ def init()
     FileUtils.mkdir_p($CONF["last_dir"])
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
-    sites=Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
+    sites = Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
 
     if sites.empty?
-        $stderr.puts "Didn't find any site to parse. You might want to "
-        $stderr.puts "cd sites-enabled/; ln -s ../sites-available/something.rb . "
+        $stderr.puts "Didn't find any site to parse. You might want to:"
+        $stderr.puts "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
     end
 
     $CONF["alert_proc"] = make_alert($CONF)
@@ -111,21 +111,17 @@ def init()
         rescue Net::ReadTimeout, Errno::ENETUNREACH => e
             $logger.warn "Failed pulling #{site}: #{e.message}"
             # Do nothing, try later
-            # TODO
-            # Log Something when we have logs
-        rescue Exception=>e
+        rescue Exception => e
             $logger.err "Issue with #{site} : #{e}"
             $logger.err e.message
             $logger.debug e.backtrace
         end
     end
-
 end
 
 def main()
     if not File.exist?("config.json")
-        $stderr.puts "plz cp config.json.template config.json"
-        $stderr.puts "and update it to your needs"
+        $stderr.puts "Copy config.json.template to config.json and update it to your needs"
         exit
     else
         $CONF=JSON.parse(File.read("config.json"))
@@ -137,6 +133,7 @@ def main()
         $logger.info "Already running. Quitting"
         exit
     end
+
     begin
         File.open($CONF["pid_file"],'w+') {|f|
             f.puts($$)
