@@ -104,51 +104,52 @@ Move that into `sites-enabled`, and you're good to go.
 In the following example, you fetch an array of things, that I call "articles" at every run of the code.
 Only new articles that have never been seen will be sent.
 
-    #!/usr/bin/ruby
-    # encoding: utf-8
+```ruby
+#!/usr/bin/ruby
+# encoding: utf-8
 
-    require ../lib/site.rb"
+require ../lib/site.rb"
 
-    class Mysite < Site::Articles # This time, get_content calls add_article() on a Hash of stuff ( == "articles")
-        def get_content()
-            # Parses the DOM, returns an Array of Hash with articles
-            #
-            # If DOM is:
-            # <div class="article">
-            #   <a href="http://lol/article/1.html">Lol 1</a>
-            # </div>
-            # <div class="article">
-            #   <a href="http://lol/article/1.html">Lol 1</a>
-            # </div>
-            #
-            # returns:
-            # [{'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/1.html'},
-            #   'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/2.html'}]
-            #
-            # If for example this previously only returned the following
-            # [{'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/1.html'}]
-            # A mail will be sent containing just HTML for the second article
+class Mysite < Site::Articles # This time, get_content calls add_article() on a Hash of stuff ( == "articles")
+    def get_content()
+        # Parses the DOM, returns an Array of Hash with articles
+        #
+        # If DOM is:
+        # <div class="article">
+        #   <a href="http://lol/article/1.html">Lol 1</a>
+        # </div>
+        # <div class="article">
+        #   <a href="http://lol/article/1.html">Lol 1</a>
+        # </div>
+        #
+        # returns:
+        # [{'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/1.html'},
+        #   'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/2.html'}]
+        #
+        # If for example this previously only returned the following
+        # [{'id' => 'http://lol/article/1.html', 'url' => 'http://lol/article/1.html'}]
+        # A mail will be sent containing just HTML for the second article
 
-            res = []
-            @parsed_content.css("div.article") do |article|
-                link = article.css("a").attr("href")
-                title = article.css("a").content
+        res = []
+        @parsed_content.css("div.article") do |article|
+            link = article.css("a").attr("href")
+            title = article.css("a").content
 
-                add_article({
-                    "id"=> link, # This needs to be unique, per Article
-                    # Magic keys for a nice html ul/li message
-                    "url" => link,
-                    "title" => title
-                })
-            end
-            # This time we don't return anything
+            add_article({
+                "id"=> link, # This needs to be unique, per Article
+                # Magic keys for a nice html ul/li message
+                "url" => link,
+                "title" => title
+            })
         end
+        # This time we don't return anything
+    end
 
-    Mysite.new(
-        url: "https://www.mydomistoobig.pt",
-        every: 10*60 # Check every 10 minutes,
-        test: __FILE__ == $0
-    ).update()
+Mysite.new(
+    url: "https://www.mydomistoobig.pt",
+    every: 10*60 # Check every 10 minutes,
+    test: __FILE__ == $0
+).update() ```
 
 ## Test your new site
 
