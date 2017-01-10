@@ -16,8 +16,6 @@ class Site
         @logger = $logger || Logger.new(STDOUT)
         @url = url
         @post_data = post_data
-        @http_content = fetch_url(@url)
-        @parsed_content = parse_noko(@http_content)
         @wait = every
         @name = url
         md5 = Digest::MD5.hexdigest(url)
@@ -99,6 +97,8 @@ class Site
 
     def update()
         begin
+            @http_content = fetch_url(@url)
+            @parsed_content = parse_noko(@http_content)
             new_stuff = false
             prev = read_last()
             prev_content = prev["content"]
@@ -118,6 +118,8 @@ class Site
                     end
                     @logger.info "Nothing new"
                 end
+            else
+                @logger.info "Too soon to update"
             end
         rescue Exception => e
             $stderr.puts "#{self} Failed on #{@url}"
