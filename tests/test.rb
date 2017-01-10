@@ -15,6 +15,7 @@ class TestClasse < Test::Unit::TestCase
     $content_is_array = "content_is_array.html"
     $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
     $CONF["last_dir"] = Dir.mktmpdir
+    $logger = Logger.new("/dev/null")
 
     class TestFileHandler < WEBrick::HTTPServlet::FileHandler
         def do_GET(req, res)
@@ -179,6 +180,9 @@ class TestClasse < Test::Unit::TestCase
                                     {"id"=>"new!", "title"=>"new", "url"=>"new!"}]}
         result_last = JSON.parse(File.read(c.last_file))
         result_last.delete("time")
+        result_last["content"].each do |item|
+            item.delete("_timestamp")
+        end
         assert_equal(expected_last, result_last)
 
         result = ""
