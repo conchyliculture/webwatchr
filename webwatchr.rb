@@ -5,7 +5,7 @@ require "json"
 require "logger"
 require "net/http"
 require "net/smtp"
-require "optionparser"
+require "optparse"
 require "timeout"
 
 
