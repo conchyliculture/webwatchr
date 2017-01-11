@@ -5,6 +5,7 @@ require "json"
 require "logger"
 require "net/http"
 require "net/smtp"
+require "optionparser"
 require "timeout"
 
 
@@ -81,7 +82,7 @@ def make_alert(c)
     return res_proc
 end
 
-def init()
+def init(options)
     $logger.debug("Starting WebWatchr")
 
     $MYDIR = File.dirname(__FILE__)
@@ -92,30 +93,37 @@ def init()
     FileUtils.mkdir_p($CONF["last_dir"])
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
-    sites = Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
-
-    if sites.empty?
-        $stderr.puts "Didn't find any site to parse. You might want to:"
-        $stderr.puts "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
-    end
-
+    timeout = $CONF["site_timeout"]
     $CONF["alert_proc"] = make_alert($CONF)
-
-    timeout = $CONF["site_timeout"] || 10*60
-    sites.each do |site|
-        begin
-            $logger.debug "loading #{File.basename(site)} file"
-            status = Timeout::timeout(timeout) {
-                load site
-            }
-        rescue Net::ReadTimeout, Errno::ENETUNREACH => e
-            $logger.warn "Failed pulling #{site}: #{e.message}"
-            # Do nothing, try later
-        rescue Exception => e
-            $logger.err "Issue with #{site} : #{e}"
-            $logger.err e.message
-            $logger.debug e.backtrace
+    if options[:site]
+        site = File.join("sites-available", options[:site])
+        load_site(site, timeout)
+    else
+        sites = Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
+        if sites.empty?
+            $stderr.puts "Didn't find any site to parse. You might want to:"
+            $stderr.puts "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
         end
+        sites.each {|s| load_site(s, timeout)}
+    end
+end
+
+def load_site(site, timeout=10*60)
+    unless File.exist?(site)
+        raise "Can't find site to load #{File.realpath(site)}"
+    end
+    begin
+        $logger.debug "loading #{File.basename(site)} file"
+        status = Timeout::timeout(timeout) {
+            load site
+        }
+    rescue Net::ReadTimeout, Errno::ENETUNREACH => e
+        $logger.warn "Failed pulling #{site}: #{e.message}"
+        # Do nothing, try later
+    rescue Exception => e
+        $logger.error "Issue with #{site} : #{e}"
+        $logger.error e.message
+        $logger.debug e.backtrace.join("\n")
     end
 end
 
@@ -134,10 +142,26 @@ def main()
         exit
     end
 
+    options = {}
+    OptionParser.new { |o|
+        o.banner = """WebWatchr is a script to poll websites and alert on changes.
+Exemple uses:
+ * Updates all webpages according to their 'wait' value, and compare against internal state.
+    ruby #{__FILE__}
+ * Updates sites-available/site.rb, ignoring 'wait' value, and compare against internal state.
+    ruby #{__FILE__} -s site.rb
+
+Usage: ruby #{__FILE__} """
+        o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of a script in sites-available.") do |v|
+            options[:site] = v
+        end
+        o.on("-h", "--help", "Prints this help"){puts o; exit}
+    }.parse!
+
     begin
         File.open($CONF["pid_file"],'w+') {|f|
             f.puts($$)
-            init()
+            init(options)
         }
     ensure
         if File.exist?($CONF["pid_file"])
