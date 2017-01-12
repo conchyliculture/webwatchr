@@ -138,12 +138,6 @@ def main()
     $logger = Logger.new($CONF["log"] || STDOUT)
     $logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
-
-    if File.exist?($CONF["pid_file"])
-        $logger.info "Already running. Quitting"
-        exit
-    end
-
     options = {}
     OptionParser.new { |o|
         o.banner = """WebWatchr is a script to poll websites and alert on changes.
@@ -159,6 +153,11 @@ Usage: ruby #{__FILE__} """
         end
         o.on("-h", "--help", "Prints this help"){puts o; exit}
     }.parse!
+
+    if File.exist?($CONF["pid_file"]) and not options[:site]
+        $logger.info "Already running. Quitting"
+        exit
+    end
 
     begin
         File.open($CONF["pid_file"],'w+') {|f|
