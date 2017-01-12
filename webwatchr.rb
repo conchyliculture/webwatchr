@@ -142,14 +142,16 @@ def main()
     end
 
     $logger = Logger.new($CONF["log"] || STDOUT)
+    $logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
+
 
     options = {}
     OptionParser.new { |o|
         o.banner = """WebWatchr is a script to poll websites and alert on changes.
 Exemple uses:
- * Updates all webpages according to their 'wait' value, and compare against internal state.
+ * Updates all webpages according to their 'wait' value, and compare against internal state, and update it.
     ruby #{__FILE__}
- * Updates sites-available/site.rb, ignoring 'wait' value, and compare against internal state.
+ * Updates sites-available/site.rb, ignoring 'wait' value, and compare against internal state, and update it.
     ruby #{__FILE__} -s site.rb
 
 Usage: ruby #{__FILE__} """
