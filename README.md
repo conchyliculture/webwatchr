@@ -173,6 +173,14 @@ If you need to do weird things like authentication, session handling, form posti
 
 If you need javascript... well... lol.
 
+## Force a site check, ignoring the 'wait' parameter
+
+This can be useful to run a site update at a specific time/day with a crontab, instead of every specified amount of time. You can force update a website using the -s flag:
+```bash
+ruby webwatchr.rb -s lol.rb
+```
+Make sure `lol.rb` is in the `sites-available` directory
+
 # FAQ
 
 ## POST?
