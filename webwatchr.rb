@@ -99,6 +99,12 @@ def init(options)
         site = File.join("sites-available", options[:site])
         load_site(site, timeout)
     else
+
+        if File.exist?($CONF["pid_file"])
+            $logger.info "Already running. Quitting"
+            exit
+        end
+
         sites = Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
         if sites.empty?
             $stderr.puts "Didn't find any site to parse. You might want to:"
@@ -136,11 +142,6 @@ def main()
     end
 
     $logger = Logger.new($CONF["log"] || STDOUT)
-
-    if File.exist?($CONF["pid_file"])
-        $logger.info "Already running. Quitting"
-        exit
-    end
 
     options = {}
     OptionParser.new { |o|
