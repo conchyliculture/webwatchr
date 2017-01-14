@@ -32,15 +32,20 @@ class Site
     def fetch_url(url)
         html = ""
         uri = URI(url)
-        if @post_data
-            res = Net::HTTP.post_form(uri, @post_data).body
-        else
-            Net::HTTP.start(uri.host, uri.port) do |http|
-                response = Net::HTTP.get_response(uri)
-                html  = response.body
-                if html and response["Content-Encoding"]
-                    html = html.force_encoding(response["Content-Encoding"])
-                end
+        req = nil
+        Net::HTTP.start(uri.host, uri.port,
+                         :use_ssl => uri.scheme == 'https') do |http|
+            if @post_data
+                req = Net::HTTP::Post.new(uri)
+                req.set_form_data(@post_data)
+            else
+                req = Net::HTTP::Get.new(uri)
+            end
+            req["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
+            response = http.request(req)
+            html = response.body
+            if html and response["Content-Encoding"]
+                html = html.force_encoding(response["Content-Encoding"])
             end
         end
         @logger.debug "Fetched #{url}"
