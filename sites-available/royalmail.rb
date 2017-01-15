@@ -22,8 +22,12 @@ class RoyalMail < Site::SimpleString
         headers = table[0].css("th").map{|x| x.text.strip}
         table.css("tr")[1..-1].each do |tr|
             row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,"").gsub(/  +/," ")}
-            time = DateTime.strptime("#{row[0]} #{row[1]}","%d/%m/%y %H:%M")
-            res << "#{time} : #{row[2]}<br/>\n"
+            begin
+                time = DateTime.strptime("#{row[0]} #{row[1]}","%d/%m/%y %H:%M")
+                res << "#{time} : #{row[2]}<br/>\n"
+            rescue Exception
+                res << row.join(" ")
+            end
         end
         return res
     end
