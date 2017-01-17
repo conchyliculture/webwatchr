@@ -43,7 +43,7 @@ class Site
             end
             req["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
             response = http.request(req)
-            html = response.body
+            html = response.body.force_encoding('ISO-8859-1').encode('UTF-8')
             if html and response["Content-Encoding"]
                 html = html.force_encoding(response["Content-Encoding"])
             end
