@@ -177,6 +177,9 @@ class Site
         def get_new(previous_content)
             new_stuff = []
             get_content()
+            unless @content
+                return nil
+            end
             if previous_content
                 previous_ids = previous_content.map{|h| h["id"]}
                 new_stuff = @content.delete_if{|item| previous_ids.include?(item["id"])}
