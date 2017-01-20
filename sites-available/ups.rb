@@ -44,7 +44,7 @@ class UPS < Site::SimpleString
         table = @parsed_content.css("table.dataTable tr")
         if table.size==0
             $stderr.puts "Please verify the UPS tracking ID #{@url}"
-            @logger.err "Please verify the UPS tracking ID #{@url}"
+            @logger.error "Please verify the UPS tracking ID #{@url}"
             return nil
         end
         headers = table[0].css("th").map{|x| x.text}

@@ -4,3 +4,4 @@ config.json
 sites-enabled/.empty
 TODO
 *.log
+*.swp

@@ -16,7 +16,7 @@ class RoyalMail < Site::SimpleString
         table = @parsed_content.css("table.sticky-enabled")
         if table.size == 0
             $stderr.puts "Please verify the RoyalMail tracking ID #{@url}"
-            @logger.err "Please verify the RoyalMail tracking ID #{@url}"
+            @logger.error "Please verify the RoyalMail tracking ID #{@url}"
             return nil
         end
         headers = table[0].css("th").map{|x| x.text.strip}

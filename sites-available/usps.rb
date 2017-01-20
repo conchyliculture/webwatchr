@@ -11,7 +11,7 @@ class USPS < Site::SimpleString
         table = @parsed_content.css("table.zebra-table tr")
         if table.size == 0
             $stderr.puts "Please verify the USPS tracking ID #{@url}"
-            @logger.err "Please verify the USPS tracking ID #{@url}"
+            @logger.error "Please verify the USPS tracking ID #{@url}"
             return nil
         end
         headers = table[0].css("th").map{|x| x.text.strip}
