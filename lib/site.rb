@@ -34,7 +34,7 @@ class Site
         uri = URI(url)
         req = nil
         Net::HTTP.start(uri.host, uri.port,
-                         :use_ssl => uri.scheme == 'https') do |http|
+                        :use_ssl => uri.scheme == 'https') do |http|
             if @post_data
                 req = Net::HTTP::Post.new(uri)
                 req.set_form_data(@post_data)
@@ -123,6 +123,8 @@ class Site
                     end
                     @logger.info "Nothing new"
                 end
+            rescue Errno::ETIMEDOUT => e
+                @logger.warn "#{e} #{e.message}, no internet?"
             rescue Exception => e
                 $stderr.puts "#{self} Failed on #{@url}"
                 $stderr.puts e.class
