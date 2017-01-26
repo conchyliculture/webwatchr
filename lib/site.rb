@@ -106,7 +106,7 @@ class Site
         previous_content = previous["content"]
         if should_update?(previous["time"]) or @test
             begin
-                @logger.info "Time to update" unless @test
+                @logger.info "Time to update #{@url}" unless @test
                 @http_content = fetch_url(@url)
                 @parsed_content = parse_noko(@http_content)
                 new_stuff = get_new(previous_content)
@@ -121,7 +121,7 @@ class Site
                     if @test
                         puts "Nothing new"
                     end
-                    @logger.info "Nothing new"
+                    @logger.info "Nothing new for #{@url}"
                 end
             rescue Errno::ETIMEDOUT => e
                 @logger.warn "#{e} #{e.message}, no internet?"
@@ -133,7 +133,7 @@ class Site
                 $stderr.puts "state_file : #{@state_file}"
             end
         else
-            @logger.info "Too soon to update"
+            @logger.info "Too soon to update #{@url}"
         end
     end
 

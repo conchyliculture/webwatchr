@@ -113,7 +113,7 @@ def load_site(site, timeout=10*60)
         raise "Can't find site to load #{File.realpath(site)}"
     end
     begin
-        $logger.debug "loading #{File.basename(site)} file"
+        $logger.info "loading #{File.basename(site)} file"
         status = Timeout::timeout(timeout) {
             load site
         }
