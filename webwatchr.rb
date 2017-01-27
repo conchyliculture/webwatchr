@@ -117,7 +117,7 @@ def load_site(site, timeout=10*60)
         status = Timeout::timeout(timeout) {
             load site
         }
-    rescue Net::ReadTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError => e
+    rescue Net::ReadTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
         $logger.warn "Failed pulling #{site}: #{e.message}"
         # Do nothing, try later
     rescue Exception => e
