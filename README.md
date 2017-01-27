@@ -36,7 +36,7 @@ This means these website will only extract "interesting" information from the pa
 
 * Bandcamp merch pages
 * [Dealabs](https://www.dealabs.com)
-* Package tracking (DHL, Colissimo, Royalmail, PostNL, UPS, USPS)
+* Package tracking (DHL, Colissimo, i-parcel, Royalmail, PostNL, UPS, USPS)
 * [galaxus/digitec daily deals](https://www.galaxus.com/LiveShopping/)
 * [Noquarterprod](https://www.noquarterprod.com)
 * [Qwertee](https://www.qwertee.com)
