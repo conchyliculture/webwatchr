@@ -57,7 +57,13 @@ class UPS < Site::SimpleString
         prev_place = ""
         table[1..-1].each do |tr|
             row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,"").gsub(/  +/," ")}
-            time = DateTime.strptime("#{row[1]} #{row[2]}","%m/%d/%Y %l:%M %p")
+            format = "%m/%d/%Y %l:%M %p"
+            begin
+                time = DateTime.strptime("#{row[1]} #{row[2]}",format)
+            rescue ArgumentError
+                format = "%d.%m.%Y %H:%M"
+                retry
+            end
             place = row[0].gsub(" ","+")
             if place != "" and (place != prev_place)
                 places << place
