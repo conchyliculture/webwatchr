@@ -4,22 +4,35 @@
 require_relative "../lib/site.rb"
 
 class DHL < Site::SimpleString
+    require "date"
+    require "json"
 
     # Here we want to do check only part of the DOM.
     #   @http_content contains the HTML page as String
     #   @parsed_content contains the result of Nokogiri.parse(@http_content)
     #
     def get_content()
-        # Selects the content of the first table tag with the CSS class result-summary
-        return @parsed_content.css("table.result-summary")[0].to_s
+        res = ""
+        j = JSON.parse(@http_content)
+        unless j['results']
+            $stderr.puts "Please verify the tracking ID #{@url}"
+            @logger.error "Please verify the tracking ID #{@url}"
+        end
+        j['results'][0]["checkpoints"].each do |l|
+            descr = l['description']
+            time = DateTime.strptime("#{l['date']} #{l['time']}","%A, %B %d, %Y %H:%M")
+            location = l['location']
+            res << "#{time} : #{descr} (#{location})<br/>\n"
+        end
+        return res
     end
 
 end
 
-# trackingnb=1234567890
-#DHL.new(
-#    url:  "http://www.dhl.com/en/express/tracking.html?AWB=#{trackingnb}&brand=DHL",
-#    every: 10*60,
-#    test: __FILE__ == $0
-#).update
+trackingnb="0000000000"
+DHL.new(
+    url:  "http://www.dhl.com/shipmentTracking?AWB=#{trackingnb}",
+    every: 60*60,
+   test: __FILE__ == $0
+).update
 
