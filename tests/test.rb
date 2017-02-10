@@ -76,7 +76,7 @@ class TestClasse < Test::Unit::TestCase
 
         $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8')}
 
-        c = TestStringSite.new(url: url)
+        c = TestStringSite.new(url: url, comment:"comment")
         empty_last = {"content"=>nil, "time"=>-9999999999999}
         assert_equal(empty_last,c.read_state_file())
         assert_equal(true, c.should_update?(empty_last["time"]))
@@ -92,7 +92,7 @@ class TestClasse < Test::Unit::TestCase
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
             f.write whole_html.gsub("</div>"," new ! </div>")
         end
-        c = TestStringSite.new(url: url)
+        c = TestStringSite.new(url: url, comment:"lol")
         c.update()
         assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url}\"}", result)
         c.wait = 0
