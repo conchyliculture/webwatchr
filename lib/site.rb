@@ -7,6 +7,7 @@ require "logger"
 require "net/http"
 require "nokogiri"
 
+
 class Site
 
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
@@ -37,8 +38,10 @@ class Site
         html = ""
         uri = URI(url)
         req = nil
-        Net::HTTP.start(uri.host, uri.port,
-                        :use_ssl => uri.scheme == 'https') do |http|
+        http_o = Net::HTTP.new(uri.host, uri.port)
+        http_o.use_ssl = (uri.scheme == 'https')
+#        http_o.set_debug_output $stderr
+        http_o.start do |http|
             if @post_data
                 req = Net::HTTP::Post.new(uri)
                 req.set_form_data(@post_data)
@@ -50,8 +53,6 @@ class Site
             html = response.body
             if html and response["Content-Encoding"]
                 html = html.force_encoding(response["Content-Encoding"])
-            else
-                html = html.force_encoding('ISO-8859-1').encode('UTF-8')
             end
         end
         @logger.debug "Fetched #{url}"
@@ -59,6 +60,13 @@ class Site
     end
 
     def parse_noko(html)
+        noko = Nokogiri::HTML(html)
+        meta = noko.css("meta")
+        meta.each do |m|
+            if m['charset']
+                html = html.force_encoding(m['charset'])
+            end
+        end
         return Nokogiri::HTML(html)
     end
 
