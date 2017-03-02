@@ -14,7 +14,7 @@ class PostFR < Site::SimpleString
         table.each do |r|
             res << "#{r[0]} #{r[1]}"
         end
-        return res.join("")
+        return res.join("<br/>")
     end
 end
 
