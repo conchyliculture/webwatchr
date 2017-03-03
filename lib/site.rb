@@ -15,11 +15,10 @@ class Site
     attr_accessor :state_file, :url, :wait
     def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
         @logger = $logger || Logger.new(STDOUT)
+        @name = url
         @comment = comment
         if @comment
-            @name << "#{url} (#{@comment})"
-        else
-            @name = url
+            @name << " (#{@comment})"
         end
         @post_data = post_data
         @test = test
