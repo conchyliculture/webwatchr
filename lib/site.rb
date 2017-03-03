@@ -15,6 +15,7 @@ class Site
     attr_accessor :state_file, :url, :wait
     def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
         @logger = $logger || Logger.new(STDOUT)
+        @comment = comment
         if @comment
             @name << "#{url} (#{@comment})"
         else
