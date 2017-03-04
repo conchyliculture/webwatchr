@@ -59,6 +59,10 @@ class Site
         return html
     end
 
+    def parse_content(html)
+        return parse_noko(html)
+    end
+
     def parse_noko(html)
         noko = Nokogiri::HTML(html)
         meta = noko.css("meta")
@@ -122,7 +126,7 @@ class Site
             begin
                 @logger.info "Time to update #{@url}" unless @test
                 @http_content = fetch_url(@url)
-                @parsed_content = parse_noko(@http_content)
+                @parsed_content = parse_content(@http_content)
                 new_stuff = get_new(previous_content)
                 if new_stuff
                     if @test
