@@ -121,9 +121,12 @@ def load_site(site, timeout=10*60)
         $logger.warn "Failed pulling #{site}: #{e.message}"
         # Do nothing, try later
     rescue Exception => e
-        $logger.error "Issue with #{site} : #{e}"
-        $logger.error e.message
+        msg = "Issue with #{site} : #{e}\n"
+        msg += "#{e.message}\n"
+        $logger.error msg
+        msg += e.backtrace.join("\n")
         $logger.debug e.backtrace.join("\n")
+        $stderr.puts msg
     end
 end
 
