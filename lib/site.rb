@@ -249,7 +249,7 @@ class Site
             })
             state = previous_state.update(hash)
             if hash_content
-                (previous_state["content"] ||= []).concat( hash_content)
+                (previous_state["content"] ||= []).concat(hash_content)
             end
             save_state_file(state)
         end
