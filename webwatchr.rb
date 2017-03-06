@@ -10,7 +10,7 @@ require "timeout"
 
 
 trap("INT") do
-    $logger.err("User interrupted")
+    $logger.error("User interrupted")
     exit
 end
 
@@ -51,7 +51,7 @@ END_OF_MESSAGE
             $logger.debug("Sending mail to #{to}")
         end
     rescue Net::SMTPFatalError => e
-        $logger.err "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
+        $logger.error "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
     end
 end
 
