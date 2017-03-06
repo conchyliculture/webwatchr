@@ -8,8 +8,7 @@ class PostFR < Site::SimpleString
         res = []
         table = @parsed_content.css("table.table tr").map{|row| row.css("td").map{|r| r.text.strip}}.delete_if{|x| x.empty?}
         if table.size==0
-            $stderr.puts "Please verify the PostFR tracking ID"
-            return nil
+            raise Site::ParseError.new "Please verify the PostFR tracking ID"
         end
         table.each do |r|
             res << "#{r[0]} #{r[1]}"

@@ -15,7 +15,9 @@ class TestClasse < Test::Unit::TestCase
     $content_is_array = "content_is_array.html"
     $CONF = JSON.parse(File.read(File.join(File.dirname(__FILE__),"..","config.json.template")))
     $CONF["last_dir"] = Dir.mktmpdir
-    $logger = Logger.new("/dev/null")
+    $logger_test_io = StringIO.new()
+    $logger = Logger.new($logger_test_io)
+    #$logger = Logger.new("/dev/null")
 
     class TestFileHandler < WEBrick::HTTPServlet::FileHandler
         def do_GET(req, res)
@@ -77,8 +79,8 @@ class TestClasse < Test::Unit::TestCase
         $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8')}
 
         c = TestStringSite.new(url: url, comment:"comment")
+        assert_equal({}, c.load_state_file())
         empty_last = {"content"=>nil, "time"=>-9999999999999}
-        assert_equal(empty_last,c.read_state_file())
         assert_equal(true, c.should_update?(empty_last["time"]))
         assert_equal(false, c.should_update?((Time.now() - wait + 30).to_i))
         html = c.fetch_url(url)
@@ -86,19 +88,28 @@ class TestClasse < Test::Unit::TestCase
         assert_equal("test", c.parse_noko(html).css('title').text)
         assert_block{c.state_file().end_with?("last-2182cd5c8685baed48f692ed72d7a89f")}
         c.update()
+        expected_error = "DEBUG -- : Alerting new stuff"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
         first_pass_content = Site::HTML_HEADER + content_html
-        assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url}\"}", result)
+        assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url} (comment)\"}", result)
 
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
             f.write whole_html.gsub("</div>"," new ! </div>")
         end
         c = TestStringSite.new(url: url, comment:"lol")
         c.update()
-        assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url}\"}", result)
+        expected_error = "INFO -- : Too soon to update #{url}"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
+        assert_equal("{:content=>#{first_pass_content.inspect}, :name=>\"#{url} (comment)\"}", result)
         c.wait = 0
         c.update()
-        assert_equal("{:content=>#{(first_pass_content+" new ! ").inspect}, :name=>\"#{url}\"}", result)
-        expected_last = {"url"=>"http://localhost:8001/content_is_string.html", "wait"=>0, "content"=>content_html+" new ! "}
+        expected_error = "DEBUG -- : Alerting new stuff"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
+        assert_equal("{:content=>#{(first_pass_content+" new ! ").inspect}, :name=>\"#{url} (lol)\"}", result)
+        expected_last = {"url"=>url, "wait"=>0, "content"=>content_html+" new ! "}
         result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
         assert_equal(expected_last, result_last)
@@ -129,9 +140,9 @@ class TestClasse < Test::Unit::TestCase
         called = false
         $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode('utf-8'); called = true}
 
-        c = TestArraySite.new(url: url)
+        c = TestArraySite.new(url: url, every: wait)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
-        assert_equal(empty_last,c.read_state_file())
+        assert_equal({}, c.load_state_file())
         assert_equal(true, c.should_update?(empty_last["time"]))
         assert_equal(false, c.should_update?((Time.now() - wait + 30).to_i))
         html = c.fetch_url(url)
@@ -141,6 +152,10 @@ class TestClasse < Test::Unit::TestCase
 
         # First full run, Get 2 things
         c.update()
+        expected_error = "DEBUG -- : Alerting new stuff"
+        last_error = $logger_test_io.string.split("\n")[-1].strip()
+        puts "#{last_error.end_with?(expected_error)}"
+        assert(last_error.end_with?(expected_error), "last_error should end with: '#{expected_error}', but is '#{last_error}'")
         expected_html = Site::HTML_HEADER.dup + [
             "<ul style='list-style-type: none;'>",
             "<li id='lol'><a href='lol'>lilo</a></li>",
@@ -158,6 +173,9 @@ class TestClasse < Test::Unit::TestCase
         c = TestArraySite.new(url: url)
         # Second run don't d anything because we shouldn't rerun
         c.update()
+        expected_error = "INFO -- : Too soon to update #{url}"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
         assert_equal(false, called)
 		assert_equal("", result)
 
@@ -167,6 +185,9 @@ class TestClasse < Test::Unit::TestCase
         c.wait = 0
         # This time we set new things, and wait is 0 so we are good to go
         c.update()
+        expected_error = "DEBUG -- : Alerting new stuff"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
         expected_html = Site::HTML_HEADER.dup + [
             "<ul style='list-style-type: none;'>",
             "<li id='new!'><a href='new!'>new</a></li>",
@@ -191,6 +212,9 @@ class TestClasse < Test::Unit::TestCase
         c = TestArraySite.new(url: url)
         # Now, we don't call the alert Proc because we have no new things
         c.update()
+        expected_error = "INFO -- : Nothing new for #{url}"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
         expected_html = Site::HTML_HEADER.dup + [
             "<ul style=\"list-style-type: none;\">",
             "</ul>"].join("\n")
@@ -199,5 +223,19 @@ class TestClasse < Test::Unit::TestCase
 
         result = ""
         called = false
+
+        # Test error
+        @serv_thread.exit
+        c = TestArraySite.new(url: url)
+        # Now, we don't call the alert Proc because we have no new things
+        c.update()
+        expected_error = "ERROR -- : Network error on #{url} : Failed to open TCP connection to localhost:8001 (Connection refused - connect(2) for \"localhost\" port 8001). Will retry in 0 + 5 minutes"
+        last_error = $logger_test_io.string.split("\n")[-1]
+        assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
+        expected_html = Site::HTML_HEADER.dup + [
+            "<ul style=\"list-style-type: none;\">",
+            "</ul>"].join("\n")
+        assert_equal(false, called)
+		assert_equal("", result)
     end
 end

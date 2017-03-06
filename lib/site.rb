@@ -10,6 +10,9 @@ require "nokogiri"
 
 class Site
 
+    class Site::ParseError < Exception
+    end
+
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait
@@ -23,15 +26,15 @@ class Site
         @post_data = post_data
         @test = test
         @url = url
-        @wait = every
 
         md5 = Digest::MD5.hexdigest(url)
         @state_file = ".lasts/last-#{md5}"
         if $CONF and $CONF["last_dir"]
             @state_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
+            @logger.debug "using #{@state_file} to store updates"
         end
-
-        @logger.debug "using #{@state_file} to store updates"
+        state = load_state_file()
+        @wait = state["wait"] || every
     end
 
     def fetch_url(url)
@@ -74,31 +77,33 @@ class Site
         return Nokogiri::HTML(html)
     end
 
-    def read_state_file()
-        data = {
-            "time" => -9999999999999,
-            "content" => nil,
-        }
+    def load_state_file()
         if File.exist?(@state_file)
             begin
-                data = JSON.parse(File.read(@state_file))
+                return JSON.parse(File.read(@state_file))
             rescue JSON::ParserError
             end
         end
-        return data
+        return {}
     end
 
-    def save_state_file(stuff)
-        data={
+    def save_state_file(hash)
+        File.open(@state_file,"w") do |f|
+            f.write JSON.pretty_generate(hash)
+        end
+    end
+
+    def update_state_file(hash)
+        previous_state = load_state_file()
+        previous_state.update({
             "time" => Time.now.to_i,
             "url" => @url,
             "wait" => @wait,
-            "content" => stuff,
-        }
-        File.open(@state_file,"w") do |f|
-            f.write JSON.pretty_generate(data)
-        end
+        })
+        state = previous_state.update(hash)
+        save_state_file(state)
     end
+
 
     def alert(new_stuff)
         @logger.debug "Alerting new stuff"
@@ -119,36 +124,57 @@ class Site
     end
 
     def update()
+        begin
+            do_stuff()
+        rescue Site::ParseError => e
+            msg = "Error parsing page #{@url}"
+            if e.message
+                msg+=" with error : #{e.message}"
+            end
+            msg += ". Will retry in #{@wait} + 5 minutes"
+            @logger.error msg
+            $stderr.puts msg
+            update_state_file({"wait" => @wait + 5*60})
+        rescue Errno::ECONNREFUSED => e
+            msg = "Network error on #{@url}"
+            if e.message
+                msg+=" : #{e.message}"
+            end
+            msg += ". Will retry in #{@wait} + 5 minutes"
+            @logger.error msg
+            $stderr.puts msg
+            update_state_file({"wait" => @wait + 5*60})
+        end
+    end
+
+    def do_stuff()
         new_stuff = false
-        previous = read_state_file()
-        previous_content = previous["content"]
-        if should_update?(previous["time"]) or @test
-            begin
-                @logger.info "Time to update #{@url}" unless @test
-                @http_content = fetch_url(@url)
-                @parsed_content = parse_content(@http_content)
-                new_stuff = get_new(previous_content)
-                if new_stuff
-                    if @test
-                        puts "Would have sent an email with #{format(new_stuff)}"
-                    else
-                        alert(new_stuff)
-                        save_state_file(new_stuff)
-                    end
+        previous_state = {
+            "time" => -9999999999999,
+            "content" => nil,
+        }
+        state = load_state_file()
+        if state
+            previous_state.update(state)
+        end
+        previous_content = previous_state["content"]
+        if should_update?(previous_state["time"]) or @test
+            @logger.info "Time to update #{@url}" unless @test
+            @http_content = fetch_url(@url)
+            @parsed_content = parse_content(@http_content)
+            new_stuff = get_new(previous_content)
+            if new_stuff
+                if @test
+                    puts "Would have sent an email with #{format(new_stuff)}"
                 else
-                    if @test
-                        puts "Nothing new"
-                    end
-                    @logger.info "Nothing new for #{@url}"
+                    alert(new_stuff)
+                    update_state_file({"content" => new_stuff})
                 end
-            rescue Errno::ETIMEDOUT => e
-                @logger.warn "#{e} #{e.message}, no internet?"
-            rescue Exception => e
-                $stderr.puts "#{self} Failed on #{@url}"
-                $stderr.puts e.class
-                $stderr.puts e.message
-                $stderr.puts e.backtrace
-                $stderr.puts "state_file : #{@state_file}"
+            else
+                if @test
+                    puts "Nothing new"
+                end
+                @logger.info "Nothing new for #{@url}"
             end
         else
             @logger.info "Too soon to update #{@url}"
@@ -212,19 +238,20 @@ class Site
             return new_stuff
         end
 
-        def save_state_file(stuff)
-            data = {}
-            if File.exist?(@state_file)
-                data = JSON.parse(File.read(@state_file))
+        def update_state_file(hash)
+            hash_content = hash["content"]
+            hash.delete("content")
+            previous_state = load_state_file()
+            previous_state.update({
+                "time" => Time.now.to_i,
+                "url" => @url,
+                "wait" => @wait,
+            })
+            state = previous_state.update(hash)
+            if hash_content
+                (previous_state["content"] ||= []).concat( hash_content)
             end
-            data["time"] = Time.now.to_i
-            data["url"] = @url
-            data["wait"] = @wait
-            (data["content"] ||= []).concat(stuff)
-            @logger.debug "Appending #{stuff.size} new items to #{@state_file}"
-            File.open(@state_file, "w") do |f|
-                f.write JSON.pretty_generate(data)
-            end
+            save_state_file(state)
         end
 
         def format(content)

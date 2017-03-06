@@ -8,9 +8,7 @@ class Colisprive < Site::SimpleString
         res = []
         table = @parsed_content.css("table.tableHistoriqueColis tr").map{|row| row.css("td").map{|r| r.text.strip}}
         if table.size==0
-            $stderr.puts "Please verify the ColisPrivé tracking ID"
-            @logger.error "Please verify the ColisPrivé tracking ID"
-            return nil
+            raise Site::ParseError.new("Please verify the ColisPrivé tracking ID")
         end
         headers = ["Date", "Status"]
         table.each do |r|

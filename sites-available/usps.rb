@@ -10,9 +10,7 @@ class USPS < Site::SimpleString
         res = ""
         table = @parsed_content.css("table.zebra-table tr")
         if table.size == 0
-            $stderr.puts "Please verify the USPS tracking ID #{@url}"
-            @logger.error "Please verify the USPS tracking ID #{@url}"
-            return nil
+            raise Site::ParseError.new("Please verify the USPS tracking ID #{@url}")
         end
         headers = table[0].css("th").map{|x| x.text.strip}
         table.css("tr")[1..-1].each do |tr|

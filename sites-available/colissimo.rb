@@ -8,9 +8,7 @@ class Colissimo < Site::SimpleString
         res = []
         table = @parsed_content.css("tbody tr").map{|row| row.css("td").map{|r| r.text.strip}}
         if table.size==0
-            $stderr.puts "Please verify the Colissimo tracking ID"
-            @logger.error "Please verify the Colissimo tracking ID"
-            return nil
+            Site::ParseError("Please verify the Colissimo tracking ID")
         end
         headers = ["Date", "Status"]
         prev_place = ""

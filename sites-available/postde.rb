@@ -8,7 +8,7 @@ class PostDE < Site::SimpleString
         res = []
         table = @parsed_content.css("div.dp-table table tr").map{|row| row.css("td").map{|r| r.text.strip}}.delete_if{|x| x.empty?}
         if table.size==0
-            $stderr.puts "Please verify the PostDE tracking ID"
+            raise Site::ParseError.new "Please verify the PostDE tracking ID"
             return nil
         end
         table.each do |r|

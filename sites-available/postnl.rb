@@ -8,9 +8,7 @@ class PostNL < Site::SimpleString
         res = []
         table = @parsed_content.css("tbody tr").map{|row| row.css("td").map{|r| r.text.strip}}
         if table.size==0
-            $stderr.puts "Please verify the PostNL tracking ID"
-            @logger.error "Please verify the PostNL tracking ID"
-            return nil
+            raise Site::ParseError.new "Please verify the PostNL tracking ID"
         end
         headers = ["Date", "Status"]
         prev_place = ""

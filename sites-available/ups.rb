@@ -46,9 +46,7 @@ class UPS < Site::SimpleString
             begin
                 text = @parsed_content.css("div.pkgstep.current").css("a").text.gsub("\t","")
             rescue Exception => e
-                $stderr.puts "Please verify the UPS tracking ID #{@url}"
-                @logger.error "Please verify the UPS tracking ID #{@url}"
-                return nil
+                raise Site::ParseError.new "Please verify the UPS tracking ID #{@url}"
             end
             return text
         end

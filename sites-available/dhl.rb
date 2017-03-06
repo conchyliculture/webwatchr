@@ -15,8 +15,7 @@ class DHL < Site::SimpleString
         res = ""
         j = JSON.parse(@http_content)
         unless j['results']
-            $stderr.puts "Please verify the tracking ID #{@url}"
-            @logger.error "Please verify the tracking ID #{@url}"
+            raise Site::ParseError("Please verify the DHL tracking ID #{@url}")
         end
         j['results'][0]["checkpoints"].each do |l|
             descr = l['description']

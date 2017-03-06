@@ -26,8 +26,7 @@ class DPD < Site::SimpleString
                 res << "#{date} #{place} #{descr}"
             }
         else
-            $stderr.puts "Please verify the DPD tracking ID"
-            return nil
+            raise Site::ParseError.new "Please verify the DPD tracking ID"
         end
         return res.join("<br/>\n")
     end
