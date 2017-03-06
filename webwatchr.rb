@@ -10,7 +10,7 @@ require "timeout"
 
 
 trap("INT") do
-    $logger.error("User interrupted")
+    $stderr.puts "User interrupted"
     exit
 end
 
