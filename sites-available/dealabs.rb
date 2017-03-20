@@ -4,8 +4,14 @@
 require_relative "../lib/site.rb"
 
 # Here list the categories you're not interested in
-$BADCATEGORY = Regexp.union([/^mode$/,/^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
-/^Épicerie$/])
+$BADCATEGORY = Regexp.union(
+    [
+        /^mode$/,
+        /^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
+        /^Épicerie$/,
+        /google play/
+    ]
+)
 
 class Dealabs < Site::Articles 
 
