@@ -9,6 +9,7 @@ $BADCATEGORY = Regexp.union(
         /^mode$/,
         /^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
         /^Épicerie$/,
+        /itunes/,
         /google play/
     ]
 )
