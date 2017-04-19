@@ -19,7 +19,6 @@ class EDHL < Site::SimpleString
         end
         date = nil
         l.each do |l|
-            puts l
             case l.attr("class")
             when "timeline-date"
                 date = l.text
