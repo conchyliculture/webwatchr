@@ -8,7 +8,7 @@ class USPS < Site::SimpleString
 
     def get_content()
         res = ""
-        table = @parsed_content.css("table.zebra-table tr")
+        table = @parsed_content.css("table.tracking_history tr")
         if table.size == 0
             raise Site::ParseError.new("Please verify the USPS tracking ID #{@url}")
         end
