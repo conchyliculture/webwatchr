@@ -28,7 +28,10 @@ class PostSG < Site::SimpleString
             end
         end
 
-        return res.join("<br/>\n\n\n\n")
+        if not res.empty?
+            return res.join("<br/>\n\n\n\n")
+        end
+        return nil
     end
 
 end
