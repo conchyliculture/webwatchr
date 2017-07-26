@@ -56,6 +56,8 @@ class Site
             html = response.body
             if html and response["Content-Encoding"]
                 html = html.force_encoding(response["Content-Encoding"])
+            else
+                html = html.encode("UTF-8", "binary", invalid: :replace, undef: :replace, replace: "")
             end
         end
         @logger.debug "Fetched #{url}"
