@@ -131,15 +131,6 @@ def load_site(site, timeout=10*60)
 end
 
 def main()
-    if not File.exist?("config.json")
-        $stderr.puts "Copy config.json.template to config.json and update it to your needs"
-        exit
-    else
-        $CONF=JSON.parse(File.read("config.json"))
-    end
-
-    $logger = Logger.new($CONF["log"] || STDOUT)
-    $logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
     options = {}
     OptionParser.new { |o|
@@ -174,5 +165,15 @@ Usage: ruby #{__FILE__} """
     end
     $logger.info("Webwatcher finished working")
 end
+
+if not File.exist?("config.json")
+    $stderr.puts "Copy config.json.template to config.json and update it to your needs"
+    exit
+else
+    $CONF=JSON.parse(File.read("config.json"))
+end
+
+$logger = Logger.new($CONF["log"] || STDOUT)
+$logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
 main()
