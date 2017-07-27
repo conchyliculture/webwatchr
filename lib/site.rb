@@ -133,19 +133,19 @@ class Site
             if e.message
                 msg+=" with error : #{e.message}"
             end
-            msg += ". Will retry in #{@wait} + 5 minutes"
+            msg += ". Will retry in #{@wait} + 30 minutes"
             @logger.error msg
             $stderr.puts msg
-            update_state_file({"wait" => @wait + 5*60})
+            update_state_file({"wait" => @wait + 30*60})
         rescue Errno::ECONNREFUSED => e
             msg = "Network error on #{@url}"
             if e.message
                 msg+=" : #{e.message}"
             end
-            msg += ". Will retry in #{@wait} + 5 minutes"
+            msg += ". Will retry in #{@wait} + 30 minutes"
             @logger.error msg
             $stderr.puts msg
-            update_state_file({"wait" => @wait + 5*60})
+            update_state_file({"wait" => @wait + 30*60})
         end
     end
 
