@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 # encoding: utf-8
+require "cgi"
+require "json"
 
 require_relative "../lib/site.rb"
 
@@ -27,13 +29,18 @@ class Dealabs < Site::Articles
         Nokogiri.parse(@http_content).css("article").each do |article|
             next if article.attr('class')=~/ expired/
             categories = article.css('div.content_part').css('p.categorie').css('a').map{|x| x.text.downcase}
-            title = article.css('a.title').text
+            title = article.css('a.space--v-1').text
             if match_category(categories)
                 @logger.debug "Ignoring #{title} because #{categories} have bad category"
                 next
             end
-            link = article.css('a.title').attr('href').text
-            img = article.css('div#over img').attr('src').text
+            img_html = article.css('img.imgFrame-img')
+            img = img_html.attr('src').text
+            link_html = article.css('a.imgFrame')
+            if img=~/^data:image\/gif;base64/
+                img = JSON.parse(CGI.unescapeHTML(img_html.attr('data-lazy-img')))["src"]
+            end
+            link = link_html.attr('href').text
             add_article({
                 "id" => link,
                 "url" => link,
