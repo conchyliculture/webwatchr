@@ -154,7 +154,6 @@ class TestClasse < Test::Unit::TestCase
         c.update()
         expected_error = "DEBUG -- : Alerting new stuff"
         last_error = $logger_test_io.string.split("\n")[-1].strip()
-        puts "#{last_error.end_with?(expected_error)}"
         assert(last_error.end_with?(expected_error), "last_error should end with: '#{expected_error}', but is '#{last_error}'")
         expected_html = Site::HTML_HEADER.dup + [
             "<ul style='list-style-type: none;'>",
@@ -229,7 +228,7 @@ class TestClasse < Test::Unit::TestCase
         c = TestArraySite.new(url: url)
         # Now, we don't call the alert Proc because we have no new things
         c.update()
-        expected_error = "ERROR -- : Network error on #{url} : Failed to open TCP connection to localhost:8001 (Connection refused - connect(2) for \"localhost\" port 8001). Will retry in 0 + 5 minutes"
+        expected_error = "ERROR -- : Network error on #{url} : Failed to open TCP connection to localhost:8001 (Connection refused - connect(2) for \"localhost\" port 8001). Will retry in 0 + 30 minutes"
         last_error = $logger_test_io.string.split("\n")[-1]
         assert(last_error.end_with?(expected_error), "last_error should end with: #{expected_error}\n, but is #{last_error}")
         expected_html = Site::HTML_HEADER.dup + [
