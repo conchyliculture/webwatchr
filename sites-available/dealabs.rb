@@ -9,7 +9,7 @@ require_relative "../lib/site.rb"
 $BADCATEGORY = Regexp.union(
     [
         /^mode$/,
-        /^bons plans (e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
+        /^(e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
         /^Épicerie$/,
         /itunes/,
         /google play/
@@ -28,7 +28,7 @@ class Dealabs < Site::Articles
     def get_content()
         Nokogiri.parse(@http_content).css("article").each do |article|
             next if article.attr('class')=~/ expired/
-            categories = article.css('div.content_part').css('p.categorie').css('a').map{|x| x.text.downcase}
+            categories = article.css('span.cept-merchant-name').map{|x| x.text.downcase}
             title = article.css('a.space--v-1').text
             if match_category(categories)
                 @logger.debug "Ignoring #{title} because #{categories} have bad category"
