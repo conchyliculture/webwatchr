@@ -209,6 +209,11 @@ class Site
 
     class Site::Articles < Site
 
+        def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
+            super
+            @content = []
+        end
+
         def validate(item)
             raise Exception.new("Needs at least \"id\" key") unless item["id"]
             id = item["id"]
@@ -219,7 +224,7 @@ class Site
             @logger.debug "Found article #{item['id']}"
             validate(item)
             item["_timestamp"] = Time.now().to_i
-            (@content ||= []) << item
+            @content << item unless @content.map{|x| x['id']}.include?(item['id'])
         end
 
         def get_new(previous_content)
