@@ -27,26 +27,32 @@ class Dealabs < Site::Articles
 
     def get_content()
         Nokogiri.parse(@http_content).css("article").each do |article|
-            next if article.attr('class')=~/ expired/
-            categories = article.css('span.cept-merchant-name').map{|x| x.text.downcase}
-            title = article.css('a.space--v-1').text
-            if match_category(categories)
-                @logger.debug "Ignoring #{title} because #{categories} have bad category"
-                next
+            next if article.attr('class')=~/expired/
+
+            img_html = article.css('a.imgFrame')
+            header_div = article.css('div.threadGrid-title')
+            link = img_html.attr('href').text
+            title = ""
+            img = ""
+            if not header_div.empty?
+                title = header_div.css('a.thread-link').text.strip
+                categories = article.css('span.cept-merchant-name').map{|x| x.text.downcase}
+                img_ = article.css('img.imgFrame-img')
+                img = img_.attr('src').text
+                if img=~/^data:image\/gif;base64/
+                    img = JSON.parse(CGI.unescapeHTML(img_.attr('data-lazy-img')))["src"]
+                end
+                if match_category(categories)
+                    @logger.debug "Ignoring #{title} because #{categories} have bad category"
+                    next
+                end
+                add_article({
+                    "id" => link,
+                    "url" => link,
+                    "title" => "#{title}  / (#{categories.join('|')})",
+                    "img_src" => img
+                })
             end
-            img_html = article.css('img.imgFrame-img')
-            img = img_html.attr('src').text
-            link_html = article.css('a.imgFrame')
-            if img=~/^data:image\/gif;base64/
-                img = JSON.parse(CGI.unescapeHTML(img_html.attr('data-lazy-img')))["src"]
-            end
-            link = link_html.attr('href').text
-            add_article({
-                "id" => link,
-                "url" => link,
-                "title" => "#{title}  / (#{categories.join('|')})",
-                "img_src" => img
-            })
         end
     end
 end
