@@ -31,7 +31,10 @@ class Dealabs < Site::Articles
 
             img_html = article.css('a.imgFrame')
             header_div = article.css('div.threadGrid-title')
-            link = img_html.attr('href').text
+            link = ""
+            unless img_html.empty?
+                link = img_html.attr('href').text
+            end
             title = ""
             img = ""
             if not header_div.empty?
