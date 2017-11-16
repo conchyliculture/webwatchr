@@ -53,6 +53,18 @@ class Site
             end
             req["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
             response = http.request(req)
+            case response.code
+            when "301", "302"
+                location = response["Location"]
+                if !location.start_with?("http")
+                    location = "#{uri.scheme}://#{uri.hostname}:#{uri.port}/#{location}"
+                end
+
+                @url = location
+                @logger.debug "Redirecting to #{location}"
+                return fetch_url(location)
+            end
+
             html = response.body
             if html and response["Content-Encoding"]
                 html = html.force_encoding(response["Content-Encoding"])
