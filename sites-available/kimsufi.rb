@@ -53,7 +53,7 @@ class Kimsufi < Site::SimpleString
 
     def get_content
         dispos = {} 
-        JSON.parse(@http_content)["answer"]["availability"].each do |m|
+        JSON.parse(@html_content)["answer"]["availability"].each do |m|
 			machine = Kimsufi::TYPETONAME[m["reference"]]
             next unless @machines.include?(machine)
 			available_zones = (m["zones"] || []).select{|m| m["availability"]!~/^(unavailable|unknown)$/}.map{|z| z["zone"]}

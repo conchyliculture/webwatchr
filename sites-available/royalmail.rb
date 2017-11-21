@@ -7,8 +7,8 @@ class RoyalMail < Site::SimpleString
     require "date"
 
     # Here we want to do check only part of the DOM.
-    #   @http_content contains the HTML page as String
-    #   @parsed_content contains the result of Nokogiri.parse(@http_content)
+    #   @html_content contains the HTML page as String
+    #   @parsed_content contains the result of Nokogiri.parse(@html_content)
     #
     def get_content()
         # Selects the content of the first table tag with the CSS class result-summary

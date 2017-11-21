@@ -125,7 +125,7 @@ class Site
     end
 
     def get_content()
-        return @http_content
+        return @html_content
     end
 
     def should_update?(prevous_time)
@@ -174,8 +174,8 @@ class Site
         previous_content = previous_state["content"]
         if should_update?(previous_state["time"]) or @test
             @logger.info "Time to update #{@url}" unless @test
-            @http_content = fetch_url(@url)
-            @parsed_content = parse_content(@http_content)
+            @html_content = fetch_url(@url)
+            @parsed_content = parse_content(@html_content)
             new_stuff = get_new(previous_content)
             if new_stuff
                 if @test

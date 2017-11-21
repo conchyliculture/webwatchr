@@ -14,10 +14,10 @@ class Bandcamp < Site::Articles
 
     def get_content()
         if @merch
-            if @http_content=~/You are being redirected, please follow <a href="([^"]+)"/
+            if @html_content=~/You are being redirected, please follow <a href="([^"]+)"/
 				new_url = $1
-                @http_content = Net::HTTP.get(URI.parse(new_url))
-                @parsed_content = Nokogiri::HTML.parse(@http_content)
+                @html_content = Net::HTTP.get(URI.parse(new_url))
+                @parsed_content = Nokogiri::HTML.parse(@html_content)
                 item = @parsed_content.css('div#merch-item')
                 if item.css(".notable").text == "Sold Out"
                     @logger.debug "That item is sold out =("

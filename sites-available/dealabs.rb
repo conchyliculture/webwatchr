@@ -26,7 +26,7 @@ class Dealabs < Site::Articles
     end
 
     def get_content()
-        Nokogiri.parse(@http_content).css("article").each do |article|
+        Nokogiri.parse(@html_content).css("article").each do |article|
             next if article.attr('class')=~/expired/
 
             img_html = article.css('a.imgFrame')

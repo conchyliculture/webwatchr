@@ -8,12 +8,12 @@ class DHL < Site::SimpleString
     require "json"
 
     # Here we want to do check only part of the DOM.
-    #   @http_content contains the HTML page as String
-    #   @parsed_content contains the result of Nokogiri.parse(@http_content)
+    #   @html_content contains the HTML page as String
+    #   @parsed_content contains the result of Nokogiri.parse(@html_content)
     #
     def get_content()
         res = ""
-        j = JSON.parse(@http_content)
+        j = JSON.parse(@html_content)
         unless j['results']
             raise Site::ParseError("Please verify the DHL tracking ID #{@url}")
         end
