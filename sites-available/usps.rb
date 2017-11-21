@@ -4,28 +4,34 @@
 require_relative "../lib/site.rb"
 
 class USPS < Site::SimpleString
-    require "date"
 
     def get_content()
-        res = ""
-        table = @parsed_content.css("table.tracking_history tr")
-        if table.size == 0
+        infos = @parsed_content.css('div#trackingHistory_1 div.row div.panel-actions-content')
+        unless infos
             raise Site::ParseError.new("Please verify the USPS tracking ID #{@url}")
         end
-        headers = table[0].css("th").map{|x| x.text.strip}
-        table.css("tr")[1..-1].each do |tr|
-            row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,"").gsub(/  +/," ")}
-            next if row.size < 3
-            if row[1] != ""
-                begin
-                    time = DateTime.strptime("#{row[0]}","%B %d, %Y,%H:%M %p")
-                rescue Exception
-                end
-                res << "#{time} : #{row[1]} #{row[2]}<br/>\n"
+        # Man this is crappy
+        res = "Tracking History: <ul>"
+        lignes = []
+        ligne = []
+        infos.children.each do |c|
+            case c.text.strip
+            when "Tracking History"
+                next
+            when ""
+                next
+            when /as of.*#{Time.now.year}/
+                next
+            when /#{Time.now.year}/
+                lignes << ligne.join(' ') unless ligne == []
+                ligne = [c.text.strip.gsub(/[\t\r\n]/, "")]
             else
-                res << "#{row[0]}<br/>\n"
+                ligne << c.text.strip.gsub(/[\t\r\n]/, "")
             end
         end
+        lignes << ligne.join(' ') unless ligne == []
+        res << lignes.map{|x| "<li>#{x}</li>"}.join("\n")
+        res << "</ul>"
         return res
     end
 
