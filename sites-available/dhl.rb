@@ -9,7 +9,7 @@ class DHL < Site::SimpleString
         if div.empty?
             raise Site::ParseError.new "Please verify the DHL tracking ID"
         end
-        return div.text.gsub("\t", "").gsub("international shipment", "shipment").gsub(/Next step.*$/m, "")
+        return div.text.gsub("\t", "").gsub("international shipment", "shipment").gsub(/Next step.*$/m, "").gsub("export parcel center", "destination parcel center")
     end
 end
 
