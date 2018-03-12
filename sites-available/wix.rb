@@ -14,7 +14,7 @@ class Wix < Site::SimpleString
             j.each do |k,v|
                 if v["type"] =~/text/i
                     r = Nokogiri::HTML.parse(v["text"])
-                    res += r.text
+                    res += r.text+"\n"
                 end
             end
         end
