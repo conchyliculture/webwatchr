@@ -22,7 +22,7 @@ end
 
 [].each do |store_name|
     Storenvy.new(
-        url: "http://#{store_name}.storenvy.com",
+        url: "http://storenvy.com/#{store_name}",
         every: 12 * 60 * 60,
         comment: "#{store_name} Storenvy",
         test: __FILE__ == $0
