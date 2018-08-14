@@ -13,6 +13,9 @@ class Site
     class Site::ParseError < Exception
     end
 
+    class Site::RedirectError < Exception
+    end
+
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait
@@ -37,7 +40,7 @@ class Site
         @wait = state["wait"] || every
     end
 
-    def fetch_url(url)
+    def fetch_url(url, max_redir:10)
         html = ""
         uri = URI(url)
         req = nil
@@ -55,6 +58,9 @@ class Site
             response = http.request(req)
             case response.code
             when "301", "302"
+                if max_redir == 0
+                    raise Site::RedirectError.new()
+                end
                 location = response["Location"]
                 if !location.start_with?("http")
                     location = "#{uri.scheme}://#{uri.hostname}:#{uri.port}/#{location}"
@@ -62,7 +68,7 @@ class Site
 
                 @url = location
                 @logger.debug "Redirecting to #{location}"
-                return fetch_url(location)
+                return fetch_url(location, max_redir:max_redir-1)
             end
 
             html = response.body
@@ -140,6 +146,12 @@ class Site
     def update()
         begin
             do_stuff()
+        rescue Site::RedirectError => e
+            msg = "Error parsing page #{@url}, too many redirects"
+            msg += ". Will retry in #{@wait} + 30 minutes"
+            @logger.error msg
+            $stderr.puts msg
+            update_state_file({"wait" => @wait + 30*60})
         rescue Site::ParseError => e
             msg = "Error parsing page #{@url}"
             if e.message
