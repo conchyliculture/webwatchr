@@ -19,26 +19,18 @@ module Galaxus
         # Gets info from the daily deals
         def get_content
             @parsed_content.css("article").each do |a|
-                unless a.css("div.lazy-image img").empty?
-                    img = "https:"+a.css("div.lazy-image img").attr("src").value()
-                    if img =~ /data:image\/gif;base64/
-                        img = "https:"+a.css("div.lazy-image img").attr("data-src").value()
-                    end
-                    site_base = URI.parse(@url)
-                    site_base = site_base.to_s.sub(site_base.request_uri, "")
-                    url = site_base + "/" + a.css("a.product-overlay")[0].attr("href")
-                    title = a.css("h5.product-name").text.split("\n").join("").gsub("\r","")
-                    price = "?"
-                    if a.css("div.product-price")
-                        price = a.css("div.product-price").text.split(".–")[0].strip
-                    end
-                    add_article({
-                        "id" => url,
-                        "url" => url,
-                        "img_src" => img,
-                        "title" => "#{title} - #{price}"
-                    })
-                end
+                img = a.css('picture img')[0]['src']
+                site_base = URI.parse(@url)
+                site_base = site_base.to_s.sub(site_base.request_uri, "")
+                url = site_base + "/" + a.css('header a')[0]['href']
+                title = a.css('div.E2F0').text
+                price = a.css('div._1JnF span strong').text
+                add_article({
+                    "id" => url,
+                    "url" => url,
+                    "img_src" => img,
+                    "title" => "#{title} - #{price}"
+                })
             end
         end
     end
