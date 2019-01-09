@@ -40,7 +40,7 @@ end
 
 # Add some terms to search
 # 
-search_terms = ["ricardo"]
+search_terms = []
 search_terms.each do |term|
     Ricardo.new(
         url:  URI.encode("https://www.ricardo.ch/fr/s/#{term}"),
