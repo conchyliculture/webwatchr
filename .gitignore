@@ -1,7 +1,8 @@
 .lasts
 libs
 config.json
-sites-enabled/.empty
 TODO
 *.log
 *.swp
+sites-enabled/*
+!sites-enabled/.empty
