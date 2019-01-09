@@ -19,7 +19,7 @@ module Galaxus
         # Gets info from the daily deals
         def get_content
             @parsed_content.css("article").each do |a|
-                img = a.css('picture img')[0]['src']
+                img = a.css('div img')[0]['src']
                 site_base = URI.parse(@url)
                 site_base = site_base.to_s.sub(site_base.request_uri, "")
                 url = site_base + "/" + a.css('header a')[0]['href']
