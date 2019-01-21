@@ -23,8 +23,8 @@ module Galaxus
                 site_base = URI.parse(@url)
                 site_base = site_base.to_s.sub(site_base.request_uri, "")
                 url = site_base + "/" + a.css('header a')[0]['href']
-                title = a.css('div.E2F0').text
-                price = a.css('div._1JnF span strong').text
+                title = a.css('div')[16].text
+                price = a.css('div span strong').text
                 add_article({
                     "id" => url,
                     "url" => url,
