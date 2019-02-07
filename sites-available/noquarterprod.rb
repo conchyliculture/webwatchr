@@ -7,6 +7,16 @@ class NQP < Site::Articles
     require "net/http"
     require "nokogiri"
 
+    def initialize(artist_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://www.colisprive.com/moncolis/pages/detailColis.aspx?numColis=#{track_id}",
+            url:  "http://www.noquarterprod.com/product-category/#{artist_id}/",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     def get_content()
         @alread_fetched_urls = []
         return get_products(@parsed_content)
@@ -40,7 +50,7 @@ class NQP < Site::Articles
 end
 
 NQP.new(
-    url:  "http://www.noquarterprod.com/product-category/carpenter-brut-en/",
+    artist_id: "carpenter-brut-en",
     every: 12*60*60,
     test: __FILE__ == $0
 ).update

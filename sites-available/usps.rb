@@ -5,6 +5,15 @@ require_relative "../lib/site.rb"
 
 class USPS < Site::SimpleString
 
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://tools.usps.com/go/TrackConfirmAction?tLabels=#{track_id}",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     def get_content()
         infos = @parsed_content.css('div#trackingHistory_1 div.row div.panel-actions-content')
         unless infos
@@ -37,9 +46,8 @@ class USPS < Site::SimpleString
 
 end
 
-trackingnb = "LZ000000000US"
 USPS.new(
-    url: "https://tools.usps.com/go/TrackConfirmAction?tLabels=#{trackingnb}",
+    track_id: "LZ000000000US",
     every: 60*60,
     test: __FILE__ == $0
 ).update

@@ -3,6 +3,15 @@
 require_relative "../lib/site.rb"
 
 class Ebay < Site::Articles 
+
+    def initialize(search_request:, every:, comment:nil, test:false)
+        super(
+            url:  "https://www.ebay.com/sch/i.html?LH_PrefLoc=2&_nkw=#{search_request}",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
     def get_content()
         @parsed_content.css('.s-item').each do |article|
             url = article.css('a.s-item__link')[0]['href']
@@ -24,7 +33,7 @@ end
 search_terms = []
 search_terms.each do |term|
     Ebay.new(
-        url:  "https://www.ebay.com/sch/i.html?LH_PrefLoc=2&_nkw=#{term}",
+        search_request: term,
         every: 30*60,
         test: __FILE__ == $0
     ).update

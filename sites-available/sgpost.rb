@@ -5,6 +5,20 @@ require_relative "../lib/site.rb"
 
 class PostSG < Site::SimpleString
 
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "http://www.singpost.com/track-items",
+            post_data: {
+                "track_number" => track_id,
+                "captoken" => "",
+                "op" => "Check item status"
+            },
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     # Here we want to do check only part of the DOM.
     #   @html_content contains the HTML page as String
     #   @parsed_content contains the result of Nokogiri.parse(@html_content)
@@ -16,12 +30,12 @@ class PostSG < Site::SimpleString
             raise Site::ParseError.new("Please verify the PostSG tracking ID")
         end
         status = ""
-        l.each do |l|
-            case l.attr("class")
+        l.each do |ll|
+            case ll.attr("class")
             when "tracking-status-text"
-                status = l.text.strip()
+                status = ll.text.strip()
             when "tracking-no-text"
-                date = l.text.strip()
+                date = ll.text.strip()
                 if date =~ /\d\d\/\d\d\/\d\d\d\d/
                     res << "#{date} : #{status}"
                 end
@@ -33,18 +47,10 @@ class PostSG < Site::SimpleString
         end
         return nil
     end
-
 end
 
-trackingnb = "RB000000000SG"
 PostSG.new(
-    url: "http://www.singpost.com/track-items",
-    post_data: {
-        "track_number" => trackingnb,
-        "captoken" => "",
-        "op" => "Check item status"
-    },
+    track_id: "RB000000000SG",
     every: 60*60,
-   test: __FILE__ == $0
+    test: __FILE__ == $0
 ).update
-

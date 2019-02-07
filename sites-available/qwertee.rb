@@ -4,6 +4,14 @@
 require_relative "../lib/site.rb"
 
 class Qwertee < Site::Articles
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://www.qwertee.com/rss/",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
 
     def get_content()
         Nokogiri.parse(@html_content).xpath("rss/channel/item").each do |entry|
@@ -13,7 +21,6 @@ class Qwertee < Site::Articles
             entry_description.remove_namespaces!
             shirtPhotoURL = entry_description.xpath("//img").first["src"]
 
-            shirtPubDate = entry.xpath("pubDate").first.content
             add_article({
                 "title" => shirtName,
                 "id" => shirtURL,
@@ -24,10 +31,7 @@ class Qwertee < Site::Articles
     end
 end
 
-# I know I use the RSS page, which mean I could just use a RSS reader right?
-# I could also use your mom.
 Qwertee.new(
-    url:  "https://www.qwertee.com/rss/",
     every: 6*60*60,
     test: __FILE__ == $0
 ).update
