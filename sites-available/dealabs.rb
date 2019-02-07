@@ -18,6 +18,15 @@ $BADCATEGORY = Regexp.union(
 
 class Dealabs < Site::Articles 
 
+    def initialize(every:, comment:nil, test:false)
+        super(
+            url:  "https://www.dealabs.com/",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     def match_category(categories)
         categories.each do |category|
             return true if category=~$BADCATEGORY
@@ -61,7 +70,6 @@ class Dealabs < Site::Articles
 end
 
 Dealabs.new(
-    url:  "https://www.dealabs.com/",
     every: 30*60,
     test: __FILE__ == $0
 ).update

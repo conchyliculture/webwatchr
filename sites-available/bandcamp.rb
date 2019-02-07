@@ -7,7 +7,7 @@ class Bandcamp < Site::Articles
     require "net/http"
     require "nokogiri"
 
-    def initialize(band,every,test,merch=false)
+    def initialize(band,every,test=false,merch=false)
         @merch = merch
         super(url: "https://#{band}.bandcamp.com/#{'merch' if @merch}", every: every,test: test)
     end
@@ -67,7 +67,6 @@ end
 # "group2"
 # ]
 bandcamp=[
-#
 ].each do |band|
     Bandcamp.new(
         band,

@@ -8,6 +8,15 @@ class UPS < Site::SimpleString
     require "net/http"
     require "json"
 
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{track__id}",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     def get_coords(search)
         url = "http://maps.googleapis.com/maps/api/geocode/json?address=#{search}&sensor=false"
         j = JSON.parse(Net::HTTP.get(URI.parse(url.gsub(' ','+'))))
@@ -45,12 +54,11 @@ class UPS < Site::SimpleString
         if table.size==0
             begin
                 text = @parsed_content.css("div.pkgstep.current").css("a").text.gsub("\t","")
-            rescue Exception => e
+            rescue Exception
                 raise Site::ParseError.new "Please verify the UPS tracking ID #{@url}"
             end
             return text
         end
-        headers = table[0].css("th").map{|x| x.text}
         places=[]
         prev_place = ""
         table[1..-1].each do |tr|
@@ -76,9 +84,8 @@ class UPS < Site::SimpleString
     end
 end
 
-ups_id="AAAAAAAAAAAAAAAAAA"
 UPS.new(
-    url:  "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{ups_id}",
+    track_id: "AAAAAAAAAAAAAAAAAA",
     every: 30*60,
     test: __FILE__ == $0
 ).update

@@ -3,7 +3,6 @@
 require_relative "../lib/site.rb"
 require "openssl"
 
-
 # Ricard is broken and uses terrible SSL signature methods
 # This means this script can't work with OpenSSL 1.1
 # The workaround would be to patch the SSL Context for the
@@ -21,6 +20,14 @@ end
 
 
 class Ricardo < Site::Articles 
+    def initialize(search_term:, every:, comment:nil, test:false)
+        super(
+            url:  URI.encode("https://www.ricardo.ch/fr/s/#{search_term}"),
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
 
     def get_content()
         @parsed_content.css('a.ric-article').each do |article|
@@ -39,11 +46,9 @@ class Ricardo < Site::Articles
 end
 
 # Add some terms to search
-# 
-search_terms = []
-search_terms.each do |term|
+[].each do |term|
     Ricardo.new(
-        url:  URI.encode("https://www.ricardo.ch/fr/s/#{term}"),
+        search_term: term,
         every: 30*60,
         test: __FILE__ == $0
     ).update

@@ -30,9 +30,9 @@ class Songkick < Site::Articles
 end
     
 # example
-#Songkick.new(
-#    url: "https://www.songkick.com/artists/7214659-carpenter-brut/calendar",
-#    every: 12 * 60 * 60,
-#    comment: "CarpenterBrut concerts",
-#    test: __FILE__ == $0
-#).update
+Songkick.new(
+    url: "https://www.songkick.com/artists/7214659-carpenter-brut/calendar",
+    every: 12 * 60 * 60,
+    comment: "CarpenterBrut concerts",
+    test: __FILE__ == $0
+).update
