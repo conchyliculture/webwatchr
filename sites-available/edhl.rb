@@ -7,10 +7,14 @@ class EDHL < Site::SimpleString
     require "date"
     require "json"
 
-    # Here we want to do check only part of the DOM.
-    #   @html_content contains the HTML page as String
-    #   @parsed_content contains the result of Nokogiri.parse(@html_content)
-    #
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "http://webtrack.dhlglobalmail.com/?mobile=&trackingnumber=#{track_id}",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
     def get_content()
         res = []
         l = @parsed_content.css("ol.timeline li")
@@ -18,14 +22,13 @@ class EDHL < Site::SimpleString
             raise Site::ParseError.new("Please verify the eDHL tracking ID")
         end
         date = nil
-        l.each do |l|
-            case l.attr("class")
+        l.each do |ll|
+            case ll.attr("class")
             when "timeline-date"
-                date = l.text
+                date = ll.text
             when /timeline-event/
-                time = l.css("div.timeline-time").text.strip()
-                loc = l.css("div.timeline-location").text.strip()
-                descr = l.css("div.timeline-description").text.strip()
+                time = ll.css("div.timeline-time").text.strip()
+                descr = ll.css("div.timeline-description").text.strip()
                 res << "#{date} #{time}: #{descr}"
             end
         end
@@ -35,10 +38,9 @@ class EDHL < Site::SimpleString
 
 end
 
-trackingnb="000000"
 EDHL.new(
-    url: "http://webtrack.dhlglobalmail.com/?mobile=&trackingnumber=#{trackingnb}",
+    track_id: "000000",
     every: 60*60,
-   test: __FILE__ == $0
+    test: __FILE__ == $0
 ).update
 

@@ -6,6 +6,15 @@ require_relative "../lib/site.rb"
 class RoyalMail < Site::SimpleString
     require "date"
 
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://www.royalmail.com/track-your-item?trackNumber=#{track_id}",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     # Here we want to do check only part of the DOM.
     #   @html_content contains the HTML page as String
     #   @parsed_content contains the result of Nokogiri.parse(@html_content)
@@ -17,7 +26,6 @@ class RoyalMail < Site::SimpleString
         if table.size == 0
             raise Site::ParseError.new "Please verify the RoyalMail tracking ID #{@url}"
         end
-        headers = table[0].css("th").map{|x| x.text.strip}
         table.css("tr")[1..-1].each do |tr|
             row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,"").gsub(/  +/," ")}
             begin
@@ -32,9 +40,8 @@ class RoyalMail < Site::SimpleString
 
 end
 
-trackingnb = "RN000000000GB"
 RoyalMail.new(
-    url: "https://www.royalmail.com/track-your-item?trackNumber=#{trackingnb}",
+    track_id: "RN000000000GB",
     every: 60*60,
     test: __FILE__ == $0
 ).update

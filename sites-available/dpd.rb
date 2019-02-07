@@ -8,6 +8,15 @@ require "pp"
 
 class DPD < Site::SimpleString
 
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://tracking.dpd.de/cgi-bin/simpleTracking.cgi?parcelNr=#{track_id}&locale=en_D2&type=1&jsoncallback=_jqjsp",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     def parse_content(html)
         if html=~/_jqjsp\((.+)\)/m
             return JSON.parse($1)
@@ -32,9 +41,8 @@ class DPD < Site::SimpleString
     end
 end
 
-$DPD_id = "000000000000"
 DPD.new(
-    url: "https://tracking.dpd.de/cgi-bin/simpleTracking.cgi?parcelNr=#{$DPD_id}&locale=en_D2&type=1&jsoncallback=_jqjsp",
+    track_id: "000000000000",
     every: 30*60,
     test: __FILE__ == $0
 ).update

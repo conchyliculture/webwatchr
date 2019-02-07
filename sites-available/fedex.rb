@@ -8,6 +8,16 @@ class Fedex < Site::SimpleString
     require "json"
     require "net/http"
 
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://www.fedex.com/trackingCal/track",
+            post_data: Fedex.make_post_data(track_id),
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
+
     def get_content()
         package_info = JSON.parse(@html_content).dig("TrackPackagesResponse", "packageList")[0]
         estDeliveryDt = package_info["estDeliveryDt"]
@@ -37,11 +47,8 @@ class Fedex < Site::SimpleString
     end
 end
 
-fedex_id = "999999999"
-
 Fedex.new(
-    url: "https://www.fedex.com/trackingCal/track",
-    post_data: Fedex.make_post_data(fedex_id),
+    track_id: "999999999",
     every: 60*60,
     test: __FILE__ == $0
 ).update

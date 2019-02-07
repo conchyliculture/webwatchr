@@ -4,9 +4,18 @@
 require_relative "../lib/site.rb"
 
 class IParcel < Site::SimpleString
+
+    def initialize(track_id:, every:, comment:nil, test:false)
+        super(
+            url: "https://tracking.i-parcel.com/Home/Index?trackingnumber=#{track_id}",
+            every: every,
+            test: test,
+            comment: comment,
+        )
+    end
     def get_content()
         res = []
-        table = @parsed_content.css("div.result").each{|row|
+        @parsed_content.css("div.result").each{|row|
             date = row.css("div.date").text.split("\n").map{|s| s.strip()}.join(" ")
             what = row.css("div.event").text.split("\n").map{|s| s.strip()}.join(" ")
             res << "#{date} #{what}<br/>\n"
@@ -16,9 +25,8 @@ class IParcel < Site::SimpleString
     end
 end
 
-iparcel = "AEIEDE00000000000"
 IParcel.new(
-    url:  "https://tracking.i-parcel.com/Home/Index?trackingnumber=#{iparcel}",
+    track_id: "AEIEDE00000000000",
     every: 60*60,
     test: __FILE__ == $0
 ).update
