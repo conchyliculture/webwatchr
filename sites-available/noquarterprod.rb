@@ -9,8 +9,7 @@ class NQP < Site::Articles
 
     def initialize(artist_id:, every:, comment:nil, test:false)
         super(
-            url: "https://www.colisprive.com/moncolis/pages/detailColis.aspx?numColis=#{track_id}",
-            url:  "http://www.noquarterprod.com/product-category/#{artist_id}/",
+            url: "http://www.noquarterprod.com/product-category/#{artist_id}/",
             every: every,
             test: test,
             comment: comment,
