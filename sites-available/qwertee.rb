@@ -4,7 +4,7 @@
 require_relative "../lib/site.rb"
 
 class Qwertee < Site::Articles
-    def initialize(track_id:, every:, comment:nil, test:false)
+    def initialize(every:, comment:nil, test:false)
         super(
             url: "https://www.qwertee.com/rss/",
             every: every,
