@@ -63,7 +63,11 @@ class Site
                 end
                 location = response["Location"]
                 if !location.start_with?("http")
-                    location = "#{uri.scheme}://#{uri.hostname}:#{uri.port}/#{location}"
+                    if location.start_with?("/")
+                        location = "#{uri.scheme}://#{uri.hostname}:#{uri.port}#{location}"
+                    else
+                        location = "#{uri.scheme}://#{uri.hostname}:#{uri.port}/#{location}"
+                    end
                 end
 
                 @url = location
