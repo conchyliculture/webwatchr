@@ -18,19 +18,19 @@ module Galaxus
     class DailyDeals < Site::Articles
         # Gets info from the daily deals
         def get_content
-            @parsed_content.css("article").each do |a|
-                img = a.css('div img')[0]['src']
-                site_base = URI.parse(@url)
-                site_base = site_base.to_s.sub(site_base.request_uri, "")
-                url = site_base + "/" + a.css('header a')[0]['href']
-                title = a.css('div')[16].text
-                price = a.css('div span strong').text
-                add_article({
-                    "id" => url,
-                    "url" => url,
-                    "img_src" => img,
-                    "title" => "#{title} - #{price}"
-                })
+  			@parsed_content.css("article.liveshoppingProduct").each do |a|
+               img = a.css('img[src^="http"]')[0]['src']
+               site_base = URI.parse(@url)
+               site_base = site_base.to_s.sub(site_base.request_uri, "")
+               url = site_base + "/" + a.css('a[class*="fullSizeOverlay"]')[0]['href']
+               title = a.css('div.productName').map() {|x| x.text.strip}.join(' ')
+               price = a.css('div span strong').text
+               add_article({
+                   "id" => url,
+                   "url" => url,
+                   "img_src" => img,
+                   "title" => "#{title} - #{price}"
+               })
             end
         end
     end
@@ -41,15 +41,3 @@ end
 #    every: 2*60*60,
 #    test: __FILE__ == $0
 #).update
-
-Galaxus::DailyDeals.new(
-    url:  "https://www.galaxus.ch/en/LiveShopping",
-    every: 12*60*60,
-    test: __FILE__ == $0
-).update
-
-Galaxus::DailyDeals.new(
-    url:  "https://www.digitec.ch/en/LiveShopping",
-    every: 12*60*60,
-    test: __FILE__ == $0
-).update
