@@ -12,6 +12,7 @@ class USPS < Site::SimpleString
             test: test,
             comment: comment,
         )
+        @useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
     end
 
     def get_content()
@@ -53,4 +54,3 @@ end
 #     every: 60*60,
 #     test: __FILE__ == $0
 # ).update
-
