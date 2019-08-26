@@ -19,7 +19,7 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait
-    def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
+    def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil, useragent:nil)
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
         @comment = comment
@@ -29,6 +29,7 @@ class Site
         @post_data = post_data
         @test = test
         @url = url
+        @useragent = useragent
 
         md5 = Digest::MD5.hexdigest(url)
         @state_file = ".lasts/last-#{md5}"
@@ -54,7 +55,9 @@ class Site
             else
                 req = Net::HTTP::Get.new(uri)
             end
-#            req["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
+            if @useragent
+              req["User-Agent"] = @useragent
+            end
             response = http.request(req)
             case response.code
             when "301", "302"
