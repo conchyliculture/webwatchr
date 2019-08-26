@@ -32,9 +32,10 @@ class Colisprive < Site::SimpleString
     end
 end
 
-Colisprive.new(
-    track_id: "55600000000000000",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+# Colisprive.new(
+#     track_id: "55600000000000000",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update
+# 

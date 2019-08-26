@@ -32,11 +32,13 @@ class PostDE < Site::SimpleString
     end
 end
 
-PostDE.new(
-    track_id: "Rblol",
-    post_day: 16,
-    post_month: 2 ,
-    post_year: 2017,
-    every: 30*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# PostDE.new(
+#     track_id: "Rblol",
+#     post_day: 16,
+#     post_month: 2 ,
+#     post_year: 2017,
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

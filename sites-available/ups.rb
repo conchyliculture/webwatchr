@@ -84,9 +84,10 @@ class UPS < Site::SimpleString
     end
 end
 
-UPS.new(
-    track_id: "AAAAAAAAAAAAAAAAAA",
-    every: 30*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+#
+# UPS.new(
+#     track_id: "AAAAAAAAAAAAAAAAAA",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

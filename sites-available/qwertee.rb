@@ -31,7 +31,9 @@ class Qwertee < Site::Articles
     end
 end
 
-Qwertee.new(
-    every: 6*60*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# Qwertee.new(
+#     every: 6*60*60,
+#     test: __FILE__ == $0
+# ).update

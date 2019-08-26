@@ -48,8 +48,10 @@ class NQP < Site::Articles
     end
 end
 
-NQP.new(
-    artist_id: "carpenter-brut-en",
-    every: 12*60*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# NQP.new(
+#     artist_id: "carpenter-brut-en",
+#     every: 12*60*60,
+#     test: __FILE__ == $0
+# ).update

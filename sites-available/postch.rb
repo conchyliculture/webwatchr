@@ -26,9 +26,10 @@ class PostCH < Site::SimpleString
     end
 end
 
-PostCH.new(
-    track_id: "99.60.00000.00000000",
-    every: 30*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+#
+# PostCH.new(
+#     track_id: "99.60.00000.00000000",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

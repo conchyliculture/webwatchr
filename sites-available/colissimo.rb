@@ -31,9 +31,10 @@ class Colissimo < Site::SimpleString
     end
 end
 
-Colissimo.new(
-    track_id: "CW0000000000FR",
-    every: 2*60*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+# Colissimo.new(
+#     track_id: "CW0000000000FR",
+#     every: 2*60*60,
+#     test: __FILE__ == $0
+# ).update
+# 

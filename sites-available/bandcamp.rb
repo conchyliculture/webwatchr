@@ -66,12 +66,12 @@ end
 # "group1",
 # "group2"
 # ]
-bandcamp=[
-].each do |band|
-    Bandcamp.new(
-        band,
-        12*60*60,
-        __FILE__ == $0,
-        true
-    ).update
-end
+# bandcamp=[
+# ].each do |band|
+#     Bandcamp.new(
+#         band,
+#         12*60*60,
+#         __FILE__ == $0,
+#         true
+#     ).update
+# end
