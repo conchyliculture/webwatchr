@@ -27,8 +27,10 @@ class PostNL < Site::SimpleString
     end
 end
 
-PostNL.new(
-    track_id: "RSAAAAAAAAAAAAA",
-    every: 30*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# PostNL.new(
+#     track_id: "RSAAAAAAAAAAAAA",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

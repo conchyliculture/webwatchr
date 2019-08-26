@@ -29,11 +29,13 @@ class Ricardo < Site::Articles
     end
 end
 
-# Add some terms to search
-[].each do |term|
-    Ricardo.new(
-        search_term: term,
-        every: 30*60,
-        test: __FILE__ == $0
-    ).update
-end
+# Example:
+#
+# # Add some terms to search
+# [].each do |term|
+#     Ricardo.new(
+#         search_term: term,
+#         every: 30*60,
+#         test: __FILE__ == $0
+#     ).update
+# end

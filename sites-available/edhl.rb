@@ -38,9 +38,11 @@ class EDHL < Site::SimpleString
 
 end
 
-EDHL.new(
-    track_id: "000000",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+#
+# EDHL.new(
+#     track_id: "000000",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update
+# 

@@ -29,8 +29,10 @@ class PostFR < Site::SimpleString
     end
 end
 
-PostFR.new(
-    track_id: "6Y000000000",
-    every: 30*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# PostFR.new(
+#     track_id: "6Y000000000",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

@@ -46,9 +46,11 @@ class USPS < Site::SimpleString
 
 end
 
-USPS.new(
-    track_id: "LZ000000000US",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# USPS.new(
+#     track_id: "LZ000000000US",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update
 

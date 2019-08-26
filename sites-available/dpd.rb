@@ -41,10 +41,10 @@ class DPD < Site::SimpleString
     end
 end
 
-DPD.new(
-    track_id: "000000000000",
-    every: 30*60,
-    test: __FILE__ == $0
-).update
-
-
+# Example:
+#
+# DPD.new(
+#     track_id: "000000000000",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

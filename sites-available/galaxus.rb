@@ -36,6 +36,8 @@ module Galaxus
     end
 end
 
+# Example:
+#
 #Galaxus::Product.new(
 #    url:  "",
 #    every: 2*60*60,

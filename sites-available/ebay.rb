@@ -30,12 +30,14 @@ class Ebay < Site::Articles
     end
 end
 
-# Add some terms to search
-search_terms = []
-search_terms.each do |term|
-    Ebay.new(
-        search_request: term,
-        every: 30*60,
-        test: __FILE__ == $0
-    ).update
-end
+# Example:
+#
+# # Add some terms to search
+# search_terms = []
+# search_terms.each do |term|
+#     Ebay.new(
+#         search_request: term,
+#         every: 30*60,
+#         test: __FILE__ == $0
+#     ).update
+# end

@@ -69,9 +69,11 @@ class Kimsufi < Site::SimpleString
     end
 end
 
-Kimsufi.new(
-    every: 5*60,
-    machines: ["KS-1", "KS-2B"],
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# Kimsufi.new(
+#     every: 5*60,
+#     machines: ["KS-1", "KS-2B"],
+#     test: __FILE__ == $0
+# ).update
 

@@ -29,10 +29,11 @@ class Songkick < Site::Articles
     end
 end
     
-# example
-Songkick.new(
-    url: "https://www.songkick.com/artists/7214659-carpenter-brut/calendar",
-    every: 12 * 60 * 60,
-    comment: "CarpenterBrut concerts",
-    test: __FILE__ == $0
-).update
+# # example
+#
+# Songkick.new(
+#     url: "https://www.songkick.com/artists/7214659-carpenter-brut/calendar",
+#     every: 12 * 60 * 60,
+#     comment: "CarpenterBrut concerts",
+#     test: __FILE__ == $0
+# ).update

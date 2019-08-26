@@ -69,7 +69,9 @@ class Dealabs < Site::Articles
     end
 end
 
-Dealabs.new(
-    every: 30*60,
-    test: __FILE__ == $0
-).update
+# Example:
+# 
+# Dealabs.new(
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

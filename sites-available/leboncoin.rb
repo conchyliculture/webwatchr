@@ -20,12 +20,14 @@ class Leboncoin < Site::Articles
     end
 end
 
-region = "ile_de_france"
-dept = "paris"
-cat = "telephonie"
-search = "mon tel de reve"
-Leboncoin.new(
-    url:  "https://www.leboncoin.fr/#{cat}/offres/#{region}/#{dept}/?q=#{search}",
-    every: 30*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# region = "ile_de_france"
+# dept = "paris"
+# cat = "telephonie"
+# search = "mon tel de reve"
+# Leboncoin.new(
+#     url:  "https://www.leboncoin.fr/#{cat}/offres/#{region}/#{dept}/?q=#{search}",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update

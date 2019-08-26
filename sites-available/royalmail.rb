@@ -40,9 +40,10 @@ class RoyalMail < Site::SimpleString
 
 end
 
-RoyalMail.new(
-    track_id: "RN000000000GB",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+#
+# RoyalMail.new(
+#     track_id: "RN000000000GB",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update

@@ -25,9 +25,10 @@ class IParcel < Site::SimpleString
     end
 end
 
-IParcel.new(
-    track_id: "AEIEDE00000000000",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
-
+# Example:
+#
+# IParcel.new(
+#     track_id: "AEIEDE00000000000",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update

@@ -22,9 +22,10 @@ class DHL < Site::SimpleString
     end
 end
 
-DHL.new(
-    track_id: "000000000000",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
-
+# example:
+# DHL.new(
+#     track_id: "000000000000",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update
+# 

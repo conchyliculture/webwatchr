@@ -49,8 +49,10 @@ class PostSG < Site::SimpleString
     end
 end
 
-PostSG.new(
-    track_id: "RB000000000SG",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# PostSG.new(
+#     track_id: "RB000000000SG",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update

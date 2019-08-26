@@ -22,6 +22,8 @@ class Wix < Site::SimpleString
     end
 end
 
+# Example:
+#
 #Wix.new(
 #    url: "http://a.website/made.with/wix.com"
 #    every: 2*60*60,

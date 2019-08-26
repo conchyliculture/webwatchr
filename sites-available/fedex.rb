@@ -47,8 +47,10 @@ class Fedex < Site::SimpleString
     end
 end
 
-Fedex.new(
-    track_id: "999999999",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
+# Example:
+#
+# Fedex.new(
+#     track_id: "999999999",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update
