@@ -55,12 +55,12 @@ END_OF_MESSAGE
     end
 end
 
-def make_alert(c)
-    res_proc = nil
+def make_alerts(c)
+    res_proc = []
     c["default_alert"].each do |a|
         case a
         when "email"
-			res_proc = Proc.new { |args|
+			res_proc += Proc.new { |args|
                 unless args[:subject]
                     args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
                 end
@@ -72,9 +72,16 @@ def make_alert(c)
                 send_mail(args)
             }
         when "rss"
-            res_proc = Proc.new { |args|
+            res_proc += Proc.new { |args|
     #            gen_rss(args)
             }
+        when "telegram"
+            require 'telegram/bot'
+            res_proc += Proc.new { |args|
+              bot = Telegram::Bot::Client.new($CONF["alert"]["telegram"]["token"])
+              bot.api.send_message(chat_id: $CONF["alert"]["telegram"]["chat_id"], text: args[:content])
+            }
+
         else
             raise Exception("Unknown alert method : #{a}")
         end
@@ -94,7 +101,7 @@ def init(options)
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
     timeout = $CONF["site_timeout"]
-    $CONF["alert_proc"] = make_alert($CONF)
+    $CONF["alert_procs"] = make_alerts($CONF)
     if options[:site]
         site = File.join("sites-available", options[:site])
         load_site(site, timeout)
