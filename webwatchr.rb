@@ -81,8 +81,8 @@ def make_alerts(c)
             begin
               require 'telegram/bot'
               res_procs.append(Proc.new { |args|
-                bot = Telegram::Bot::Client.new($CONF["alert"]["telegram"]["token"])
-                bot.api.send_message(chat_id: $CONF["alert"]["telegram"]["chat_id"], text: args[:content])
+                bot = Telegram::Bot::Client.new($CONF["alerts"]["telegram"]["token"])
+                bot.api.send_message(chat_id: $CONF["alerts"]["telegram"]["chat_id"], text: args[:content])
               })
             rescue LoadError
                 puts "Please open README.md to see how to make Telegram alerting work"
