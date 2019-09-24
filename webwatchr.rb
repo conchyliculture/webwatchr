@@ -91,7 +91,7 @@ def make_alerts(c)
             raise Exception("Unknown alert method : #{a}")
         end
     end
-    return res_proc
+    return res_procs
 end
 
 def init(options)
