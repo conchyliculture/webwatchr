@@ -22,7 +22,7 @@ module Galaxus
                img = a.css('img[src^="http"]')[0]['src']
                site_base = URI.parse(@url)
                site_base = site_base.to_s.sub(site_base.request_uri, "")
-               url = site_base + "/" + a.css('a[class*="fullSizeOverlay"]')[0]['href']
+               url = site_base + "/" + a.css('a')[0]['href']
                title = a.css('div.productName').map() {|x| x.text.strip}.join(' ')
                price = a.css('div span strong').text
                add_article({
