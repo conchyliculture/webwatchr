@@ -134,7 +134,9 @@ class Site
 
     def alert(new_stuff)
         @logger.debug "Alerting new stuff"
-        $CONF["alert_proc"].call({content: format(new_stuff), name: @name})
+        $CONF["alert_procs"].each do |p|
+          p.call({content: format(new_stuff), name: @name})
+        end
     end
 
     def get_content()
