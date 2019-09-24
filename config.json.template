@@ -5,10 +5,14 @@
             "smtp_server": "localhost",
             "smtp_port": 25
         },
+        "telegram": {
+            "chat_id": 123456789,
+            "token": "MLKJQSDMLKJSQDMLQKSJDMLQKSJDMLKSQJD"
+        },
         "rss" : {
         }
     },
-    "default_alert" : ["email"],
+    "default_alert" : ["email", "telegram"],
     "pid_file": "webwatchr.pid",
     "last_dir": ".lasts",
     "site_timeout": 120,

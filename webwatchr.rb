@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 
+$: << "lib"
+
 require "fileutils"
 require "json"
 require "logger"
@@ -55,12 +57,12 @@ END_OF_MESSAGE
     end
 end
 
-def make_alert(c)
-    res_proc = nil
+def make_alerts(c)
+    res_procs = []
     c["default_alert"].each do |a|
         case a
         when "email"
-			res_proc = Proc.new { |args|
+            res_procs.append(Proc.new { |args|
                 unless args[:subject]
                     args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
                 end
@@ -70,11 +72,21 @@ def make_alert(c)
                 args[:to] = $CONF["alerts"]["email"]["dest_email"]
                 args[:from] = $CONF["alerts"]["email"]["from_email"]
                 send_mail(args)
-            }
+            })
         when "rss"
-            res_proc = Proc.new { |args|
+            res_procs.append(Proc.new { |args|
     #            gen_rss(args)
-            }
+            })
+        when "telegram"
+            begin
+              require 'telegram/bot'
+              res_procs.append(Proc.new { |args|
+                bot = Telegram::Bot::Client.new($CONF["alert"]["telegram"]["token"])
+                bot.api.send_message(chat_id: $CONF["alert"]["telegram"]["chat_id"], text: args[:content])
+              })
+            rescue LoadError
+                puts "Please open README.md to see how to make Telegram alerting work"
+            end
         else
             raise Exception("Unknown alert method : #{a}")
         end
@@ -94,7 +106,7 @@ def init(options)
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
     timeout = $CONF["site_timeout"]
-    $CONF["alert_proc"] = make_alert($CONF)
+    $CONF["alert_procs"] = make_alerts($CONF)
     if options[:site]
         site = File.join("sites-available", options[:site])
         load_site(site, timeout)
@@ -114,7 +126,7 @@ def load_site(site, timeout=10*60)
     end
     begin
         $logger.info "loading #{File.basename(site)} file"
-        status = Timeout::timeout(timeout) {
+        Timeout::timeout(timeout) {
             load site
         }
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
