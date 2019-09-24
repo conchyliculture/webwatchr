@@ -204,3 +204,29 @@ run `ruby tests/test.rb`
 You can use the @logger Logger object in your mysite.rb.
 
 Set the log file in config.json under the "log" key
+
+## Alerting
+
+Email is the main method of alerting, but you can also set webwatchr to talk on telegram through a bot.
+
+First make a bot and grab a token following the [Telegram procedure](https://core.telegram.org/bots#6-botfather).
+
+You also need to know the `chat_id` for its discussion with you. The code in [there](https://github.com/atipugin/telegram-bot-ruby/blob/master/examples/bot.rb) can help you.
+
+Install some dependencies from the one and only repo you should kind of trust:
+
+```
+apt install ruby-virtus ruby-inflecto ruby-faraday
+```
+
+Then grab the code for the Telegram bot client. Run this from inside the current dir:
+
+```
+CURDIR="$(pwd)"
+cd /tmp
+git clone https://github.com/atipugin/telegram-bot-ruby
+mv telegram-bot-ruby/lib/telegram "${CURDIR}/lib/"
+cd -
+```
+
+Then edit the config.json file accordingly.
