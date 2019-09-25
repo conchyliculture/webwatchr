@@ -76,9 +76,9 @@ class TestClasse < Test::Unit::TestCase
 
         result = ""
 
-        $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode("utf-8")}
+        $CONF["alert_procs"] = [Proc.new{|x| result = x.to_s.encode("utf-8")}]
 
-        c = TestStringSite.new(url: url, comment:"comment")
+        c = TestStringSite.new(config:$CONF, url: url, comment:"comment")
         assert {c.load_state_file() == {}}
         empty_last = {"content"=>nil, "time"=>-9999999999999}
         assert {c.should_update?(empty_last["time"]) == true}
@@ -97,7 +97,7 @@ class TestClasse < Test::Unit::TestCase
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
             f.write whole_html.gsub("</div>"," new ! </div>")
         end
-        c = TestStringSite.new(url: url, comment:"lol")
+        c = TestStringSite.new(config:$CONF, url: url, comment:"lol")
         c.update()
         expected_error = "INFO -- : Too soon to update #{url}"
         last_error = $logger_test_io.string.split("\n")[-1]
@@ -138,9 +138,9 @@ class TestClasse < Test::Unit::TestCase
 
         result = ""
         called = false
-        $CONF["alert_proc"] = Proc.new{|x| result = x.to_s.encode("utf-8"); called = true}
+        $CONF["alert_procs"] = [Proc.new{|x| result = x.to_s.encode("utf-8"); called = true}]
 
-        c = TestArraySite.new(url: url, every: wait)
+        c = TestArraySite.new(config: $CONF, url: url, every: wait)
         empty_last = {"content"=>nil, "time"=>-9999999999999}
         assert {c.load_state_file() == {}}
         assert {c.should_update?(empty_last["time"])}
@@ -169,7 +169,7 @@ class TestClasse < Test::Unit::TestCase
         File.open(File.join($wwwroot,$content_is_array),"a+") do |f|
             f.write "<div>new! - new </div>"
         end
-        c = TestArraySite.new(url: url)
+        c = TestArraySite.new(config: $CONF, url: url)
         # Second run don't d anything because we shouldn't rerun
         c.update()
         expected_error = "INFO -- : Too soon to update #{url}"
@@ -208,7 +208,7 @@ class TestClasse < Test::Unit::TestCase
         result = ""
         called = false
 
-        c = TestArraySite.new(url: url)
+        c = TestArraySite.new(config: $CONF, url: url)
         # Now, we don't call the alert Proc because we have no new things
         c.update()
         expected_error = "INFO -- : Nothing new for #{url}"
@@ -225,7 +225,7 @@ class TestClasse < Test::Unit::TestCase
 
         # Test error
         @serv_thread.exit
-        c = TestArraySite.new(url: url)
+        c = TestArraySite.new(config: $CONF, url: url)
         # Now, we don't call the alert Proc because we have no new things
         c.update()
         expected_error = "ERROR -- : Network error on #{url} : Failed to open TCP connection to localhost:8001 (Connection refused - connect(2) for \"localhost\" port 8001). Will retry in 0 + 30 minutes"
