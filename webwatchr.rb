@@ -67,10 +67,10 @@ def make_alerts(c)
                     args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
                 end
                 args.delete(:name)
-                args[:smtp_server] = $CONF["alerts"]["email"]["smtp_server"]
-                args[:smtp_port] = $CONF["alerts"]["email"]["smtp_port"]
-                args[:to] = $CONF["alerts"]["email"]["dest_email"]
-                args[:from] = $CONF["alerts"]["email"]["from_email"]
+                args[:smtp_server] = c["alerts"]["email"]["smtp_server"]
+                args[:smtp_port] = c["alerts"]["email"]["smtp_port"]
+                args[:to] = c["alerts"]["email"]["dest_email"]
+                args[:from] = c["alerts"]["email"]["from_email"]
                 send_mail(args)
             })
         when "rss"
@@ -81,8 +81,8 @@ def make_alerts(c)
             begin
               require 'telegram/bot'
               res_procs.append(Proc.new { |args|
-                bot = Telegram::Bot::Client.new($CONF["alerts"]["telegram"]["token"])
-                bot.api.send_message(chat_id: $CONF["alerts"]["telegram"]["chat_id"], text: args[:content])
+                bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
+                bot.api.send_message(chat_id: c["alerts"]["telegram"]["chat_id"], text: args[:content])
               })
             rescue LoadError
                 puts "Please open README.md to see how to make Telegram alerting work"
@@ -94,22 +94,22 @@ def make_alerts(c)
     return res_procs
 end
 
-def init(options)
+def init(config, site: nil)
     $logger.debug("Starting WebWatchr")
 
     $MYDIR = File.dirname(__FILE__)
 
-    unless $CONF["last_dir"]
-        $CONF["last_dir"] = File.join($MYDIR, ".lasts")
+    unless config["last_dir"]
+        config["last_dir"] = File.join($MYDIR, ".lasts")
     end
-    FileUtils.mkdir_p($CONF["last_dir"])
+    FileUtils.mkdir_p(config["last_dir"])
     FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
 
-    timeout = $CONF["site_timeout"]
-    $CONF["alert_procs"] = make_alerts($CONF)
-    if options[:site]
-        site = File.join("sites-available", options[:site])
-        load_site(site, timeout)
+    timeout = config["site_timeout"]
+    config["alert_procs"] = make_alerts(config)
+    if site
+        site_rb = File.join("sites-available", site)
+        load_site(site_rb, timeout)
     else
         sites = Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
         if sites.empty?
@@ -143,8 +143,7 @@ def load_site(site, timeout=10*60)
 end
 
 def main()
-
-    options = {}
+    options = {config: "config.json"}
     OptionParser.new { |o|
         o.banner = """WebWatchr is a script to poll websites and alert on changes.
 Exemple uses:
@@ -154,38 +153,42 @@ Exemple uses:
     ruby #{__FILE__} -s site.rb
 
 Usage: ruby #{__FILE__} """
-        o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of a script in sites-available.") do |v|
+        o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of a script in sites-enabled.") do |v|
             options[:site] = v
+        end
+        o.on("-cCONF", "--config=CONF", "Use a specific config file (default: ./config.json") do |v|
+            options[:config] = v
         end
         o.on("-h", "--help", "Prints this help"){puts o; exit}
     }.parse!
 
-    if File.exist?($CONF["pid_file"]) and not options[:site]
+    config = nil
+
+    if not File.exist?(options[:config])
+        $stderr.puts "Copy config.json.template to config.json and update it to your needs, or specify a config file with --config"
+        exit
+    else
+        config = JSON.parse(File.read(options[:config]))
+    end
+    $logger = Logger.new(config["log"] || STDOUT)
+    $logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
+
+    if File.exist?(config["pid_file"]) and not options[:site]
         $logger.info "Already running. Quitting"
         exit
     end
 
     begin
-        File.open($CONF["pid_file"],'w+') {|f|
+        File.open(config["pid_file"],'w+') {|f|
             f.puts($$)
-            init(options)
+            init(config, option[:site])
         }
     ensure
-        if File.exist?($CONF["pid_file"])
-            FileUtils.rm $CONF["pid_file"]
+        if File.exist?(config["pid_file"])
+            FileUtils.rm config["pid_file"]
         end
     end
     $logger.info("Webwatcher finished working")
 end
-
-if not File.exist?("config.json")
-    $stderr.puts "Copy config.json.template to config.json and update it to your needs"
-    exit
-else
-    $CONF=JSON.parse(File.read("config.json"))
-end
-
-$logger = Logger.new($CONF["log"] || STDOUT)
-$logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
 main()

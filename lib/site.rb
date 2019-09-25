@@ -19,7 +19,8 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait
-    def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil, useragent:nil)
+    def initialize(config: nil, url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil)
+        @config = config
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
         @comment = comment
@@ -33,8 +34,8 @@ class Site
 
         md5 = Digest::MD5.hexdigest(url)
         @state_file = ".lasts/last-#{md5}"
-        if $CONF and $CONF["last_dir"]
-            @state_file = File.join($CONF["last_dir"] || ".", "last-#{md5}")
+        if @config and @config["last_dir"]
+            @state_file = File.join(@config["last_dir"] || ".", "last-#{md5}")
             @logger.debug "using #{@state_file} to store updates"
         end
         state = load_state_file()
@@ -134,7 +135,7 @@ class Site
 
     def alert(new_stuff)
         @logger.debug "Alerting new stuff"
-        $CONF["alert_procs"].each do |p|
+        @config["alert_procs"].each do |p|
           p.call({content: format(new_stuff), name: @name})
         end
     end
@@ -242,7 +243,7 @@ class Site
 
     class Site::Articles < Site
 
-        def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
+        def initialize(config:nil, url:, every: 60*60, post_data: nil, test: false, comment:nil)
             super
             @content = []
         end
