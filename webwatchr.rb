@@ -181,7 +181,7 @@ Usage: ruby #{__FILE__} """
     begin
         File.open(config["pid_file"],'w+') {|f|
             f.puts($$)
-            init(config, option[:site])
+            init(config, site:options[:site])
         }
     ensure
         if File.exist?(config["pid_file"])
