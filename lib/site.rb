@@ -6,6 +6,7 @@ require "json"
 require "logger"
 require "net/http"
 require "nokogiri"
+require_relative "./config.rb"
 
 
 class Site
@@ -19,8 +20,8 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait
-    def initialize(config: nil, url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil)
-        @config = config
+    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil)
+        @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
         @comment = comment
@@ -243,7 +244,7 @@ class Site
 
     class Site::Articles < Site
 
-        def initialize(config:nil, url:, every: 60*60, post_data: nil, test: false, comment:nil)
+        def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
             super
             @content = []
         end
