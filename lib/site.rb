@@ -132,11 +132,11 @@ class Site
         save_state_file(state)
     end
 
-
     def alert(new_stuff)
         @logger.debug "Alerting new stuff"
+
         @config["alert_procs"].each do |p|
-          p.call({content: format(new_stuff), name: @name})
+          p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name})
         end
     end
 

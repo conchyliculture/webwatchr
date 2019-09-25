@@ -74,13 +74,13 @@ class TestClasse < Test::Unit::TestCase
         url = "http://localhost:#{$wwwport}/#{$content_is_string}"
         wait = 10*60
 
-        result = ""
+        result = {}
 
-        $CONF["alert_procs"] = [Proc.new{|x| result = x.to_s.encode("utf-8")}]
+        $CONF["alert_procs"] = [Proc.new{|x| result = x}]
 
         c = TestStringSite.new(config:$CONF, url: url, comment:"comment")
         assert {c.load_state_file() == {}}
-        empty_last = {"content"=>nil, "time"=>-9999999999999}
+        empty_last = {"formatted_content"=>nil, "time"=>-9999999999999}
         assert {c.should_update?(empty_last["time"]) == true}
         assert {c.should_update?((Time.now() - wait + 30).to_i) == false}
         html = c.fetch_url(url)
@@ -92,7 +92,9 @@ class TestClasse < Test::Unit::TestCase
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
         first_pass_content = Site::HTML_HEADER + content_html
-        assert {"{:content=>#{first_pass_content.inspect}, :name=>\"#{url} (comment)\"}" == result}
+        assert {result[:content] == content_html}
+        assert {result[:formatted_content] == first_pass_content}
+        assert {result[:name] == url + " (comment)"}
 
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
             f.write whole_html.gsub("</div>"," new ! </div>")
@@ -102,17 +104,23 @@ class TestClasse < Test::Unit::TestCase
         expected_error = "INFO -- : Too soon to update #{url}"
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
-        assert {"{:content=>#{first_pass_content.inspect}, :name=>\"#{url} (comment)\"}" == result}
+        assert {result[:content] == content_html}
+        assert {result[:formatted_content] == first_pass_content}
+        assert {result[:name] == url + " (comment)"}
 
         c.wait = 0
         c.update()
         expected_error = "DEBUG -- : Alerting new stuff"
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
-        assert {"{:content=>#{(first_pass_content+" new ! ").inspect}, :name=>\"#{url} (lol)\"}" == result}
+        assert {result[:content] == content_html+" new ! "}
+        assert {result[:formatted_content] == first_pass_content+" new ! "}
+        assert {result[:name] == url + " (lol)"}
         result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
-        assert {result_last == {"url"=>url, "wait"=>0, "content"=>content_html+" new ! "}}
+        assert {result_last["url"] == url}
+        assert {result_last["content"] == content_html+" new ! "}
+        assert {result_last["wait"] == 0}
     end
 
     class TestArraySite < Site::Articles
@@ -136,12 +144,12 @@ class TestClasse < Test::Unit::TestCase
         url = "http://localhost:#{$wwwport}/#{$content_is_array}"
         wait = 10*60
 
-        result = ""
+        result = {}
         called = false
-        $CONF["alert_procs"] = [Proc.new{|x| result = x.to_s.encode("utf-8"); called = true}]
+        $CONF["alert_procs"] = [Proc.new{|x| result = x; called = true}]
 
         c = TestArraySite.new(config: $CONF, url: url, every: wait)
-        empty_last = {"content"=>nil, "time"=>-9999999999999}
+        empty_last = {"formatted_content"=>nil, "time"=>-9999999999999}
         assert {c.load_state_file() == {}}
         assert {c.should_update?(empty_last["time"])}
         assert { ! c.should_update?((Time.now() - wait + 30).to_i)}
@@ -160,13 +168,18 @@ class TestClasse < Test::Unit::TestCase
             "<li id='lol'><a href='lol'>lilo</a></li>",
             "<li id='fi'><a href='fi'>fu</a></li>",
             "</ul>"].join("\n")
-		assert {"{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}" == result}
+        result[:content].each{|x| x.delete('_timestamp')}
+        assert {result[:content] == [
+          {"id"=>"lol", "url"=>"lol", "title"=>"lilo"},
+          {"id"=>"fi", "url"=>"fi", "title"=>"fu"}]}
+        assert {result[:formatted_content] == expected_html}
+        assert {result[:name] == url}
         assert {called}
 
         result = ""
         called = false
 
-        File.open(File.join($wwwroot,$content_is_array),"a+") do |f|
+        File.open(File.join($wwwroot, $content_is_array),"a+") do |f|
             f.write "<div>new! - new </div>"
         end
         c = TestArraySite.new(config: $CONF, url: url)
@@ -192,7 +205,11 @@ class TestClasse < Test::Unit::TestCase
             "<li id='new!'><a href='new!'>new</a></li>",
             "</ul>"].join("\n")
         assert {called}
-        assert {result == "{:content=>#{expected_html.inspect}, :name=>\"#{url}\"}"}
+
+        result[:content].each{|x| x.delete('_timestamp')}
+        assert {result[:content] == [{"id"=>"new!", "url"=>"new!", "title"=>"new"}]}
+        assert {result[:formatted_content] == expected_html}
+        assert {result[:name] == url}
         expected_last = {"url"=>"http://localhost:8001/content_is_array.html",
                          "wait"=>0,
                          "content"=>[{"id"=>"lol", "title"=>"lilo", "url"=>"lol"},
