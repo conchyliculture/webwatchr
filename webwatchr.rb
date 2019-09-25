@@ -35,7 +35,7 @@ end
 #                   smtp_server: "localhost",
 #                   smtp_port: 25)
 #
-def send_mail(content: , from: , to:, subject: , smtp_server: , smtp_port:)
+def send_mail(content:, formatted_content: , from: , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
@@ -44,7 +44,7 @@ MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
 Subject: #{subject}
 
-#{content}
+#{formatted_content}
 END_OF_MESSAGE
 
     begin
@@ -81,8 +81,20 @@ def make_alerts(c)
             begin
               require 'telegram/bot'
               res_procs.append(Proc.new { |args|
+                cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
-                bot.api.send_message(chat_id: c["alerts"]["telegram"]["chat_id"], text: args[:content])
+                if args[:content].class == Array
+                    bot.api.send_message(chat_id: cid, text: "Update from "+args[:name])
+                    args[:content].each do |item|
+                        msg = item["title"]
+                        if item["url"]
+                          msg += ": "+item["url"]
+                        end
+                        bot.api.send_message(chat_id: cid, text: msg)
+                    end
+                else
+                    bot.api.send_message(chat_id: cid, text: args[:content])
+                end
               })
             rescue LoadError
                 puts "Please open README.md to see how to make Telegram alerting work"
