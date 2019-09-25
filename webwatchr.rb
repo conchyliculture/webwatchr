@@ -10,6 +10,7 @@ require "net/smtp"
 require "optparse"
 require "timeout"
 
+require "config.rb"
 
 trap("INT") do
     $stderr.puts "User interrupted"
@@ -109,13 +110,13 @@ end
 def init(config, site: nil)
     $logger.debug("Starting WebWatchr")
 
-    $MYDIR = File.dirname(__FILE__)
+    current_dir = File.dirname(__FILE__)
 
     unless config["last_dir"]
-        config["last_dir"] = File.join($MYDIR, ".lasts")
+        config["last_dir"] = File.join(current_dir, ".lasts")
     end
     FileUtils.mkdir_p(config["last_dir"])
-    FileUtils.mkdir_p(File.join($MYDIR, "sites-enabled"))
+    FileUtils.mkdir_p(File.join(current_dir, "sites-enabled"))
 
     timeout = config["site_timeout"]
     config["alert_procs"] = make_alerts(config)
@@ -123,7 +124,7 @@ def init(config, site: nil)
         site_rb = File.join("sites-available", site)
         load_site(site_rb, timeout)
     else
-        sites = Dir.glob(File.join($MYDIR, "sites-enabled", "*.rb"))
+        sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
         if sites.empty?
             $stderr.puts "Didn't find any site to parse. You might want to:"
             $stderr.puts "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
@@ -182,6 +183,7 @@ Usage: ruby #{__FILE__} """
     else
         config = JSON.parse(File.read(options[:config]))
     end
+    Config.set_config(config)
     $logger = Logger.new(config["log"] || STDOUT)
     $logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
@@ -193,7 +195,7 @@ Usage: ruby #{__FILE__} """
     begin
         File.open(config["pid_file"],'w+') {|f|
             f.puts($$)
-            init(config, site:options[:site])
+            init(Config.config, site:options[:site])
         }
     ensure
         if File.exist?(config["pid_file"])
