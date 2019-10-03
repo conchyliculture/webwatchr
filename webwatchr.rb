@@ -59,11 +59,11 @@ END_OF_MESSAGE
 end
 
 def make_alerts(c)
-    res_procs = []
+    res_procs = {}
     c["default_alert"].each do |a|
         case a
         when "email"
-            res_procs.append(Proc.new { |args|
+            res_procs["email"] = Proc.new { |args|
                 unless args[:subject]
                     args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
                 end
@@ -73,15 +73,15 @@ def make_alerts(c)
                 args[:to] = c["alerts"]["email"]["dest_email"]
                 args[:from] = c["alerts"]["email"]["from_email"]
                 send_mail(args)
-            })
+            }
         when "rss"
-            res_procs.append(Proc.new { |args|
+            res_procs["rss"] = Proc.new { |args|
     #            gen_rss(args)
-            })
+            }
         when "telegram"
             begin
               require 'telegram/bot'
-              res_procs.append(Proc.new { |args|
+              res_procs["telegram"] = Proc.new { |args|
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 if args[:content].class == Array
@@ -96,7 +96,7 @@ def make_alerts(c)
                 else
                     bot.api.send_message(chat_id: cid, text: args[:content])
                 end
-              })
+              }
             rescue LoadError
                 puts "Please open README.md to see how to make Telegram alerting work"
             end
