@@ -20,7 +20,7 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait
-    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil)
+    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [])
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
@@ -136,8 +136,10 @@ class Site
     def alert(new_stuff)
         @logger.debug "Alerting new stuff"
 
-        @config["alert_procs"].each do |p|
-          p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name})
+        @config["alert_procs"].each do |alert_name, p|
+          if @alert_only == nil or @alert_only.include?(alert_name)
+             p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name})
+          end
         end
     end
 
