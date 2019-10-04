@@ -32,6 +32,7 @@ class Site
         @test = test
         @url = url
         @useragent = useragent
+        @alert_only = alert_only
 
         md5 = Digest::MD5.hexdigest(url)
         @state_file = ".lasts/last-#{md5}"
@@ -137,7 +138,7 @@ class Site
         @logger.debug "Alerting new stuff"
 
         @config["alert_procs"].each do |alert_name, p|
-          if @alert_only == nil or @alert_only.include?(alert_name)
+          if @alert_only.empty? or @alert_only.include?(alert_name)
              p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name})
           end
         end
@@ -246,7 +247,7 @@ class Site
 
     class Site::Articles < Site
 
-        def initialize(url:, every: 60*60, post_data: nil, test: false, comment:nil)
+        def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [])
             super
             @content = []
         end
