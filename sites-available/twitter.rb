@@ -33,9 +33,9 @@ class Twitter < Site::Articles
         end
     end
 end
-
-Twitter.new(
-    account: "twitter",
-    every: 6*60*60,
-    test: __FILE__== $0,
-).update
+#
+#Twitter.new(
+#    account: "twitter",
+#    every: 6*60*60,
+#    test: __FILE__== $0,
+#).update
