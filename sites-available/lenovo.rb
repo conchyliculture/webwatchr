@@ -5,26 +5,25 @@ require_relative "../lib/site.rb"
 
 class LenovoOVP < Site::SimpleString
 
-    def initialize(order_id:, email:, every:, comment:nil, test:false)
-        super(
-          url: "https://ovp.lenovo.com/lenovo-ovp-new/public/showdetail",
-            post_data: {orderNumber: order_id, email: email, lang: "en" }, 
-            every: every,
-            test: test,
-            comment: comment,
-        )
-    end
-
     def get_content()
+      res = "<ul>\n"
+      @parsed_content.css("div.rowLineItem").each do |art|
+        name = art.css("div#dr_pdName").text.strip()
+        ship_status = art.css("li.dr_trackShipment").text.strip()
+        ship_extra = art.css("div.dr_extraOVPInfo").text.strip()
+        res += "<li><a href='#{@url}'>#{name}</a>: #{ship_status} #{ship_extra}</li>\n"
+      end
+      res += "</ul>\n"
+      return res
     end
 end
 
 # Example:
-LenovoOVP.new(
-    order_id: "1111111",
-    email: "lol@gmail.ninja",
-    every: 60*60,
-    test: __FILE__ == $0
-).update
+#LenovoOVP.new(
+#    # The order confirm email you got, looks like
+#    url: "http://checkout.lenovo.com/store?SiteID=lenovoeu&Action=DisplayCustomerServiceOrderDetailPage&requisitionID=11111111111&Locale=fr_CH&lenovoOrderToken=XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF%3D",
+#    every: 60*60,
+#    test: __FILE__ == $0
+#).update
 
 
