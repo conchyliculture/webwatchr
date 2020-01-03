@@ -15,32 +15,20 @@ class USPS < Site::SimpleString
         @useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
     end
 
+    def clean(node)
+      return node.text.delete("\r\n").gsub("\t", " ").gsub(/  +/, " ").strip()
+    end
+
     def get_content()
-        infos = @parsed_content.css('div#trackingHistory_1 div.row div.panel-actions-content')
+        infos = @parsed_content.css('div.thPanalAction')
         unless infos
             raise Site::ParseError.new("Please verify the USPS tracking ID #{@url}")
         end
-        # Man this is crappy
-        res = "Tracking History: <ul>"
-        lignes = []
-        ligne = []
-        infos.children.each do |c|
-            case c.text.strip
-            when "Tracking History"
-                next
-            when ""
-                next
-            when /as of.*#{Time.now.year}/
-                next
-            when /#{Time.now.year}/
-                lignes << ligne.join(' ') unless ligne == []
-                ligne = [c.text.strip.gsub(/[\t\r\n]/, "")]
-            else
-                ligne << c.text.strip.gsub(/[\t\r\n]/, "")
-            end
+        res = "Tracking History: <ul>\n"
+        infos[0].to_html().split("<hr>").each do |hr|
+          ligne = Nokogiri::HTML.parse(hr).css('span').map {|span| clean(span)}.join(' ')
+          res << "<li>#{ligne}</li>\n"
         end
-        lignes << ligne.join(' ') unless ligne == []
-        res << lignes.map{|x| "<li>#{x}</li>"}.join("\n")
         res << "</ul>"
         return res
     end
