@@ -10,7 +10,7 @@ class UPS < Site::SimpleString
 
     def initialize(track_id:, every:, comment:nil, test:false)
         super(
-            url: "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{track__id}",
+            url: "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{track_id}",
             every: every,
             test: test,
             comment: comment,
@@ -50,7 +50,7 @@ class UPS < Site::SimpleString
 
     def get_content()
         res = ""
-        table = @parsed_content.css("table.dataTable tr")
+        table = @parsed_content.css("table tbody.ng-star-inserted tr.ups-progress_row")
         if table.size==0
             begin
                 text = @parsed_content.css("div.pkgstep.current").css("a").text.gsub("\t","")
