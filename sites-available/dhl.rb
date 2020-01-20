@@ -20,10 +20,12 @@ class DHL < Site::SimpleString
 #        begin
             j = JSON.parse(@html_content)
             status = j.dig("results",0, "delivery", "status")
-            res << "Status: " + status + "\n"
+            res << "Status: " + status + "<br>\n"
+            res << "<ul>\n"
             j.dig("results", 0, "checkpoints"). each do |update|
-              res << "#{update['date']} #{update['time']}: #{update['description']}\n"
+              res << "<li>#{update['date']} #{update['time']}: #{update['description']}</li>\n"
             end
+            res << "</ul>\n"
 #        rescue
 #            raise Site::ParseError.new "Please verify the DHL tracking ID"
 #        end
