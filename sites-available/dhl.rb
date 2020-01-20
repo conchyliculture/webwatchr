@@ -20,7 +20,7 @@ class DHL < Site::SimpleString
 #        begin
             j = JSON.parse(@html_content)
             status = j.dig("results",0, "delivery", "status")
-            res << status + "\n"
+            res << "Status: " + status + "\n"
             j.dig("results", 0, "checkpoints"). each do |update|
               res << "#{update['date']} #{update['time']}: #{update['description']}\n"
             end
