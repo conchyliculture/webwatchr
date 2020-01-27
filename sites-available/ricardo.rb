@@ -16,8 +16,13 @@ class Ricardo < Site::Articles
     def get_content()
       @parsed_content.css('div.MuiGrid-container a.MuiGrid-item').each do |article|
             url = "https://www.ricardo.ch"+article['href']
-            image = article.css('img')[0]['src']
-            title = article.css('p')[0].text
+            images = article.css('img')
+            if images.size >0 
+              image = images[0]['src']
+            else
+              image = "nope"
+            end
+            title = article.css('p').text
 
             add_article({
             "id" => url,
