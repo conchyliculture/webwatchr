@@ -13,9 +13,14 @@ class Ebay < Site::Articles
         )
     end
     def get_content()
-        @parsed_content.css('.s-item').each do |article|
-            uri = URI.parse(article.css('a.s-item__link')[0]['href'])
-            url = "https://#{uri.host}#{uri.path}"
+        @parsed_content.css('li.s-item').each do |article|
+            a = article.css('div.s-item__image a')
+            if a.size > 0
+              url = a[0]['href']
+            else
+              next
+            end
+
             image = article.css('img.s-item__image-img')[0]['src']
             title = article.css('h3.s-item__title')[0].text
             price = article.css('span.s-item__price')[0].text
