@@ -2,8 +2,9 @@ require_relative "../lib/site.rb"
 
 class Twitter < Site::Articles
 
-    def initialize(account: , regex:nil ,every: ,test: false)
+    def initialize(account:, regex:nil, no_retweets:false, every: ,test: false)
         @regex = regex
+        @no_retweets = no_retweets
         if regex.class == String
           @regex = /#{regex.class}/i
         end
@@ -21,6 +22,9 @@ class Twitter < Site::Articles
 
     def get_content()
         @parsed_content.css('div.tweet').each do |tweet|
+            if @no_retweets and tweet.css('span.js-retweet-text').size > 0
+              next
+            end
             text = tweet.css('p.TweetTextSize')[0].text
             tweet_url = 'https://twitter.com'+tweet.css('a.tweet-timestamp')[0].attr('href')
             if @regex 
