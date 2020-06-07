@@ -2,7 +2,7 @@ require_relative "../lib/site.rb"
 
 class Twitter < Site::Articles
 
-    def initialize(account:, regex:nil, no_retweets:false, every: ,test: false)
+    def initialize(account:, regex:nil, no_retweets:false, every: 60*60 ,test: false)
         @regex = regex
         @no_retweets = no_retweets
         @account = account
@@ -17,7 +17,7 @@ class Twitter < Site::Articles
             "id" => url,
             "url"=> url,
             "img_src" => nil,
-            "title" => txt
+            "title" => txt.strip()
         })
     end
 
