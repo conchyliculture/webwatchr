@@ -5,10 +5,11 @@ class Twitter < Site::Articles
     def initialize(account:, regex:nil, no_retweets:false, every: ,test: false)
         @regex = regex
         @no_retweets = no_retweets
+        @account = account
         if regex.class == String
           @regex = /#{regex.class}/i
         end
-        super(url: "https://twitter.com/#{account}", every: every, test: test)
+        super(url: "https://mobile.twitter.com/#{account}", every: every, test: test)
     end
 
     def add_art(url, txt)
@@ -21,12 +22,12 @@ class Twitter < Site::Articles
     end
 
     def get_content()
-        @parsed_content.css('div.tweet').each do |tweet|
-            if @no_retweets and tweet.css('span.js-retweet-text').size > 0
+        @parsed_content.css('table.tweet').each do |tweet|
+            text = tweet.css('div.tweet-text')[0].text
+            if @no_retweets and not tweet.attr('href').start_with?("/#{@account}/")
               next
             end
-            text = tweet.css('p.TweetTextSize')[0].text
-            tweet_url = 'https://twitter.com'+tweet.css('a.tweet-timestamp')[0].attr('href')
+            tweet_url = 'https://twitter.com'+tweet.attr('href')
             if @regex 
               if text=~@regex
                 add_art(tweet_url, text)
@@ -37,9 +38,12 @@ class Twitter < Site::Articles
         end
     end
 end
-#
-#Twitter.new(
-#    account: "twitter",
-#    every: 6*60*60,
-#    test: __FILE__== $0,
-#).update
+
+if __FILE__== $0
+  Twitter.new(
+     account: "mobile_test_2",
+      every: 6*60*60,
+      test: true,
+      no_retweets: true
+  ).update
+end
