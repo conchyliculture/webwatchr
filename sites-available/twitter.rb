@@ -27,7 +27,9 @@ class Twitter < Site::Articles
             if @no_retweets and not tweet.attr('href').start_with?("/#{@account}/")
               next
             end
-            tweet_url = 'https://twitter.com'+tweet.attr('href')
+            tweet_uri = URI('https://twitter.com'+tweet.attr('href'))
+            tweet_url = "https://twitter.com"+tweet_uri.path
+
             if @regex 
               if text=~@regex
                 add_art(tweet_url, text)
