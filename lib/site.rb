@@ -19,7 +19,7 @@ class Site
 
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
-    attr_accessor :state_file, :url, :wait
+    attr_accessor :state_file, :url, :wait, :logger
     def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [])
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(STDOUT)
@@ -187,6 +187,11 @@ class Site
         end
     end
 
+    def pull_things()
+      @html_content = fetch_url(@url)
+      @parsed_content = parse_content(@html_content)
+    end
+
     def do_stuff()
         new_stuff = false
         previous_state = {
@@ -200,8 +205,7 @@ class Site
         previous_content = previous_state["content"]
         if should_update?(previous_state["time"]) or @test
             @logger.info "Time to update #{@url}" unless @test
-            @html_content = fetch_url(@url)
-            @parsed_content = parse_content(@html_content)
+            pull_things()
             new_stuff = get_new(previous_content)
             if new_stuff
                 if @test
@@ -246,6 +250,7 @@ class Site
     end
 
     class Site::Articles < Site
+
 
         def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [])
             super
