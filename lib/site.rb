@@ -20,7 +20,7 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait, :logger
-    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [])
+    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
@@ -33,6 +33,7 @@ class Site
         @url = url
         @useragent = useragent
         @alert_only = alert_only
+        @http_ver = http_ver
 
         md5 = Digest::MD5.hexdigest(url)
         @state_file = ".lasts/last-#{md5}"
@@ -45,6 +46,28 @@ class Site
     end
 
     def fetch_url(url, max_redir:10)
+      if @http_ver == 2
+        return fetch_url2(url, max_redir:max_redir)
+      end
+      return fetch_url1(url, max_redir:max_redir)
+    end
+
+    def fetch_url2(url, max_redir:10)
+      begin
+        require "curb"
+      rescue LoadError => e
+        puts "HTTP/2 requires the curb gem"
+        raise e
+      end
+
+      c = Curl::Easy.new(url)
+      c.set(:HTTP_VERSION, Curl::HTTP_2_0)
+
+      c.perform
+      return c.body_str
+    end
+
+    def fetch_url1(url, max_redir:10)
         html = ""
         uri = URI(url)
         req = nil
@@ -251,8 +274,7 @@ class Site
 
     class Site::Articles < Site
 
-
-        def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [])
+        def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [], http_ver:1)
             super
             @content = []
         end
