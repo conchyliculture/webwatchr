@@ -121,7 +121,7 @@ def init(config, site: nil)
     timeout = config["site_timeout"]
     config["alert_procs"] = make_alerts(config)
     if site
-        site_rb = File.join("sites-available", site)
+        site_rb = File.join("sites-enabled", site)
         load_site(site_rb, timeout)
     else
         sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
