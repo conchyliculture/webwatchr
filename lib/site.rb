@@ -32,6 +32,7 @@ class Site
         @test = test
         @url = url
         @useragent = useragent
+        @extra_headers = {}
         @alert_only = alert_only
         @http_ver = http_ver
 
@@ -43,6 +44,10 @@ class Site
         end
         state = load_state_file()
         @wait = state["wait"] || every
+    end
+
+    def set_http_header(key, value)
+      @extra_headers[key] = value
     end
 
     def fetch_url(url, max_redir:10)
@@ -83,6 +88,9 @@ class Site
             end
             if @useragent
               req["User-Agent"] = @useragent
+            end
+            @extra_headers.each do |k, v|
+              req[k] = v
             end
             response = http.request(req)
             case response.code
