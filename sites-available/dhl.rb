@@ -52,7 +52,10 @@ class DHLPrivate < Site::SimpleString
       j = JSON.parse(json_t.gsub("\\", ""))
       res = "<ul>"
       j["sendungen"][0]["sendungsdetails"]["sendungsverlauf"]["events"].each do |e|
-        res << "<li>"+e["datum"]+": "+e["status"]+"</li>"
+        res << "<li>"+e["datum"]+": "+e["status"]
+        place = e["ort"]
+        res << " ("+place+")" if place
+        res << "</li>\n"
       end
       res += "</ul>"
       return res
