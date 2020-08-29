@@ -13,6 +13,7 @@ class USPS < Site::SimpleString
             comment: comment,
         )
         @useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
+        set_http_header("ISTL-INFINITE-LOOP", "1")
     end
 
     def clean(node)
