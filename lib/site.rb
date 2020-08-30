@@ -251,6 +251,7 @@ class Site
                 end
                 @logger.info "Nothing new for #{@url}"
             end
+            update_state_file({})
         else
             @logger.info "Too soon to update #{@url}"
         end
