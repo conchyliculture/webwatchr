@@ -81,6 +81,9 @@ class PostCH < Site::SimpleString
         if @global_state["deliveryRange"]
           res << "Expected delivery time: between #{@global_state["deliveryRange"]["start"]} and #{@global_state["deliveryRange"]["end"]}"
         end
+        if @global_state["calculatedDeliveryDate"]
+          res << "Expected delivery day: #{@global_state["calculatedDeliveryDate"]}"
+        end
         res << "<ul>"
         @events.sort{|x, y| y["timestamp"] <=> x["timestamp"]}.each do |event|
           if event["eventCode"]=~/PARCEL\.\*\..\.([0-9]+)$/
