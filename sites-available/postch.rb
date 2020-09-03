@@ -66,6 +66,10 @@ class PostCH < Site::SimpleString
         c = Curl.get("https://service.post.ch/ekp-web/api/history/not-included/#{hash}?userId=%3C%5Banonymous%5D%3E#{user_id}")
         c.set(:HTTP_VERSION, Curl::HTTP_2_0)
         c.perform
+        if c.body_str == "[]"
+            raise Site::ParseError.new "Please verify the PostCH tracking ID"
+        end
+
         @global_state = JSON.parse(c.body_str)[0]
         identity = @global_state["identity"]
 
