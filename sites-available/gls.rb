@@ -43,8 +43,8 @@ end
 
 # Example:
 #
- GLS.new(
-     track_id: "12345678911",
-     every: 30*60,
-     test: __FILE__ == $0
- ).update
+# GLS.new(
+#     track_id: "12345678911",
+#     every: 30*60,
+#     test: __FILE__ == $0
+# ).update
