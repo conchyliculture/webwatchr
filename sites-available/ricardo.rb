@@ -4,13 +4,14 @@ require_relative "../lib/site.rb"
 require "openssl"
 
 class Ricardo < Site::Articles 
-    def initialize(search_term:, every:, comment:nil, test:false)
+    def initialize(search_term:, ignore:nil, every:, comment:nil, test:false)
         super(
             url:  URI.encode("https://www.ricardo.ch/fr/s/#{search_term}"),
             every: every,
             test: test,
             comment: comment,
         )
+        @ignore = ignore
     end
 
     def get_content()
@@ -23,6 +24,10 @@ class Ricardo < Site::Articles
               image = "nope"
             end
             title = article.css('p').text
+
+            if @ignore and title=~/#{@ignore}/i
+              next
+            end
 
             add_article({
             "id" => url,
