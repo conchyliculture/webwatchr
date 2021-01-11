@@ -35,7 +35,7 @@ class GLS < Site::SimpleString
     def get_content()
       res = "<ul><li>"
 
-      res << @parsed_content["tuStatus"][0]["history"].map{|x| "#{x['date']}: #{x['evtDscr']} (#{x['address'].values.join(' ')})"}.join("</li></li>")
+      res << @parsed_content["tuStatus"][0]["history"].map{|x| "#{x['date']}: #{x['evtDscr']} (#{x['address'].values.map(&:strip).join(' ')})"}.join("</li></li>")
 
       res << "</li></ul>"
     end
@@ -43,8 +43,8 @@ end
 
 # Example:
 #
-# GLS.new(
-#     track_id: "12345678911",
-#     every: 30*60,
-#     test: __FILE__ == $0
-# ).update
+ GLS.new(
+     track_id: "12345678911",
+     every: 30*60,
+     test: __FILE__ == $0
+ ).update
