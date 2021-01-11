@@ -2,14 +2,14 @@ require_relative "../lib/site.rb"
 
 class Twitter < Site::Articles
 
-    def initialize(account:, regex:nil, no_retweets:false, every: 60*60 ,test: false)
+    def initialize(account:, regex:nil, with_replies:true, no_retweets:false, every: 60*60 ,test: false, nitter_instance: "nitter.fdn.fr")
         @regex = regex
         @no_retweets = no_retweets
         @account = account
         if regex.class == String
           @regex = /#{regex.class}/i
         end
-        super(url: "https://mobile.twitter.com/#{account}", every: every, test: test)
+        super(url: "https://#{nitter_instance}/#{account}#{with_replies ? '/with_replies' : ''}", every: every, test: test)
     end
 
     def add_art(url, txt)
@@ -22,12 +22,12 @@ class Twitter < Site::Articles
     end
 
     def get_content()
-        @parsed_content.css('table.tweet').each do |tweet|
-            text = tweet.css('div.tweet-text')[0].text
-            if @no_retweets and not tweet.attr('href').start_with?("/#{@account}/")
+        @parsed_content.css('div.timeline-item').each do |tweet|
+            text = tweet.css('div.tweet-content')[0].text
+            if @no_retweets and tweet.css('div.retweet-header').size() > 0
               next
             end
-            tweet_uri = URI('https://twitter.com'+tweet.attr('href'))
+            tweet_uri = URI('https://twitter.com'+tweet.css('a.tweet-link')[0]['href'])
             tweet_url = "https://twitter.com"+tweet_uri.path
 
             if @regex 
