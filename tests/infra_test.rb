@@ -96,7 +96,7 @@ class TestClasse < Test::Unit::TestCase
         first_pass_content = Site::HTML_HEADER + content_html
         assert {result[:content] == content_html}
         assert {result[:formatted_content] == first_pass_content}
-        assert {result[:name] == url + " (comment)"}
+        assert {result[:name] == url}
 
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
             f.write whole_html.gsub("</div>"," new ! </div>")
@@ -108,7 +108,7 @@ class TestClasse < Test::Unit::TestCase
         assert {last_error.end_with?(expected_error)}
         assert {result[:content] == content_html}
         assert {result[:formatted_content] == first_pass_content}
-        assert {result[:name] == url + " (comment)"}
+        assert {result[:name] == url}
 
         c.wait = 0
         c.update()
@@ -117,7 +117,7 @@ class TestClasse < Test::Unit::TestCase
         assert {last_error.end_with?(expected_error)}
         assert {result[:content] == content_html+" new ! "}
         assert {result[:formatted_content] == first_pass_content+" new ! "}
-        assert {result[:name] == url + " (lol)"}
+        assert {result[:name] == url}
         result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
         assert {result_last["url"] == url}
