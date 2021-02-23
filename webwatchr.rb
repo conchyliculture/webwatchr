@@ -36,14 +36,14 @@ end
 #                   smtp_server: "localhost",
 #                   smtp_port: 25)
 #
-def send_mail(content:, formatted_content: , from: , to:, subject: , smtp_server: , smtp_port:)
+def send_mail(content:, formatted_content: , comment: ,from: , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
 To: #{to}
 MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
-Subject: #{subject}
+Subject: #{subject} #{comment if comment}
 
 #{formatted_content}
 END_OF_MESSAGE
@@ -85,7 +85,9 @@ def make_alerts(c)
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 if args[:content].class == Array
-                    bot.api.send_message(chat_id: cid, text: "Update from "+args[:name])
+                    title_msg = "Update from "+args[:name]
+                    title_msg += " (#{@comment})" if @comment
+                    bot.api.send_message(chat_id: cid, text: title_msg)
                     args[:content].each do |item|
                         msg = item["title"]
                         if item["url"]
