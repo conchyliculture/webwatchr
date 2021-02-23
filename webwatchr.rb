@@ -36,7 +36,7 @@ end
 #                   smtp_server: "localhost",
 #                   smtp_port: 25)
 #
-def send_mail(content:, formatted_content: , comment: ,from: , to:, subject: , smtp_server: , smtp_port:)
+def send_mail(content:, formatted_content: , comment: nil ,from: , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
