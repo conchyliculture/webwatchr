@@ -66,6 +66,7 @@ def make_alerts(c)
             res_procs["email"] = Proc.new { |args|
                 unless args[:subject]
                     args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
+                    args[:subject] += " (#{args[:comment]})" if args[:comment]
                 end
                 args.delete(:name)
                 args[:smtp_server] = c["alerts"]["email"]["smtp_server"]
@@ -73,10 +74,6 @@ def make_alerts(c)
                 args[:to] = c["alerts"]["email"]["dest_email"]
                 args[:from] = c["alerts"]["email"]["from_email"]
                 send_mail(args)
-            }
-        when "rss"
-            res_procs["rss"] = Proc.new { |args|
-    #            gen_rss(args)
             }
         when "telegram"
             begin
@@ -86,7 +83,7 @@ def make_alerts(c)
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 if args[:content].class == Array
                     title_msg = "Update from "+args[:name]
-                    title_msg += " (#{@comment})" if @comment
+                    title_msg += " (#{args[:comment]})" if args[:comment]
                     bot.api.send_message(chat_id: cid, text: title_msg)
                     args[:content].each do |item|
                         msg = item["title"]
