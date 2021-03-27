@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
+require "json"
+require "curb"
 require_relative "../lib/site.rb"
 
 class UPS < Site::SimpleString
@@ -10,84 +12,68 @@ class UPS < Site::SimpleString
 
     def initialize(track_id:, every:, comment:nil, test:false)
         super(
-            url: "https://wwwapps.ups.com/WebTracking/track?track=yes&trackNums=#{track_id}",
+          url: "https://www.ups.com/track?loc=null&tracknum=#{track_id}",
             every: every,
             test: test,
             comment: comment,
         )
+        @track_id = track_id
     end
 
-    def get_coords(search)
-        url = "http://maps.googleapis.com/maps/api/geocode/json?address=#{search}&sensor=false"
-        j = JSON.parse(Net::HTTP.get(URI.parse(url.gsub(' ','+'))))
-        if j["status"]=="OK"
-            # Hopeing first result is good
-            return j["results"][0]["geometry"]["location"]
-        end
-        return nil
+    def pull_things()
+        c = Curl.get(@url)
+        c.perform
+        _, *http_headers = c.header_str.split(/[\r\n]+/).map(&:strip)
+        http_headers = http_headers.flat_map{|x| x.scan(/^(\S+): (.+)/)}
+        http_headers = http_headers.inject({}){|acc, val| (acc[val[0]] ||= []) << val[1].split('; ')[0].split('=',2); acc}
+        cookies = http_headers["Set-Cookie"].to_h
+
+        c = Curl.post("https://www.ups.com/track/api/Track/GetStatus", '{"TrackingNumber":["'+@track_id.downcase() + '"]}')
+        c.headers["X-XSRF-TOKEN"] = cookies["X-XSRF-TOKEN-ST"]
+        c.headers["Content-Type"] = "application/json"
+        c.headers["User-Agent"] = "curl/7.74.0" # stuff is necessary here
+        c.headers["Cookie"] = cookies.slice("X-CSRF-TOKEN", "X-XSRF-TOKEN-ST").to_a.map {|x| x.join("=")}.join("; ")
+        c.perform
+        @json = JSON.parse(c.body_str)
     end
 
-    def make_static_url(places)
-        colors=%w{black brown green purple yellow blue gray orange red white}
-
-        url = "http://maps.google.com/maps/api/staticmap?"
-        url << "size=1024x768"
-        url << "&zoom=3"
-        url << "&path=color:0xff0000ff|weight:5"
-        places.reverse.each do |p|
-            url << "|#{p}"
-        end
-
-        i=0
-        places.reverse.each do |p|
-            url << "&markers=color:#{colors[i % colors.size()]}|label:#{i}|#{p}"
-            i+=1
-        end
-
-        url << "&sensor=false"
-        return url
+    def proper_time(date, time)
+      at = DateTime.strptime(date+" "+time,  "%m/%d/%Y %l:%M %p")
+      return at
     end
 
     def get_content()
-        res = ""
-        table = @parsed_content.css("table tbody.ng-star-inserted tr.ups-progress_row")
-        if table.size==0
-            begin
-                text = @parsed_content.css("div.pkgstep.current").css("a").text.gsub("\t","")
-            rescue Exception
-                raise Site::ParseError.new "Please verify the UPS tracking ID #{@url}"
-            end
-            return text
+      res = []
+      sched_date = @json["trackDetails"][0]["scheduledDeliveryDate"]
+      if sched_date
+        sched_msg = "Scheduled delivery date: #{DateTime.strptime(sched_date, "%m/%d/%Y").strftime('%Y-%m-%d')}"
+        case @json["trackDetails"][0]["scheduledDeliveryTime"]
+        when "cms.stapp.eod"
+          sched_msg << " by end of day"
+        when "cms.stapp.9pm"
+          sched_msg << " by 21h"
+        when "cms.stapp.3pm"
+          sched_msg << " by 15h"
         end
-        places=[]
-        prev_place = ""
-        table[1..-1].each do |tr|
-            row = tr.css("td").map{|x| x.text.strip().gsub(/[\r\n\t]/,"").gsub(/  +/," ")}
-            format = "%m/%d/%Y %l:%M %p"
-            begin
-                time = DateTime.strptime("#{row[1]} #{row[2]}",format)
-            rescue ArgumentError
-                format = "%d.%m.%Y %H:%M"
-                retry
-            end
-            place = row[0].gsub(" ","+")
-            if place != "" and (place != prev_place)
-                places << place
-                prev_place = place
-                row[0] = " (#{row[0]})"
-            end
-            res << "#{time} : #{row[3]}#{row[0]}<br/>\n"
-        end
-        url = make_static_url(places)
-        res << "\n<br/><a href='#{url}'><img src='#{url}' alt='pic'>pic</a>\n"
-        return res
+
+        res << sched_msg
+      end
+
+      res << "<ul>"
+      @json["trackDetails"][0]["shipmentProgressActivities"].each do |e|
+        next unless e["activityScan"]
+        res << "<li>#{proper_time(e["date"], e["time"])}: #{e["activityScan"]} (#{e["location"]})</li>"
+      end
+      res << "</ul>"
+
+      return res.join("\n")
     end
 end
 
 # Example:
 #
 # UPS.new(
-#     track_id: "AAAAAAAAAAAAAAAAAA",
-#     every: 30*60,
-#     test: __FILE__ == $0
-# ).update
+#    track_id: "1Z0000000000000000",
+#    every: 30*60,
+#    test: __FILE__ == $0
+#).update
