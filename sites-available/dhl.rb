@@ -13,16 +13,18 @@ class DHL < Site::SimpleString
             every: every,
             test: test,
             comment: comment,
+            useragent: "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0",
         )
+        set_http_header('X-Requested-With', 'XMLHttpRequest')
     end
     def get_content()
         res = ""
 #        begin
             j = JSON.parse(@html_content)
-            status = j.dig("results",0, "delivery", "status")
-            res << "Status: " + status + "<br>\n"
+            description = j.dig("results",0, "description")
+            res << "Status: " + description + "<br>\n"
             res << "<ul>\n"
-            j.dig("results", 0, "checkpoints"). each do |update|
+            j.dig("results", 0, "checkpoints").each do |update|
               res << "<li>#{update['date']} #{update['time']}: #{update['description']}</li>\n"
             end
             res << "</ul>\n"
@@ -60,8 +62,8 @@ class DHLPrivate < Site::SimpleString
 end
 
 # example:
-# DHLPrivate.new(
-#    track_id: "123456789012",
-#    every: 60*60,
-#    test: __FILE__ == $0
-#).update
+# DHL.new(
+#     track_id: "1234567890",
+#     every: 60*60,
+#     test: __FILE__ == $0
+# ).update
