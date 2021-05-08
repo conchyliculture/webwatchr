@@ -29,17 +29,17 @@ class PostCH < Site::SimpleString
         @global_state = {}
 
         if not @messages
-          begin
-            build_messages()
-          rescue Exception
-            puts "Error in pulling messages for postch"
-          end
+          build_messages()
         end
     end
 
     def build_messages()
         c = Curl.get("https://service.post.ch/ekp-web/core/rest/translations/en/shipment-text-messages.json")
         c.perform
+        if not c.status == "200"
+          @logger.warn "Couldn't pull shipment-text-messages.json"
+          return
+        end
         messages = JSON.parse(c.body_str)
         shipment_text_old = messages["shipment-text--"]
         @messages = shipment_text_old.dup
