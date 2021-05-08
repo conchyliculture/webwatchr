@@ -26,7 +26,11 @@ class PostCH < Site::SimpleString
         @messages = messages
 
         if not @messages
-          build_messages()
+          begin
+            build_messages()
+          rescue Exception
+            puts "Error in pulling messages for postch"
+          end
         end
     end
 
@@ -93,7 +97,11 @@ class PostCH < Site::SimpleString
           if event["eventCode"]=~/PARCEL\.\*\..\.([0-9]+)$/
             event["eventCode"] = "PARCEL\.\*\.#{$1}"
           end
-          res << "<li>[#{event['timestamp']}] #{@messages[event["eventCode"]]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+          if @messages
+            res << "<li>[#{event['timestamp']}] #{@messages[event["eventCode"]]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+          else
+            res << "<li>[#{event['timestamp']}] #{event["eventCode"]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+          end
         end
         res << "</ul>"
         return res.join("\n")
