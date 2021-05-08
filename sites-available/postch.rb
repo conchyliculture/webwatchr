@@ -25,6 +25,9 @@ class PostCH < Site::SimpleString
         @track_id = track_id
         @messages = messages
 
+        @events = []
+        @global_state = {}
+
         if not @messages
           begin
             build_messages()
@@ -52,6 +55,9 @@ class PostCH < Site::SimpleString
         c = Curl.get("https://service.post.ch/ekp-web/api/user")
         c.set(:HTTP_VERSION, Curl::HTTP_2_0)
         c.perform
+        if not c.status == 200
+          raise Site::ParseError.new("Error getting https://service.post.ch/ekp-web/api/user : #{c.status}")
+        end
         user_id = JSON.parse(c.body_str)["userIdentifier"][13..-1]
         _, *http_headers = c.header_str.split(/[\r\n]+/).map(&:strip)
         http_headers = Hash[http_headers.flat_map{ |s| s.scan(/^(\S+): (.+)/) }]
