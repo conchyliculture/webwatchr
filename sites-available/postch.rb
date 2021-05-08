@@ -55,7 +55,7 @@ class PostCH < Site::SimpleString
         c = Curl.get("https://service.post.ch/ekp-web/api/user")
         c.set(:HTTP_VERSION, Curl::HTTP_2_0)
         c.perform
-        if not c.status == 200
+        if not c.status == "200"
           raise Site::ParseError.new("Error getting https://service.post.ch/ekp-web/api/user : #{c.status}")
         end
         user_id = JSON.parse(c.body_str)["userIdentifier"][13..-1]
