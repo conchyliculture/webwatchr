@@ -34,20 +34,43 @@ class PostCH < Site::SimpleString
     end
 
     def build_messages()
+        @messages = {}
         c = Curl.get("https://service.post.ch/ekp-web/core/rest/translations/en/shipment-text-messages.json")
         c.perform
         if not c.status == "200"
-          @logger.warn "Couldn't pull shipment-text-messages.json"
+          @logger.warn "Couldn't pull messages.json"
           return
         end
         messages = JSON.parse(c.body_str)
-        shipment_text_old = messages["shipment-text--"]
-        @messages = shipment_text_old.dup
-        shipment_text_old.each do |k, v|
-          if k=~/PARCEL\.\*\.\*\.([0-9]+)/
-            @messages["PARCEL.*.#{$1}"] = v
+        ["additional-services-text--", "shipment-text--"].each do |key|
+          messages[key].each do |k,v|
+            @messages[k] = v
           end
         end
+    end
+
+    def _code_key_check(key, pattern)
+      key_a = key.split(".")
+      pa = pattern.split(".")
+      key_a.each_with_index do |element, i|
+        if pa[i] == "*"
+          next
+        end
+        if element != pa[i]
+          return false
+        end
+      end
+      return true
+    end
+
+    def _translate_code(key)
+      key_a = key.split(".")
+      @messages.each do |k, v|
+        if _code_key_check(key, k)
+          return v
+        end
+      end
+      return nil
     end
 
     def pull_things()
@@ -107,7 +130,8 @@ class PostCH < Site::SimpleString
             event["eventCode"] = "PARCEL\.\*\.#{$1}"
           end
           if @messages
-            res << "<li>[#{event['timestamp']}] #{@messages[event["eventCode"]]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+            translated = _translate_code(event["eventCode"])
+            res << "<li>[#{event['timestamp']}] #{translated} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
           else
             res << "<li>[#{event['timestamp']}] #{event["eventCode"]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
           end
