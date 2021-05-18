@@ -36,7 +36,7 @@ end
 #                   smtp_server: "localhost",
 #                   smtp_port: 25)
 #
-def send_mail(content:, formatted_content: , comment: nil ,from: , to:, subject: , smtp_server: , smtp_port:)
+def send_mail(content:, formatted_content: , comment: , from: , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
@@ -81,20 +81,22 @@ def make_alerts(c)
               res_procs["telegram"] = Proc.new { |args|
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
+                title = "Update from "+args[:name]
+                title += " (#{args[:comment]})" if args[:comment]
+                msg = [title]
                 if args[:content].class == Array
-                    title_msg = "Update from "+args[:name]
-                    title_msg += " (#{args[:comment]})" if args[:comment]
-                    bot.api.send_message(chat_id: cid, text: title_msg)
+                    line = ""
                     args[:content].each do |item|
-                        msg = item["title"]
+                      line += item["title"]
                         if item["url"]
-                          msg += ": "+item["url"]
+                          line += ": "+item["url"]
                         end
-                        bot.api.send_message(chat_id: cid, text: msg)
+                        msg << line
                     end
                 else
-                    bot.api.send_message(chat_id: cid, text: args[:content])
+                  msg << args[:content]
                 end
+                bot.api.send_message(chat_id: cid, text: msg.join("\n"))
               }
             rescue LoadError
                 puts "Please open README.md to see how to make Telegram alerting work"
