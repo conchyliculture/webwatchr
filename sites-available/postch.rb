@@ -92,6 +92,9 @@ class PostCH < Site::SimpleString
 
     def get_content()
         res = []
+        if @comment
+          res << "Update for #{@comment}"
+        end
         if @global_state["deliveryRange"]
           res << "Expected delivery time: between #{@global_state["deliveryRange"]["start"]} and #{@global_state["deliveryRange"]["end"]}"
         end
