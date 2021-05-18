@@ -167,7 +167,7 @@ class Site
 
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
-             p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name}, comment: @comment)
+             p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name, comment: @comment})
           end
         end
     end
