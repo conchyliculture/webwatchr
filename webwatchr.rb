@@ -96,7 +96,10 @@ def make_alerts(c)
                 else
                   msg << args[:content]
                 end
-                bot.api.send_message(chat_id: cid, text: msg.join("\n"))
+                split_msg = msg.inject(['']) { |sum, str| sum.last.length + str.length > 4090 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
+                split_msg.each do |m|
+                  bot.api.send_message(chat_id: cid, text: m)
+                end
               }
             rescue LoadError
                 puts "Please open README.md to see how to make Telegram alerting work"
