@@ -50,6 +50,7 @@ class PostCH < Site::SimpleString
     end
 
     def _code_key_check(key, pattern)
+      pattern = pattern.gsub("PARCEL.*", "PARCEL")
       key_a = key.split(".")
       pa = pattern.split(".")
       key_a.each_with_index do |element, i|
@@ -64,7 +65,6 @@ class PostCH < Site::SimpleString
     end
 
     def _translate_code(key)
-      key_a = key.split(".")
       @messages.each do |k, v|
         if _code_key_check(key, k)
           return v
