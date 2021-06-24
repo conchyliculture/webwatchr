@@ -45,7 +45,7 @@ class UPS < Site::SimpleString
     def get_content()
       res = []
       sched_date = @json["trackDetails"][0]["scheduledDeliveryDate"]
-      if sched_date
+      if sched_date and sched_msg != ""
         sched_msg = "Scheduled delivery date: #{DateTime.strptime(sched_date, "%m/%d/%Y").strftime('%Y-%m-%d')}"
         case @json["trackDetails"][0]["scheduledDeliveryTime"]
         when "cms.stapp.eod"
