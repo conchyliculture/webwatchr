@@ -3,67 +3,57 @@
 
 require_relative "../lib/site.rb"
 
+require "curb"
 require "json"
 
 class DHL < Site::SimpleString
 
-    def initialize(track_id:, every:, comment:nil, test:false)
+    def initialize(track_id:, api_key: nil, every:, comment:nil, test:false)
+        unless api_key
+          raise Exception.new('DHL requires an API key for fetching tracking information. Get one by registering for a free account at https://developer.dhl.com/')
+        end
+        @api_key = api_key
+        @track_id = track_id
         super(
-            url:  "https://www.dhl.com/shipmentTracking?AWB=#{track_id}",
+            url:  "https://www.dhl.com/ch-en/home/tracking/tracking-express.html?submit=1&tracking-id=#{track_id}",
             every: every,
             test: test,
-            comment: comment,
-            useragent: "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0",
+            comment: comment
         )
-        set_http_header('X-Requested-With', 'XMLHttpRequest')
     end
+
+    def pull_things()
+      c = Curl.get("https://api-eu.dhl.com//track/shipments?trackingNumber=#{@track_id}")
+      c.headers["DHL-API-Key"] = @api_key
+      c.perform
+      @parsed_content = JSON.parse(c.body_str)
+    end
+
     def get_content()
-        res = ""
-#        begin
-            j = JSON.parse(@html_content)
-            description = j.dig("results",0, "description")
-            res << "Status: " + description + "<br>\n"
-            res << "<ul>\n"
-            j.dig("results", 0, "checkpoints").each do |update|
-              res << "<li>#{update['date']} #{update['time']}: #{update['description']}</li>\n"
-            end
-            res << "</ul>\n"
-#        rescue
-#            raise Site::ParseError.new "Please verify the DHL tracking ID"
-#        end
-
-        return res
-
-    end
-end
-
-class DHLPrivate < Site::SimpleString
-    def initialize(track_id:, every:, comment:nil, test:false)
-        super(
-            url:  "https://www.dhl.de/int-verfolgen/search?language=en&lang=en&domain=de&lang=en&domain=de&piececode=#{track_id}",
-            every: every,
-            test: test,
-            useragent: 'Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0',
-            comment: comment,
-            http_ver: 2
-        )
-    end
-
-    def get_content
-      json_t = @parsed_content.css('script')[0].text[/JSON.parse\("(.+)"\),$/,1]
-      j = JSON.parse(json_t.gsub("\\", ""))
-      res = "<ul>"
-      j["sendungen"][0]["sendungsdetails"]["sendungsverlauf"]["events"].each do |e|
-        res << "<li>"+e["datum"]+": "+e["status"]+"</li>"
+      shipment = @parsed_content["shipments"][0]
+      res = []
+      if @comment
+        res << "Update for #{@comment}"
       end
-      res += "</ul>"
-      return res
+      if shipment["estimatedTimeOfDeliveryRemark"]
+        res << "Estimated time of delivery: #{shipment["estimatedTimeOfDeliveryRemark"]}"
+      end
+
+      res << "<ul>"
+      @parsed_content["shipments"][0]["events"].each do |e|
+        res << "<li>#{e["timestamp"]}: #{e["description"]} (#{e.dig('location', 'address', 'addressLocality')})</li>"
+      end
+      res << "</ul>"
+
+      return res.join("\n")
+
     end
 end
 
 # example:
 # DHL.new(
 #     track_id: "1234567890",
+#     api_key: "j6VSqAm4RmlljLKJLajlP",
 #     every: 60*60,
 #     test: __FILE__ == $0
 # ).update
