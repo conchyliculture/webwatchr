@@ -20,7 +20,7 @@ class YanWen < Site::SimpleString
         @parsed_content.css('div.czhaodl ul li').each  do |jj|
           time = jj.css("div.cz_r p")[0].text
           desc = jj.css("div.cz_r h6")[0].text
-          res << time + ": " + desc
+          res << "<li>" + time + ": " + desc + "</li>"
         end
         res.sort!.uniq!
         res = ["<ul>"] << res << ["</ul>"]
