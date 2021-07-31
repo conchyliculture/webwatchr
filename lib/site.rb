@@ -265,6 +265,9 @@ class Site
         def get_new(previous_content=nil)
             new_stuff = nil
             @content = get_content()
+            unless @content
+                return nil
+            end
             if @content != previous_content
                 new_stuff = @content
             end

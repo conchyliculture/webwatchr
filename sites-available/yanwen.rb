@@ -23,8 +23,11 @@ class YanWen < Site::SimpleString
           res << "<li>" + time + ": " + desc + "</li>"
         end
         res.sort!.uniq!
-        res = ["<ul>"] << res << ["</ul>"]
-        return res.join("\n")
+        if res.size() > 0
+          res = ["<ul>"] << res << ["</ul>"]
+          return res.join("\n")
+        end
+        return nil
     end
 end
 
