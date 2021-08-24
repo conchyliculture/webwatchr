@@ -61,7 +61,6 @@ class USPSAPI < Site::SimpleString
     end
 
     def get_content()
-      pp Nokogiri::XML.parse(@html_content)
       root = Nokogiri::XML.parse(@html_content)
       res = [root.css("TrackResponse TrackSummary")]
       res << "<ul>"
