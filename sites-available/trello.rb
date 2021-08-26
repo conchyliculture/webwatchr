@@ -63,7 +63,7 @@ class Trello < Site::SimpleString
 
     def get_content()
       t=TrelloStruct.new(@json)
-      puts t.to_html(ignores: @ignores)
+      return t.to_html(ignores: @ignores)
     end
 end
 
