@@ -6,7 +6,7 @@ require "openssl"
 class Ricardo < Site::Articles 
     def initialize(search_term:, ignore:nil, every:, comment:nil, test:false)
         super(
-            url:  URI.encode("https://www.ricardo.ch/fr/s/#{search_term}"),
+            url:  "https://www.ricardo.ch/fr/s/#{URI.encode_www_form_component.(search_term)}",
             every: every,
             test: test,
             comment: comment,
