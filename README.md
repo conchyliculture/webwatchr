@@ -13,6 +13,9 @@ No bullshit gem from hell.
 
 ```shell
 apt-get install ruby ruby-nokogiri
+# I can't decide which web lib is the least bad
+apt install ruby-curb ruby-mechanize
+
 git clone https://github.com/conchyliculture/webwatchr/
 cd webwatchr
 cp config.json.template config.json
@@ -40,17 +43,20 @@ This means these website will only extract "interesting" information from the pa
 * [galaxus/digitec daily deals](https://www.galaxus.com/LiveShopping/)
 * [Noquarterprod](https://www.noquarterprod.com)
 * [Qwertee](https://www.qwertee.com)
+* [Trello](https://www.trello.com)
+* [Twitter](https://www.twitter.com) (via [Nitter](https://github.com/zedeus/nitter) instances)
+
+Some of these have been such a pain in the ass to scrape, I resorted to use their (usually terrible) APIs (ie: USPS)
 
 # Add a new site to watch
 
 ## Watch the whole HTML source of a page
 
-Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances.
+Just make a file `sites-enabled/mysites.rb` and append new pages to the end as new instances of the Site::SimpleString class.
 By default it will check each page every hour.
 
 ```ruby
 #/usr/bin/ruby
-# encoding: utf-8
 require_relative "../lib/site.rb"
 
 Site::SimpleString.new(
@@ -165,11 +171,11 @@ If everything looks right, `cd sites-enabled; ln -s ../sites-available/mysite.rb
 
 ## I need to do more complex stuff!
 
-If you need to do weird things like authentication, session handling, form posting and whatnots, and still don't want some useless bullshit bloated Gem, you can use [https://github.com/jjyg/libhttpclient/](https://github.com/jjyg/libhttpclient/)
+If you need to do weird things like authentication, session handling, form posting and whatnots, I've been playing around with [Mechanize](https://github.com/sparklemotion/mechanize) and [Curb](https://github.com/taf2/curb) which are kind of nice, and also have proper Debian packages.
 
 ## I need to do more even more complex stuff!
 
-If you need javascript... well... lol.
+If you need javascript... well... lol. I'll probably have to use Selenium one day but the later the better.
 
 ## Force a site check, ignoring the 'wait' parameter
 
@@ -207,7 +213,7 @@ Set the log file in config.json under the "log" key
 
 ## Alerting
 
-Email is the main method of alerting, but you can also set webwatchr to talk on telegram through a bot.
+Email is the main method of alerting, but you can also set webwatchr to talk to you on Telegram through a bot.
 
 First make a bot and grab a token following the [Telegram procedure](https://core.telegram.org/bots#6-botfather).
 
@@ -225,7 +231,7 @@ Then grab the code for the Telegram bot client. Run this from inside the current
 CURDIR="$(pwd)"
 cd /tmp
 git clone https://github.com/atipugin/telegram-bot-ruby
-mv telegram-bot-ruby/lib/telegram "${CURDIR}/lib/"
+mv telegram-bot-ruby/lib/telegram "webwatchr/lib/"
 cd -
 ```
 
