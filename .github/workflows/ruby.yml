@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: apt install
-      run: apt-get install libcurl4 libcurl3-gnutls libcurl4-openssl-dev -y
+      run:  sudo apt-get install libcurl4 libcurl3-gnutls libcurl4-openssl-dev -y
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
