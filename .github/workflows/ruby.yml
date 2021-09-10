@@ -27,6 +27,6 @@ jobs:
       with:
         ruby-version: 2.6
     - name: Install Dependencies
-      run: gem install nokogiri
+      run: gem install nokogiri curb diffy
     - name: Run tests
       run: ruby tests/tests.rb
