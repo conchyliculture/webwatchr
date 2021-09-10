@@ -253,7 +253,7 @@ class TestClasse < Test::Unit::TestCase
         c = TestArraySite.new(url: url)
         # Now, we don't call the alert Proc because we have no new things
         c.update()
-        expected_error = "ERROR -- : Network error on #{url} : execution expired. Will retry in 0 + 30 minutes"
+        expected_error = "ERROR -- : Network error on #{url} : Failed to open TCP connection to localhost:8001 (Connection refused - connect(2) for \"localhost\" port 8001). Will retry in 0 + 30 minutes"
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
         expected_html = Site::HTML_HEADER.dup + [
