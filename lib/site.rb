@@ -162,12 +162,11 @@ class Site
         save_state_file(state)
     end
 
-    def alert(new_stuff)
+    def alert(previous_content, new_content)
         @logger.debug "Alerting new stuff"
-
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
-             p.call({content: new_stuff, formatted_content: format(new_stuff), name: @name, comment: @comment})
+             p.call({content: new_content, formatted_content: format(new_content), name: @name, comment: @comment})
           end
         end
     end
@@ -239,8 +238,10 @@ class Site
                 if @test
                     puts "Would have sent an email with #{format(new_stuff)}"
                 else
-                    alert(new_stuff)
-                    update_state_file({"content" => new_stuff})
+                    alert(previous_content, new_stuff)
+                    update_state_file({
+                      "content" => new_stuff,
+                      "previous_content" => previous_content})
                 end
             else
                 if @test
@@ -278,6 +279,28 @@ class Site
             message_html = Site::HTML_HEADER.dup
             message_html += content
             return message_html
+        end
+    end
+
+    class DiffString < SimpleString
+
+        require "diffy"
+
+        def alert(previous_content, new_content)
+            @logger.debug "Alerting new stuff"
+            diffed = Diffy::Diff.new(previous_content, new_content)
+            diff_txt = diffed.to_s
+            diff_html = Site::HTML_HEADER.dup
+            diff_html += "<head><style>"
+            diff_html += Diffy::CSS
+            diff_html += "</style><body>"
+            diff_html += diffed.to_s(:html)
+            diff_html += "</body></html>"
+            @config["alert_procs"].each do |alert_name, p|
+              if @alert_only.empty? or @alert_only.include?(alert_name)
+                p.call({content: diff_txt, formatted_content: diff_html, name: @name, comment: @comment})
+              end
+            end
         end
     end
 

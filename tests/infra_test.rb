@@ -214,6 +214,8 @@ class TestClasse < Test::Unit::TestCase
         assert {result[:formatted_content] == expected_html}
         assert {result[:name] == url}
         expected_last = {"url"=>"http://localhost:8001/content_is_array.html",
+                         "previous_content"=>[{"id"=>"lol", "url"=>"lol", "title"=>"lilo"},
+                                              {"id"=>"fi", "url"=>"fi", "title"=>"fu"}],
                          "wait"=>0,
                          "content"=>[{"id"=>"lol", "title"=>"lilo", "url"=>"lol"},
                                     {"id"=>"fi", "title"=>"fu", "url"=>"fi"},
@@ -221,6 +223,9 @@ class TestClasse < Test::Unit::TestCase
         result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
         result_last["content"].each do |item|
+            item.delete("_timestamp")
+        end
+        result_last["previous_content"].each do |item|
             item.delete("_timestamp")
         end
         assert {expected_last == result_last}
