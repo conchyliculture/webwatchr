@@ -12,7 +12,7 @@ No bullshit gem from hell.
 # Installation
 
 ```shell
-apt-get install ruby ruby-nokogiri
+apt-get install ruby ruby-nokogiri ruby-diffy
 # I can't decide which web lib is the least bad
 apt install ruby-curb ruby-mechanize
 

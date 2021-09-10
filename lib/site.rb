@@ -284,7 +284,12 @@ class Site
 
     class DiffString < SimpleString
 
-        require "diffy"
+        begin
+          require "diffy"
+        rescue LoadError => e
+          puts "DiffString requires the diffy gem"
+          raise e
+        end
 
         def alert(previous_content, new_content)
             @logger.debug "Alerting new stuff"
