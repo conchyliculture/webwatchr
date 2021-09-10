@@ -203,7 +203,7 @@ class Site
             @logger.error msg
             $stderr.puts msg
             update_state_file({"wait" => @wait + 30*60})
-        rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError => e
+        rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
             msg = "Network error on #{@url}"
             if e.message
                 msg+=" : #{e.message}"
