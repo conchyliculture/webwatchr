@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
+require "curb"
+require "diffy"
 require "digest/md5"
 require "json"
 require "logger"
@@ -55,12 +57,6 @@ class Site
     end
 
     def fetch_url2(url, max_redir:10)
-      begin
-        require "curb"
-      rescue LoadError => e
-        puts "HTTP/2 requires the curb gem"
-        raise e
-      end
 
       c = Curl::Easy.new(url)
       c.set(:HTTP_VERSION, Curl::HTTP_2_0)
@@ -283,13 +279,6 @@ class Site
     end
 
     class DiffString < SimpleString
-
-        begin
-          require "diffy"
-        rescue LoadError => e
-          puts "DiffString requires the diffy gem"
-          raise e
-        end
 
         def alert(previous_content, new_content)
             @logger.debug "Alerting new stuff"
