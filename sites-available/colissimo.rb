@@ -2,39 +2,44 @@
 # encoding: utf-8
 
 require_relative "../lib/site.rb"
+require "mechanize"
+require "json"
 
 class Colissimo < Site::SimpleString
     def initialize(track_id:, every:, comment:nil, test:false)
         super(
-            url:  "http://www.colissimo.fr/portail_colissimo/suivreResultatStubs.do",
-            post_data: {"parcelnumber" => track_id},
+            url:  "https://api.laposte.fr/ssu/v1/suivi-unifie/idship/#{@track_id}?lang=en_GB",
             every: every,
             test: test,
             comment: comment,
         )
+        @track_id = track_id
+    end
+
+    def pull_things()
+      mechanize = Mechanize.new
+      # Get a cookie
+      mechanize.get("https://www.laposte.fr/outils/track-a-parcel")
+      mechanize.request_headers["Accept"]='application/json'
+      j = mechanize.get(
+        "https://api.laposte.fr/ssu/v1/suivi-unifie/idship/#{@track_id}?lang=en_GB"
+      )
+      @html_content = j.body
+      @parsed_content = JSON.parse(@html_content)
     end
 
     def get_content()
         res = []
-        table = @parsed_content.css("tbody tr").map{|row| row.css("td").map{|r| r.text.strip}}
-        if table.size==0
-            Site::ParseError("Please verify the Colissimo tracking ID")
+        @parsed_content['shipment']['event'].each do |e|
+          res << e['date']+": "+e['label']
         end
-        table.each do |r|
-            res << "#{r[0]} : #{r[1]}"
-            if r[2].to_s != ""
-                res << " (#{r[2]})"
-            end
-            res << "<br/>\n"
-        end
-        return res.join("")
+        return res.join("\n")
     end
 end
 
 # Example:
 # Colissimo.new(
-#     track_id: "CW0000000000FR",
+#     track_id: "CB0129291929FR",
 #     every: 2*60*60,
 #     test: __FILE__ == $0
 # ).update
-# 
