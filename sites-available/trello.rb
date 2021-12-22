@@ -40,7 +40,7 @@ class TrelloStruct
   end
 end
 
-class Trello < Site::SimpleString
+class Trello < Site::DiffString
     def initialize(url: , ignores: [], every:, messages:nil, comment:nil, test:false)
         super(
             url: url,
