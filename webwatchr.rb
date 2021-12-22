@@ -83,20 +83,19 @@ def make_alerts(c)
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 title = "Update from "+args[:name]
                 title += " (#{args[:comment]})" if args[:comment]
-                msg = [title]
+                msg_pieces = [title]
                 if args[:content].class == Array
-                    line = ""
                     args[:content].each do |item|
-                      line += item["title"]
+                      line = item["title"]
                         if item["url"]
                           line += ": "+item["url"]
                         end
-                        msg << line
+                        msg_pieces << line
                     end
                 else
-                  msg << args[:content]
+                  msg_pieces << args[:content]
                 end
-                split_msg = msg.inject(['']) { |sum, str| sum.last.length + str.length > 4090 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
+                split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4090 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
                 split_msg.each do |m|
                   bot.api.send_message(chat_id: cid, text: m)
                 end
