@@ -65,6 +65,9 @@ class TwitterTest < Test::Unit::TestCase
       {"id"=>"https://twitter.com/mobile_test_2/status/381158773399646209",
        "url"=>"https://twitter.com/mobile_test_2/status/381158773399646209",
        "img_src"=>nil, "title"=>"2."},
+      {"id"=>"https://twitter.com/mobile_test_2/status/381123354515615744",
+       "url"=>"https://twitter.com/mobile_test_2/status/381123354515615744",
+       "img_src"=>nil, "title"=>"1."},
     ]
 
     logger = Logger.new(STDOUT)
