@@ -2,7 +2,7 @@ require_relative "../lib/site.rb"
 
 class Twitter < Site::Articles
 
-    def initialize(account:, regex:nil, with_replies:true, no_retweets:false, every: 60*60 ,test: false, nitter_instance: "nitter.fdn.fr")
+    def initialize(account:, regex:nil, with_replies:true, no_retweets:false, every: 60*60 ,test: false, nitter_instance: "nitter.42l.fr")
         @regex = regex
         @no_retweets = no_retweets
         @account = account
