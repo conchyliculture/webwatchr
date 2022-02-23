@@ -36,14 +36,14 @@ end
 #                   smtp_server: "localhost",
 #                   smtp_port: 25)
 #
-def send_mail(content:, formatted_content: , from: , to:, subject: , smtp_server: , smtp_port:)
+def send_mail(content:, formatted_content: , comment: , from: , to:, subject: , smtp_server: , smtp_port:)
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
 To: #{to}
 MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
-Subject: #{subject}
+Subject: #{subject} #{comment if comment}
 
 #{formatted_content}
 END_OF_MESSAGE
@@ -66,6 +66,7 @@ def make_alerts(c)
             res_procs["email"] = Proc.new { |args|
                 unless args[:subject]
                     args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
+                    args[:subject] += " (#{args[:comment]})" if args[:comment]
                 end
                 args.delete(:name)
                 args[:smtp_server] = c["alerts"]["email"]["smtp_server"]
@@ -74,27 +75,31 @@ def make_alerts(c)
                 args[:from] = c["alerts"]["email"]["from_email"]
                 send_mail(args)
             }
-        when "rss"
-            res_procs["rss"] = Proc.new { |args|
-    #            gen_rss(args)
-            }
         when "telegram"
             begin
               require 'telegram/bot'
               res_procs["telegram"] = Proc.new { |args|
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
+                title = "Update from "+args[:name]
+                title += " (#{args[:comment]})" if args[:comment]
+                msg_pieces = [title]
                 if args[:content].class == Array
-                    bot.api.send_message(chat_id: cid, text: "Update from "+args[:name])
                     args[:content].each do |item|
-                        msg = item["title"]
+                      line = item["title"]
                         if item["url"]
-                          msg += ": "+item["url"]
+                          line += ": "+item["url"]
                         end
-                        bot.api.send_message(chat_id: cid, text: msg)
+                        msg_pieces << line
                     end
                 else
-                    bot.api.send_message(chat_id: cid, text: args[:content])
+                  msg_pieces << args[:content]
+                end
+                msg_pieces = msg_pieces.map{|x| x.size > 4096?  x.split("\n") : x}.flatten()
+                split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4000 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
+
+                split_msg.each do |m|
+                  bot.api.send_message(chat_id: cid, text: m)
                 end
               }
             rescue LoadError

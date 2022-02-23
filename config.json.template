@@ -8,8 +8,6 @@
         "telegram": {
             "chat_id": 123456789,
             "token": "MLKJQSDMLKJSQDMLQKSJDMLQKSJDMLKSQJD"
-        },
-        "rss" : {
         }
     },
     "default_alert" : ["email", "telegram"],

@@ -35,7 +35,7 @@ class GLS < Site::SimpleString
     def get_content()
       res = "<ul><li>"
 
-      res << @parsed_content["tuStatus"][0]["history"].map{|x| "#{x['date']}: #{x['evtDscr']} (#{x['address'].values.map(&:strip).join(' ')})"}.join("</li><li>")
+      res << @parsed_content["tuStatus"][0]["history"].map{|x| "#{x['date']}: #{x['evtDscr']} (#{x['address'].values.sort.map(&:strip).join(' ')})"}.join("</li><li>")
 
       res << "</li></ul>"
     end

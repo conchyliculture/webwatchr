@@ -25,22 +25,52 @@ class PostCH < Site::SimpleString
         @track_id = track_id
         @messages = messages
 
+        @events = []
+        @global_state = {}
+
         if not @messages
           build_messages()
         end
     end
 
     def build_messages()
+        @messages = {}
         c = Curl.get("https://service.post.ch/ekp-web/core/rest/translations/en/shipment-text-messages.json")
         c.perform
+        if not c.status == "200"
+          @logger.warn "Couldn't pull messages.json"
+          return
+        end
         messages = JSON.parse(c.body_str)
-        shipment_text_old = messages["shipment-text--"]
-        @messages = shipment_text_old.dup
-        shipment_text_old.each do |k, v|
-          if k=~/PARCEL\.\*\.\*\.([0-9]+)/
-            @messages["PARCEL.*.#{$1}"] = v
+        ["additional-services-text--", "shipment-text--"].each do |key|
+          messages[key].each do |k,v|
+            @messages[k] = v
           end
         end
+    end
+
+    def _code_key_check(key, pattern)
+      pattern = pattern.gsub("PARCEL.*", "PARCEL")
+      key_a = key.split(".")
+      pa = pattern.split(".")
+      key_a.each_with_index do |element, i|
+        if pa[i] == "*"
+          next
+        end
+        if element != pa[i]
+          return false
+        end
+      end
+      return true
+    end
+
+    def _translate_code(key)
+      @messages.each do |k, v|
+        if _code_key_check(key, k)
+          return v
+        end
+      end
+      return nil
     end
 
     def pull_things()
@@ -48,6 +78,9 @@ class PostCH < Site::SimpleString
         c = Curl.get("https://service.post.ch/ekp-web/api/user")
         c.set(:HTTP_VERSION, Curl::HTTP_2_0)
         c.perform
+        if not c.status == "200"
+          raise Site::ParseError.new("Error getting https://service.post.ch/ekp-web/api/user : #{c.status}")
+        end
         user_id = JSON.parse(c.body_str)["userIdentifier"][13..-1]
         _, *http_headers = c.header_str.split(/[\r\n]+/).map(&:strip)
         http_headers = Hash[http_headers.flat_map{ |s| s.scan(/^(\S+): (.+)/) }]
@@ -82,6 +115,9 @@ class PostCH < Site::SimpleString
 
     def get_content()
         res = []
+        if @comment
+          res << "Update for #{@comment}"
+        end
         if @global_state["deliveryRange"]
           res << "Expected delivery time: between #{@global_state["deliveryRange"]["start"]} and #{@global_state["deliveryRange"]["end"]}"
         end
@@ -93,7 +129,12 @@ class PostCH < Site::SimpleString
           if event["eventCode"]=~/PARCEL\.\*\..\.([0-9]+)$/
             event["eventCode"] = "PARCEL\.\*\.#{$1}"
           end
-          res << "<li>[#{event['timestamp']}] #{@messages[event["eventCode"]]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+          if @messages
+            translated = _translate_code(event["eventCode"])
+            res << "<li>[#{event['timestamp']}] #{translated} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+          else
+            res << "<li>[#{event['timestamp']}] #{event["eventCode"]} (#{(event["city"].to_s+ " "+event["country"].to_s).strip()})</li>"
+          end
         end
         res << "</ul>"
         return res.join("\n")
