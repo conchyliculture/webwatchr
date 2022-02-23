@@ -95,7 +95,9 @@ def make_alerts(c)
                 else
                   msg_pieces << args[:content]
                 end
-                split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4090 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
+                msg_pieces = msg_pieces.map{|x| x.size > 4096?  x.split("\n") : x}.flatten()
+                split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4000 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
+
                 split_msg.each do |m|
                   bot.api.send_message(chat_id: cid, text: m)
                 end
