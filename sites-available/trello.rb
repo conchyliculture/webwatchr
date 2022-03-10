@@ -38,10 +38,21 @@ class TrelloStruct
     return @cards.select{|c| c[:list_id] == list_id}
   end
 
+  def should_ignore?(ignores, ln)
+    if ignores.size > 0
+      if ignores[0].class == String
+        return ignores.include?(ln)
+      elsif ignores[0].class == Regexp
+        return (ignores.map{|x| ln=~x}.compact.size > 0)
+      end
+    end
+    return false
+  end
+
   def to_html(ignores:[])
     res = ""
     @lists.each do |li,ln|
-      next if ignores.include?(ln)
+      next if should_ignore?(ignores, ln)
       res << "<b>#{ln}</b> \n<ul>\n"
       get_cards_by_list_id(li).each do |c|
         card_html = "  <li>"
