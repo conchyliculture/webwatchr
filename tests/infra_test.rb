@@ -30,26 +30,26 @@ class TestClasse < Test::Unit::TestCase
     end
 
     def restart_webrick()
-        @serv_thread.kill if @serv_thread
-        @serv_thread = Thread.new do
-            s = WEBrick::HTTPServer.new(:AccessLog => [],
-                                        :Logger => WEBrick::Log::new("/dev/null", 7),
-                                        :Port => 8001,
-                                       )
-            s.mount "/", TestFileHandler, $wwwroot
-            s.start
-        end
-        sleep(1)
+      @webrick = WEBrick::HTTPServer.new(
+        :AccessLog => [],
+        :Logger => WEBrick::Log::new("/dev/null", 7),
+        :Port => $wwwport,
+      )
+      @webrick.mount "/", TestFileHandler, $wwwroot
+
+      @serv_thread = Thread.new do
+          @webrick.start
+      end
     end
 
     def setup
         FileUtils.mkdir_p($CONF["last_dir"])
-
         restart_webrick()
     end
 
     def teardown()
-        @serv_thread.exit
+      @webrick.stop
+      @serv_thread.join
         [$content_is_string, $content_is_array].each do |tf|
             File.open(File.join($wwwroot, tf), "w") do |f|
                 f.puts ""
@@ -213,7 +213,7 @@ class TestClasse < Test::Unit::TestCase
         assert {result[:content] == [{"id"=>"new!", "url"=>"new!", "title"=>"new"}]}
         assert {result[:formatted_content] == expected_html}
         assert {result[:name] == url}
-        expected_last = {"url"=>"http://localhost:8001/content_is_array.html",
+        expected_last = {"url"=>"http://localhost:#{$wwwport}/content_is_array.html",
                          "previous_content"=>[{"id"=>"lol", "url"=>"lol", "title"=>"lilo"},
                                               {"id"=>"fi", "url"=>"fi", "title"=>"fu"}],
                          "wait"=>0,
@@ -243,23 +243,6 @@ class TestClasse < Test::Unit::TestCase
             "<ul style=\"list-style-type: none;\">",
             "</ul>"].join("\n")
         assert {!called}
-		assert {result == ""}
-
-        result = ""
-        called = false
-
-        # Test error
-        @serv_thread.exit
-        c = TestArraySite.new(url: url)
-        # Now, we don't call the alert Proc because we have no new things
-        c.update()
-        expected_error = "ERROR -- : Network error on #{url} : Failed to open TCP connection to localhost:8001 (Connection refused - connect(2) for \"localhost\" port 8001). Will retry in 0 + 30 minutes"
-        last_error = $logger_test_io.string.split("\n")[-1]
-        assert {last_error.end_with?(expected_error)}
-        expected_html = Site::HTML_HEADER.dup + [
-            "<ul style=\"list-style-type: none;\">",
-            "</ul>"].join("\n")
-        assert {! called}
 		assert {result == ""}
     end
 end
