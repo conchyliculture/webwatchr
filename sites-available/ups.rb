@@ -1,8 +1,5 @@
-#!/usr/bin/ruby
-# encoding: utf-8
-
 require "json"
-require "curb"
+require "mechanize"
 require_relative "../lib/site.rb"
 
 class UPS < Site::SimpleString
@@ -18,23 +15,21 @@ class UPS < Site::SimpleString
             comment: comment,
         )
         @track_id = track_id
+        @mechanize = Mechanize.new()
     end
 
     def pull_things()
-        c = Curl.get(@url)
-        c.perform
-        _, *http_headers = c.header_str.split(/[\r\n]+/).map(&:strip)
-        http_headers = http_headers.flat_map{|x| x.scan(/^(\S+): (.+)/)}
-        http_headers = http_headers.inject({}){|acc, val| (acc[val[0]] ||= []) << val[1].split('; ')[0].split('=',2); acc}
-        cookies = http_headers["Set-Cookie"].to_h
+        url = "https://www.ups.com/track"
+        # Just get cookies
+        @mechanize.get(url)
+        data = {'Locale'=> 'en_US', 'TrackingNumber' => [@track_id]}
+        headers = {'X-XSRF-TOKEN' => @mechanize.cookie_jar.cookies().select{|c| c.name == "X-XSRF-TOKEN-ST"}[0].value,
+                    "Content-Type" => 'application/json',
+                    "Cookie" => @mechanize.cookie_jar().map{|c| c.name+"="+c.value}.join('; ')}
+        res = @mechanize.post("https://www.ups.com/track/api/Track/GetStatus?loc=en_US", data.to_json, headers)
 
-        c = Curl.post("https://www.ups.com/track/api/Track/GetStatus", '{"TrackingNumber":["'+@track_id.downcase() + '"]}')
-        c.headers["X-XSRF-TOKEN"] = cookies["X-XSRF-TOKEN-ST"]
-        c.headers["Content-Type"] = "application/json"
-        c.headers["User-Agent"] = "curl/7.74.0" # stuff is necessary here
-        c.headers["Cookie"] = cookies.slice("X-CSRF-TOKEN", "X-XSRF-TOKEN-ST").to_a.map {|x| x.join("=")}.join("; ")
-        c.perform
-        @json = JSON.parse(c.body_str)
+        @json = JSON.parse(res.body)
+        return @json
     end
 
     def proper_time(date, time)
@@ -44,10 +39,11 @@ class UPS < Site::SimpleString
 
     def get_content()
       res = []
-      sched_date = @json["trackDetails"][0]["scheduledDeliveryDate"]
+      deets = @json["trackDetails"].select{|deets|deets['requestedTrackingNumber'] == @track_id}[0]
+      sched_date = deets["scheduledDeliveryDate"]
       if sched_date and sched_date != ""
         sched_msg = "Scheduled delivery date: #{DateTime.strptime(sched_date, "%m/%d/%Y").strftime('%Y-%m-%d')}"
-        case @json["trackDetails"][0]["scheduledDeliveryTime"]
+        case deets["scheduledDeliveryTime"]
         when "cms.stapp.eod"
           sched_msg << " by end of day"
         when "cms.stapp.9pm"
@@ -60,7 +56,7 @@ class UPS < Site::SimpleString
       end
 
       res << "<ul>"
-      @json["trackDetails"][0]["shipmentProgressActivities"].each do |e|
+      deets["shipmentProgressActivities"].each do |e|
         next unless e["activityScan"]
         res << "<li>#{proper_time(e["date"], e["time"])}: #{e["activityScan"]} (#{e["location"]})</li>"
       end
