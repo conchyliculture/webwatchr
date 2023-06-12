@@ -8,6 +8,7 @@ class UPS < Site::SimpleString
     require "json"
 
     def initialize(track_id:, every:, comment:nil, test:false)
+      raise Exception.new("UPS Website switched to Akamai bot protection. They also offer no free/dev API tokens.")
         super(
           url: "https://www.ups.com/track?loc=null&tracknum=#{track_id}",
             every: every,
