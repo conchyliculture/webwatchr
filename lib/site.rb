@@ -22,12 +22,13 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait, :logger
-    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
+    def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
         @comment = comment
         @post_data = post_data
+        @post_json = post_json
         @test = test
         @url = url
         @useragent = useragent
@@ -76,6 +77,14 @@ class Site
             if @post_data
                 req = Net::HTTP::Post.new(uri)
                 req.set_form_data(@post_data)
+            elsif @post_json
+                req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+                if @post_json.class == String
+                  req.body = @post_json
+                else
+                  req.body = @post_json.to_json
+                end
+
             else
                 req = Net::HTTP::Get.new(uri)
             end
