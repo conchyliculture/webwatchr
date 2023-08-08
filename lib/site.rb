@@ -171,7 +171,7 @@ class Site
         @logger.debug "Alerting new stuff"
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
-             p.call({content: new_content, formatted_content: format(new_content), name: @name, comment: @comment})
+             p.call(content: new_content, formatted_content: format(new_content), name: @name, comment: @comment)
           end
         end
     end
