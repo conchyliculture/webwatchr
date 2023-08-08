@@ -49,7 +49,7 @@ Subject: #{subject} #{comment if comment}
 END_OF_MESSAGE
 
     begin
-        Net::SMTP.start(smtp_server, smtp_port) do |smtp|
+        Net::SMTP.start(smtp_server, smtp_port, starttls: false) do |smtp|
             smtp.send_message(msgstr, from, to)
             $logger.debug("Sending mail to #{to}")
         end
@@ -78,7 +78,7 @@ def make_alerts(c)
         when "telegram"
             begin
               require 'telegram/bot'
-              res_procs["telegram"] = Proc.new { |args|
+              res_procs["telegram"] = Proc.new { |**args|
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 title = "Update from "+args[:name]
