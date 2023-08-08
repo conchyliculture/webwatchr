@@ -22,22 +22,25 @@ class Twitter < Site::Articles
     end
 
     def get_content()
-        @parsed_content.css('div.timeline-item').each do |tweet|
-            text = tweet.css('div.tweet-content')[0].text
-            if @no_retweets and tweet.css('div.retweet-header').size() > 0
-              next
-            end
-            tweet_uri = URI('https://twitter.com'+tweet.css('a.tweet-link')[0]['href'])
-            tweet_url = "https://twitter.com"+tweet_uri.path
+        @parsed_content.css('div.timeline-item:not(.unavailable) div.tweet-content').each do |tweet|
+          if not tweet.css('div.tweet-content')[0]
+            next
+          end
+          text = tweet.css('div.tweet-content')[0].text
+          if @no_retweets and tweet.css('div.retweet-header').size() > 0
+            next
+          end
+          tweet_uri = URI('https://twitter.com'+tweet.css('a.tweet-link')[0]['href'])
+          tweet_url = "https://twitter.com"+tweet_uri.path
 
-            if @regex 
-              if text=~@regex
-                add_art(tweet_url, text)
-              end
-            else
-                add_art(tweet_url, text)
+          if @regex 
+            if text=~@regex
+              add_art(tweet_url, text)
             end
-        end
+          else
+              add_art(tweet_url, text)
+          end
+       end
     end
 end
 
