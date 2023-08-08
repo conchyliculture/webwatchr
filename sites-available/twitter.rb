@@ -22,7 +22,7 @@ class Twitter < Site::Articles
     end
 
     def get_content()
-        @parsed_content.css('div.timeline-item:not(.unavailable) div.tweet-content').each do |tweet|
+        @parsed_content.css('div.timeline-item:not(.unavailable)').each do |tweet|
           if not tweet.css('div.tweet-content')[0]
             next
           end

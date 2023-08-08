@@ -73,12 +73,12 @@ def make_alerts(c)
                 args[:smtp_port] = c["alerts"]["email"]["smtp_port"]
                 args[:to] = c["alerts"]["email"]["dest_email"]
                 args[:from] = c["alerts"]["email"]["from_email"]
-                send_mail(args)
+                send_mail(**args)
             }
         when "telegram"
             begin
               require 'telegram/bot'
-              res_procs["telegram"] = Proc.new { |**args|
+              res_procs["telegram"] = Proc.new { |args|
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 title = "Update from "+args[:name]
