@@ -7,18 +7,18 @@ class Cainiao < Site::SimpleString
 
     def initialize(track_id:, every:, comment:nil, test:false)
         super(
-          url: "https://global.cainiao.com/detail.htm?mailNoList=#{track_id}",
-            every: every,
-            test: test,
-            comment: comment,
+          url: "https://global.cainiao.com/global/detail.json?mailNos=#{track_id}",
+          every: every,
+          test: test,
+          comment: comment,
         )
     end
 
     def get_content()
         res = ["<ul>"]
-        j = JSON.parse(@parsed_content.css('textarea#waybill_list_val_box').text)
-        j['data'][0]['section2']['detailList'].each do |jj|
-          res << "<li>#{jj['time']}: #{jj['desc']}</li>"
+        j = JSON.parse(@html_content)
+        j['module'][0]['detailList'].each do |jj|
+          res << "<li>#{jj['timeStr']}: #{jj['standerdDesc']}</li>"
         end
         res << ["</ul>"]
         return res.join("\n")
