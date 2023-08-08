@@ -34,6 +34,7 @@ class USPS < Site::SimpleString
           res << "<li>#{ligne}</li>\n"
         end
         res << "</ul>"
+        return if res.size == 28 # empty
         return res
     end
 
