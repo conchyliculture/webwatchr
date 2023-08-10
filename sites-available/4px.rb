@@ -16,7 +16,6 @@ class Post4PX < Site::SimpleString
     end
 
     def parse_content(html)
-      pp html
       return JSON.parse(html)
     end
 
