@@ -21,7 +21,7 @@ class TwitterTest < Test::Unit::TestCase
       {"id"=>"https://twitter.com/mobile_test_2/status/398528424886558721", "url"=>"https://twitter.com/mobile_test_2/status/398528424886558721", "img_src"=>nil, "title"=>"Test test test.", "_timestamp"=>1691664883},
       {"id"=>"https://twitter.com/mobile_test_2/status/398528393072742402", "url"=>"https://twitter.com/mobile_test_2/status/398528393072742402", "img_src"=>nil, "title"=>"Testing.", "_timestamp"=>1691664883},
       {"id"=>"https://twitter.com/mobile_test_2/status/395975667008819200", "url"=>"https://twitter.com/mobile_test_2/status/395975667008819200", "img_src"=>nil, "title"=>"Test", "_timestamp"=>1691664883},
-      {"id"=>"https://twitter.com/EmergencyPuppy/status/393809245084590080", "url"=>"https://twitter.com/EmergencyPuppy/status/393809245084590080", "img_src"=>nil, "title"=>"Wolf pup, on the prowl http://t.co/6uFI4z3Js5", "_timestamp"=>1691664883},
+      {"id"=>"https://twitter.com/EmergencyPuppy/status/393809245084590080", "url"=>"https://twitter.com/EmergencyPuppy/status/393809245084590080", "img_src"=>nil, "title"=>"Wolf pup, on the prowl", "_timestamp"=>1691664883},
       {"id"=>"https://twitter.com/mobile_test_2/status/385421581708967936", "url"=>"https://twitter.com/mobile_test_2/status/385421581708967936", "img_src"=>nil, "title"=>"12345.", "_timestamp"=>1691664883},
       {"id"=>"https://twitter.com/mobile_test_2/status/385407139856257024", "url"=>"https://twitter.com/mobile_test_2/status/385407139856257024", "img_src"=>nil, "title"=>"1234.", "_timestamp"=>1691664883},
       {"id"=>"https://twitter.com/mobile_test_2/status/381158773399646209", "url"=>"https://twitter.com/mobile_test_2/status/381158773399646209", "img_src"=>nil, "title"=>"2.", "_timestamp"=>1691664883},
@@ -32,6 +32,7 @@ class TwitterTest < Test::Unit::TestCase
     logger.level = Logger::ERROR
     t = Twitter.new(account:"mobile_test_2", test:true)
     t.logger = logger
+    assert {t.state_file == ".lasts/last-twitter_mobile_test_2"}
     t.pull_things()
     results = t.get_new([]).map {|x| x.reject{|k,v| k == "_timestamp"}}.sort_by{|h| h['id']}
     assert {results.size == expected_results.size}
