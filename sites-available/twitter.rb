@@ -10,7 +10,7 @@ class Twitter < Site::Articles
           @regex = /#{regex.class}/i
         end
         super(url: "https://#{nitter_instance}/#{account}#{with_replies ? '/with_replies' : ''}", every: every, test: test)
-        @state_file = ".lasts/last-twitter_#{account}"
+        @state_file = ".lasts/last-twitter_#{account.downcase}"
     end
 
     def add_art(url, txt)
