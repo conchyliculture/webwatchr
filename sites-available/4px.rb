@@ -24,7 +24,7 @@ class Post4PX < Site::SimpleString
         @parsed_content["data"][0]["tracks"].each do |t|
           m = "#{t['tkDateStr']}: #{t['tkDesc']}"
           if not t['tkLocation'].empty?
-            m << " "+t['tkLocation']
+            m << " ("+t['tkLocation']+")"
           end
           res << "<li>"+m+"</li>" 
         end
