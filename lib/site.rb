@@ -37,7 +37,7 @@ class Site
         @http_ver = http_ver
 
         md5 = Digest::MD5.hexdigest(url)
-        @state_file = "last-#{URI.parse(url.hostname)}-#{md5}"
+        @state_file = "last-#{URI.parse(url).hostname}-#{md5}"
         if @config and @config["last_dir"]
             @state_file = File.join(@config["last_dir"] || ".lasts", @state_file)
             @logger.debug "using #{@state_file} to store updates"
