@@ -37,11 +37,13 @@ class Site
         @http_ver = http_ver
 
         md5 = Digest::MD5.hexdigest(url)
-        @state_file = "last-#{URI.parse(url).hostname}-#{md5}"
+        @state_file_name = "last-#{URI.parse(url).hostname}-#{md5}"
         if @config and @config["last_dir"]
-            @state_file = File.join(@config["last_dir"] || ".lasts", @state_file)
-            @logger.debug "using #{@state_file} to store updates"
+            @state_file = File.join(@config["last_dir"], @state_file_name)
+        else
+          @state_file = File.join(".lasts", @state_file_name)
         end
+        @logger.debug "using #{@state_file} to store updates"
         state = load_state_file()
         @wait = state["wait"] || every
     end
