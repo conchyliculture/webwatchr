@@ -117,6 +117,18 @@ class Site
             end
 
             html = response.body
+
+            if html
+              if html=~/meta http-equiv="refresh" content="0;URL='(.*)'/
+                if max_redir == 0
+                    raise Site::RedirectError.new()
+                end
+                @url =  "#{uri.scheme}://#{uri.hostname}:#{uri.port}#{$1}"
+                @logger.debug "Redirecting to #{location}"
+                return fetch_url(@url, max_redir:max_redir-1)
+              end
+            end
+
             if html and response["Content-Encoding"]
                 html = html.force_encoding(response["Content-Encoding"])
             else
