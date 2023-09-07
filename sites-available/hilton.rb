@@ -8,13 +8,13 @@ class Hilton < Site::SimpleString
   require "json"
 
   def initialize(hotel_code:, start_date: , end_date: ,device_id:, app_id:, every:, comment:nil, test:false)
+    @state_file_name = "last-hilton-#{hotel_code}-#{start_date}-#{end_date}"
     super(
       url: "https://m.hilton.io/graphql/customer?type=ShopPropAvail&operationName=hotel_shopPropAvail&origin=ChooseRoomQBDataModel&pod=android",
       every: every,
       test: test,
       comment: comment
     )
-    @state_file = "last-hilton-#{hotel_code}-#{start_date}-#{end_date}"
     @mechanize = Mechanize.new()
     @bearer = nil
     @app_id = app_id

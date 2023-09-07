@@ -37,7 +37,9 @@ class Site
         @http_ver = http_ver
 
         md5 = Digest::MD5.hexdigest(url)
-        @state_file_name = "last-#{URI.parse(url).hostname}-#{md5}"
+        if not @state_file_name
+          @state_file_name = "last-#{URI.parse(url).hostname}-#{md5}"
+        end
         if @config and @config["last_dir"]
             @state_file = File.join(@config["last_dir"], @state_file_name)
         else
