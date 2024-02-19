@@ -9,12 +9,33 @@ class Twitter < Site::Articles
         if regex.class == String
           @regex = /#{regex.class}/i
         end
-        super(url: "https://#{nitter_instance}/#{account}#{with_replies ? '/with_replies' : ''}", every: every, test: test, useragent: "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0")
+        super(url: "https://nitter_instance/#{account}#{with_replies ? '/with_replies' : ''}", every: every, test: test, useragent: "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0")
+        @nitter_instances = get_working_nitters
+        if nitter_instance
+          @nitter_instances.prepend(nitter_instance)
+        end
 
         @extra_headers = {
           'Accept-Language'=> "en-US,en;q=0.5",
         }
         @state_file = ".lasts/last-twitter_#{account.downcase}"
+    end
+
+    def get_working_nitters
+      cache = ".cached_nitters"
+      if not File.exist?(cache) or (Time.now() - File.mtime(cache) ) > 1000
+        url = "https://status.d420.de/api/v1/instances"
+        puts "Pulling instances from #{url}" if $VERBOSE
+        text = Net::HTTP.get(URI.parse(url))
+        f = File.new(cache, 'w+')
+        f.write(text)
+        f.close
+      else
+        puts "Reading instances from #{cache}" if $VERBOSE
+        text = File.read(cache)
+      end
+      j = JSON.parse(text)
+      return j["hosts"].select{|h| h['healthy'] and h['is_upstream'] and h['is_latest_version']}.map{|h| h['domain']}
     end
 
     def add_art(url, txt)
@@ -24,6 +45,22 @@ class Twitter < Site::Articles
             "img_src" => nil,
             "title" => txt.strip()
         })
+    end
+
+    def pull_things
+      @nitter_instances.each do |nitter|
+        begin
+          path = @url.gsub("https://nitter_instance/", "")
+          url = URI.parse("https://#{nitter}/#{path}")
+          @html_content = fetch_url1(url)
+          @parsed_content = parse_content(@html_content)
+          return
+        rescue Exception => e
+          @logger.debug("While fetching #{url} we got #{e}")
+
+        end
+      end
+      return nil
     end
 
     def get_content()
