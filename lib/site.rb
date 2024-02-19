@@ -304,22 +304,39 @@ class Site
     end
 
     class DiffString < SimpleString
+      def format(content)
+        diff_html = Site::HTML_HEADER.dup
+        diff_html += "<head><style>"
+        diff_html += Diffy::CSS
+        diff_html += "</style><body>"
+        diff_html += @diffed.to_s(:html)
+        diff_html += "</body></html>"
+        return diff_html
+      end
+
+
+      def get_new(previous_content=nil)
+        new_stuff = nil
+        @content = get_content()
+        unless @content
+            return nil
+        end
+        if @content != previous_content
+          new_stuff = @content
+          @diffed = Diffy::Diff.new(previous_content, new_stuff)
+          new_stuff = @diffed.to_s
+        end
+        return new_stuff
+      end
+
 
         def alert(previous_content, new_content)
-            @logger.debug "Alerting new stuff"
-            diffed = Diffy::Diff.new(previous_content, new_content)
-            diff_txt = diffed.to_s
-            diff_html = Site::HTML_HEADER.dup
-            diff_html += "<head><style>"
-            diff_html += Diffy::CSS
-            diff_html += "</style><body>"
-            diff_html += diffed.to_s(:html)
-            diff_html += "</body></html>"
-            @config["alert_procs"].each do |alert_name, p|
-              if @alert_only.empty? or @alert_only.include?(alert_name)
-                p.call({content: diff_txt, formatted_content: diff_html, name: @name, comment: @comment})
-              end
+          @logger.debug "Alerting new stuff"
+          @config["alert_procs"].each do |alert_name, p|
+            if @alert_only.empty? or @alert_only.include?(alert_name)
+              p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
             end
+          end
         end
     end
 
