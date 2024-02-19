@@ -87,6 +87,7 @@ class Hilton < Site::SimpleString
         msg << "<li>#{room['roomTypeName']} (#{room['roomOccupancy']} pers):</li>"
         msg << "<ul>"
         room['roomRates'].each do |rate| 
+          next unless rate["ratePlan"]["ratePlanName"] == "Flexible Rate"
           msg << "<li>#{rate["ratePlan"]["ratePlanName"]} #{rate["rateAmountFmt"]}</li>"
         end
         msg << "</ul>"
