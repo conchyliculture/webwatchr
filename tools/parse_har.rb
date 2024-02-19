@@ -52,14 +52,15 @@ class HARParser
 
     def to_curl
       req = @dict.dig('request')
-      result = "curl \"#{req.dig('url')}\" --output -\\\n"
-      req_headers = req.dig('headers')
-
-      curl_params = []
-      req_headers.delete_if{|h| h['name'] == 'Host'}.each do |h|
-        curl_params << "    -H '#{h['name']}: #{h['value']}'"
+      result_cmd = ["curl", "-X", req['method']]
+      if req["httpVersion"] == "HTTP/2.0"
+        result_cmd << "--http2 "
       end
-      return result + curl_params.join(" \\\n")
+      result_cmd << req["url"]
+      result_cmd << req["headers"].map{|h| "-H '#{h['name'].split('-').map(&:capitalize).join('-')}: #{h['value']}'"}
+
+
+      return result_cmd.join(" ")
     end
 
   end
