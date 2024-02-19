@@ -314,30 +314,26 @@ class Site
         return diff_html
       end
 
-
       def get_new(previous_content=nil)
-        new_stuff = nil
         @content = get_content()
         unless @content
             return nil
         end
         if @content != previous_content
-          new_stuff = @content
-          @diffed = Diffy::Diff.new(previous_content, new_stuff)
-          new_stuff = @diffed.to_s
+          @diffed = Diffy::Diff.new(previous_content, @content)
         end
-        return new_stuff
+        return @content
       end
 
 
-        def alert(previous_content, new_content)
-          @logger.debug "Alerting new stuff"
-          @config["alert_procs"].each do |alert_name, p|
-            if @alert_only.empty? or @alert_only.include?(alert_name)
-              p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
-            end
+      def alert(previous_content, new_content)
+        @logger.debug "Alerting new stuff"
+        @config["alert_procs"].each do |alert_name, p|
+          if @alert_only.empty? or @alert_only.include?(alert_name)
+            p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
           end
         end
+      end
     end
 
     class Site::Articles < Site
