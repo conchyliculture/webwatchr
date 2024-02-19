@@ -334,14 +334,16 @@ class Site
       end
 
       def get_new(previous_content=nil)
+        new_stuff = nil
         @content = get_content()
         unless @content
             return nil
         end
         if @content != previous_content
           @diffed = get_differ(previous_content, @content)
+          new_stuff = @diffed.to_s
         end
-        return @content
+        return new_stuff
       end
 
 
