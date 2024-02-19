@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 require "curb"
-require "diffy"
 require "digest/md5"
 require "json"
 require "logger"
@@ -304,14 +303,34 @@ class Site
     end
 
     class DiffString < SimpleString
-      def format(content)
-        diff_html = Site::HTML_HEADER.dup
-        diff_html += "<head><style>"
-        diff_html += Diffy::CSS
-        diff_html += "</style><body>"
-        diff_html += @diffed.to_s(:html)
-        diff_html += "</body></html>"
-        return diff_html
+      begin
+        require "diffy"
+
+        def format(content)
+          diff_html = Site::HTML_HEADER.dup
+          diff_html += "<head><style>"
+          diff_html += Diffy::CSS
+          diff_html += "</style><body>"
+          diff_html += @diffed.to_s(:html)
+          diff_html += "</body></html>"
+          return diff_html
+        end
+        def get_differ(previous, new)
+          return Diffy::Diff.new(previous, new)
+        end
+
+      rescue LoadError
+        require "test/unit/diff"
+        def format(content)
+          diff_html = Site::HTML_HEADER.dup
+          diff_html += @diffed.to_s
+          diff_html += "</body></html>"
+          return diff_html
+        end
+
+        def get_differ(previous, new)
+          return Test::Unit::Diff.unified(previous, new)
+        end
       end
 
       def get_new(previous_content=nil)
@@ -320,7 +339,7 @@ class Site
             return nil
         end
         if @content != previous_content
-          @diffed = Diffy::Diff.new(previous_content, @content)
+          @diffed = get_differ(previous_content, @content)
         end
         return @content
       end
