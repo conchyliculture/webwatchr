@@ -88,6 +88,12 @@ def make_alerts(c)
                     args[:content].each do |item|
                       line = item["title"]
                         if item["url"]
+                          if line
+                            line += ": "+item["url"]
+                          else
+                            line = item["url"]
+                          end
+
                           line += ": "+item["url"]
                         end
                         msg_pieces << line
