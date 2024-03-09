@@ -18,6 +18,7 @@ class Hilton < Site::SimpleString
     @mechanize = Mechanize.new()
     @bearer = nil
     @app_id = app_id
+    @device_id = device_id
     @hotel_code = hotel_code.upcase
     raise Exception.new("Invalid app_id:'#{app_id}'. hilton.rb needs an app_id (ie: '01892712-1281-0192-0192-118201928102')") if not @app_id=~/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ 
     raise Exception.new("Invalid device_id: '#{device_id}'. hilton.rb needs a device_id (ie: '19acb812dfe18cb1')") if not device_id=~/^[0-9a-f]{16}$/
@@ -34,8 +35,9 @@ class Hilton < Site::SimpleString
     end
     @base_headers = {
       "content-type" => "application/json; charset=UTF-8",
-      "User-Agent" => "HHonors/2023.8.22 Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QP1A.190711.019)",
+      "User-Agent" => "HHonors/2024.2.20 Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QP1A.190711.019)",
       "x-hilton-upsell" => "true",
+      "x-emb-path" => "/graphql/customer/ShopMultiPropAvailQuery",
       "deviceid" => device_id,
     }
   end
@@ -65,10 +67,10 @@ class Hilton < Site::SimpleString
       },
       "operationName"=>"hotel_shopPropAvail"
     }
-    url = "https://m.hilton.io/graphql/customer?type=ShopPropAvail&operationName=hotel_shopPropAvail&origin=ChooseRoomQBDataModel&pod=android"
+    url = "https://m.hilton.io/graphql/customer?type=ShopMultiPropAvailQuery&operationName=shopMultiPropAvail_hotelSummaryOption&origin=HotelSearchResultsFragment&pod=android"
     headers = @base_headers.dup
     headers["authorization"] = "Bearer "+bearer
-    headers["forter-mobile-uid"] = "true"
+    headers["forter-mobile-uid"] = @device_id
     headers["x-hilton-anonymous"] = "true"
     headers["dx-platform"] = "mobile"
     res = @mechanize.post(url, data.to_json, headers)
