@@ -49,7 +49,7 @@ Subject: #{subject} #{comment if comment}
 END_OF_MESSAGE
 
     begin
-        Net::SMTP.start(smtp_server, smtp_port) do |smtp|
+        Net::SMTP.start(smtp_server, smtp_port, starttls: false) do |smtp|
             smtp.send_message(msgstr, from, to)
             $logger.debug("Sending mail to #{to}")
         end
@@ -73,7 +73,7 @@ def make_alerts(c)
                 args[:smtp_port] = c["alerts"]["email"]["smtp_port"]
                 args[:to] = c["alerts"]["email"]["dest_email"]
                 args[:from] = c["alerts"]["email"]["from_email"]
-                send_mail(args)
+                send_mail(**args)
             }
         when "telegram"
             begin
@@ -88,6 +88,12 @@ def make_alerts(c)
                     args[:content].each do |item|
                       line = item["title"]
                         if item["url"]
+                          if line
+                            line += ": "+item["url"]
+                          else
+                            line = item["url"]
+                          end
+
                           line += ": "+item["url"]
                         end
                         msg_pieces << line

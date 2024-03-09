@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 require "curb"
-require "diffy"
 require "digest/md5"
 require "json"
 require "logger"
@@ -22,12 +21,13 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait, :logger
-    def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
+    def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(STDOUT)
         @name = url.dup()
         @comment = comment
         @post_data = post_data
+        @post_json = post_json
         @test = test
         @url = url
         @useragent = useragent
@@ -36,11 +36,15 @@ class Site
         @http_ver = http_ver
 
         md5 = Digest::MD5.hexdigest(url)
-        @state_file = ".lasts/last-#{md5}"
-        if @config and @config["last_dir"]
-            @state_file = File.join(@config["last_dir"] || ".", "last-#{md5}")
-            @logger.debug "using #{@state_file} to store updates"
+        if not @state_file_name
+          @state_file_name = "last-#{URI.parse(url).hostname}-#{md5}"
         end
+        if @config and @config["last_dir"]
+            @state_file = File.join(@config["last_dir"], @state_file_name)
+        else
+          @state_file = File.join(".lasts", @state_file_name)
+        end
+        @logger.debug "using #{@state_file} to store updates"
         state = load_state_file()
         @wait = state["wait"] || every
     end
@@ -76,6 +80,14 @@ class Site
             if @post_data
                 req = Net::HTTP::Post.new(uri)
                 req.set_form_data(@post_data)
+            elsif @post_json
+                req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+                if @post_json.class == String
+                  req.body = @post_json
+                else
+                  req.body = @post_json.to_json
+                end
+
             else
                 req = Net::HTTP::Get.new(uri)
             end
@@ -106,6 +118,18 @@ class Site
             end
 
             html = response.body
+
+            if html
+              if html=~/meta http-equiv="refresh" content="0;URL='(.*)'/
+                if max_redir == 0
+                    raise Site::RedirectError.new()
+                end
+                @url =  "#{uri.scheme}://#{uri.hostname}:#{uri.port}#{$1}"
+                @logger.debug "Redirecting to #{location}"
+                return fetch_url(@url, max_redir:max_redir-1)
+              end
+            end
+
             if html and response["Content-Encoding"]
                 html = html.force_encoding(response["Content-Encoding"])
             else
@@ -162,7 +186,7 @@ class Site
         @logger.debug "Alerting new stuff"
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
-             p.call({content: new_content, formatted_content: format(new_content), name: @name, comment: @comment})
+             p.call(content: new_content, formatted_content: format(new_content), name: @name, comment: @comment)
           end
         end
     end
@@ -279,23 +303,58 @@ class Site
     end
 
     class DiffString < SimpleString
+      begin
+        require "diffy"
 
-        def alert(previous_content, new_content)
-            @logger.debug "Alerting new stuff"
-            diffed = Diffy::Diff.new(previous_content, new_content)
-            diff_txt = diffed.to_s
-            diff_html = Site::HTML_HEADER.dup
-            diff_html += "<head><style>"
-            diff_html += Diffy::CSS
-            diff_html += "</style><body>"
-            diff_html += diffed.to_s(:html)
-            diff_html += "</body></html>"
-            @config["alert_procs"].each do |alert_name, p|
-              if @alert_only.empty? or @alert_only.include?(alert_name)
-                p.call({content: diff_txt, formatted_content: diff_html, name: @name, comment: @comment})
-              end
-            end
+        def format(content)
+          diff_html = Site::HTML_HEADER.dup
+          diff_html += "<head><style>"
+          diff_html += Diffy::CSS
+          diff_html += "</style><body>"
+          diff_html += @diffed.to_s(:html)
+          diff_html += "</body></html>"
+          return diff_html
         end
+        def get_differ(previous, new)
+          return Diffy::Diff.new(previous, new)
+        end
+
+      rescue LoadError
+        require "test/unit/diff"
+        def format(content)
+          diff_html = Site::HTML_HEADER.dup
+          diff_html += @diffed.to_s
+          diff_html += "</body></html>"
+          return diff_html
+        end
+
+        def get_differ(previous, new)
+          return Test::Unit::Diff.unified(previous, new)
+        end
+      end
+
+      def get_new(previous_content=nil)
+        new_stuff = nil
+        @content = get_content()
+        unless @content
+            return nil
+        end
+        if @content != previous_content
+          @diffed = get_differ(previous_content, @content)
+          new_stuff = @diffed.to_s
+        end
+        return new_stuff
+      end
+
+
+      def alert(previous_content, new_content)
+        @logger.debug "Alerting new stuff"
+        @config["alert_procs"].each do |alert_name, p|
+          if @alert_only.empty? or @alert_only.include?(alert_name)
+            p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
+          end
+        end
+      end
     end
 
     class Site::Articles < Site

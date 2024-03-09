@@ -7,7 +7,8 @@ require_relative "../lib/site.rb"
 class USPS < Site::SimpleString
 
     def initialize(track_id:, every:, comment:nil, test:false)
-        puts "This is most likely broken :("
+      $stderr.puts "This is most likely broken :("
+
         super(
             url: "https://tools.usps.com/go/TrackConfirmAction?tLabels=#{track_id}",
             every: every,
@@ -34,6 +35,7 @@ class USPS < Site::SimpleString
           res << "<li>#{ligne}</li>\n"
         end
         res << "</ul>"
+        return if res.size == 28 # empty
         return res
     end
 

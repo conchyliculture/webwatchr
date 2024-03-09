@@ -88,7 +88,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert {whole_html == html}
         assert {c.parse_noko(html).css("title").text == "test"}
-        assert {c.state_file().end_with?("last-2182cd5c8685baed48f692ed72d7a89f")}
+        assert {c.state_file().end_with?("last-localhost-2182cd5c8685baed48f692ed72d7a89f")}
         c.update()
         expected_error = "DEBUG -- : Alerting new stuff"
         last_error = $logger_test_io.string.split("\n")[-1]
@@ -159,7 +159,7 @@ class TestClasse < Test::Unit::TestCase
         html = c.fetch_url(url)
         assert {html == whole_html}
         assert {c.parse_noko(html).css("title").text == "test"}
-        assert {c.state_file.end_with?("last-35e711989b197f20f3d4936e91a2c079")}
+        assert {c.state_file.end_with?("last-localhost-35e711989b197f20f3d4936e91a2c079")}
 
         # First full run, Get 2 things
         c.update()
