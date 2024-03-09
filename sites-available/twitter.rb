@@ -1,4 +1,6 @@
 require_relative "../lib/site.rb"
+require "logger"
+$logger = Logger.new($stdout)
 
 class Twitter < Site::Articles
 
@@ -10,7 +12,10 @@ class Twitter < Site::Articles
           @regex = /#{regex.class}/i
         end
         super(url: "https://nitter_instance/#{account}#{with_replies ? '/with_replies' : ''}", every: every, test: test, useragent: "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0")
+        puts "getting thigns"
         @nitter_instances = get_working_nitters
+        puts "got thigns"
+        exit
         if nitter_instance
           @nitter_instances.prepend(nitter_instance)
         end
@@ -24,9 +29,15 @@ class Twitter < Site::Articles
     def get_working_nitters
       cache = ".cached_nitters"
       if not File.exist?(cache) or (Time.now() - File.mtime(cache) ) > 1000
+        pp "no cache"
         url = "https://status.d420.de/api/v1/instances"
         puts "Pulling instances from #{url}" if $VERBOSE
         text = Net::HTTP.get(URI.parse(url))
+        while text[0] != "{"
+          puts "Error pulling data from #{url}, got: #{text}"
+          sleep(10)
+          text = Net::HTTP.get(URI.parse(url))
+        end
         f = File.new(cache, 'w+')
         f.write(text)
         f.close
@@ -35,7 +46,7 @@ class Twitter < Site::Articles
         text = File.read(cache)
       end
       j = JSON.parse(text)
-      return j["hosts"].select{|h| h['healthy'] and h['is_upstream'] and h['is_latest_version']}.map{|h| h['domain']}
+      return j["hosts"].select{|h| h['healthy'] }.map{|h| h['domain']}
     end
 
     def add_art(url, txt)
@@ -57,10 +68,23 @@ class Twitter < Site::Articles
           return
         rescue Exception => e
           @logger.debug("While fetching #{url} we got #{e}")
-
         end
       end
+      @logger.debug("no more instances to try :'(")
       return nil
+    end
+
+    def parse_content(html)
+      parsed = Nokogiri::HTML.parse(html)
+      if parsed.css('noscript').size > 0
+        if parsed.css('noscript')[0].text =~/Please turn JavaScript on and reload the page./
+          raise Exception.new("Instance requires javascript tests")
+        end
+      end
+      if parsed.text =~ /Instance has been rate limited/
+        raise Exception.new("Instance has been rate limited")
+      end
+      return parsed
     end
 
     def get_content()
