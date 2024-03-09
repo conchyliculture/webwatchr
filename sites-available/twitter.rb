@@ -1,6 +1,4 @@
 require_relative "../lib/site.rb"
-require "logger"
-$logger = Logger.new($stdout)
 
 class Twitter < Site::Articles
 
