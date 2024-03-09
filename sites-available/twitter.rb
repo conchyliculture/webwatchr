@@ -26,7 +26,6 @@ class Twitter < Site::Articles
     def get_working_nitters
       cache = ".cached_nitters"
       if not File.exist?(cache) or (Time.now() - File.mtime(cache) ) > 1000
-        pp "no cache"
         url = "https://status.d420.de/api/v1/instances"
         puts "Pulling instances from #{url}" if $VERBOSE
         text = Net::HTTP.get(URI.parse(url))
