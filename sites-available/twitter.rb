@@ -12,10 +12,7 @@ class Twitter < Site::Articles
           @regex = /#{regex.class}/i
         end
         super(url: "https://nitter_instance/#{account}#{with_replies ? '/with_replies' : ''}", every: every, test: test, useragent: "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0")
-        puts "getting thigns"
         @nitter_instances = get_working_nitters
-        puts "got thigns"
-        exit
         if nitter_instance
           @nitter_instances.prepend(nitter_instance)
         end
@@ -71,7 +68,6 @@ class Twitter < Site::Articles
         end
       end
       @logger.debug("no more instances to try :'(")
-      return nil
     end
 
     def parse_content(html)
@@ -88,6 +84,7 @@ class Twitter < Site::Articles
     end
 
     def get_content()
+        return unless @parsed_content
         @parsed_content.css('div.timeline-item:not(.unavailable)').each do |tweet|
           if not tweet.css('div.tweet-content')[0]
             next
