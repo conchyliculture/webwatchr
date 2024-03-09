@@ -23,7 +23,8 @@ class Site
     attr_accessor :state_file, :url, :wait, :logger
     def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
-        @logger = $logger || Logger.new(STDOUT)
+        @logger = $logger || Logger.new(@config["log"] || STDOUT)
+        @logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
         @name = url.dup()
         @comment = comment
         @post_data = post_data
