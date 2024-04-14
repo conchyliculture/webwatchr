@@ -21,7 +21,7 @@ class Site
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
     attr_accessor :state_file, :url, :wait, :logger
-    def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [])
+    def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [], rand_sleep:0)
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(@config["log"] || STDOUT)
         @logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
@@ -35,6 +35,7 @@ class Site
         @extra_headers = {}
         @alert_only = alert_only
         @http_ver = http_ver
+        @rand_sleep = rand_sleep
 
         md5 = Digest::MD5.hexdigest(url)
         if not @state_file_name
@@ -253,6 +254,7 @@ class Site
         previous_content = previous_state["content"]
         if should_update?(previous_state["time"]) or @test
             @logger.info "Time to update #{@url}" unless @test
+            sleep(@rand_sleep) if (@rand_sleep > 0 and not @test)
             pull_things()
             new_stuff = get_new(previous_content)
             if new_stuff
@@ -360,7 +362,7 @@ class Site
 
     class Site::Articles < Site
 
-        def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [], http_ver:1)
+        def initialize(url:, every: 60*60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [], http_ver:1, rand_sleep:0)
             super
             @content = []
         end
