@@ -7,7 +7,7 @@ class Hilton < Site::SimpleString
   require "mechanize"
   require "json"
 
-  def initialize(hotel_code:, start_date: , end_date: ,device_id:, app_id:, every:, comment:nil, test:false)
+  def initialize(hotel_code:, start_date: , end_date: ,device_id:, app_id:, every:, comment:nil, test:false, group_code:nil)
     @state_file_name = "last-hilton-#{hotel_code}-#{start_date}-#{end_date}"
     super(
       url: "https://m.hilton.io/graphql/customer?type=ShopPropAvail&operationName=hotel_shopPropAvail&origin=ChooseRoomQBDataModel&pod=android",
@@ -20,6 +20,7 @@ class Hilton < Site::SimpleString
     @app_id = app_id
     @device_id = device_id
     @hotel_code = hotel_code.upcase
+    @group_code = group_code
     raise Exception.new("Invalid app_id:'#{app_id}'. hilton.rb needs an app_id (ie: '01892712-1281-0192-0192-118201928102')") if not @app_id=~/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ 
     raise Exception.new("Invalid device_id: '#{device_id}'. hilton.rb needs a device_id (ie: '19acb812dfe18cb1')") if not device_id=~/^[0-9a-f]{16}$/
     raise Exception.new("hilton.rb needs a hotel_code (ie: 'AOSLWKA')") if not @hotel_code=~/^[A-Z]{7}$/
@@ -55,7 +56,7 @@ class Hilton < Site::SimpleString
       "query" =>
         "query hotel_shopPropAvail($language: String!, $ctyhocn: String!, $guestId: BigInt, $input: ShopPropAvailQueryInput!) { hotel(ctyhocn: $ctyhocn, language: $language) { shopAvail(guestId: $guestId, input: $input) { roomTypes { roomTypeName roomTypeDesc roomOccupancy roomRates { __typename ...RoomAvailabilityRateFragment } } } } } fragment RoomAvailabilityRateFragment on ShopRoomTypeRate { rateAmountFmt(decimal: 0, strategy: trunc) rateAmount ratePlan { ratePlanName ratePlanDesc currencyCode  } }",
       "variables" => {
-        "ctyhocn" => @hotel_code.upcase,
+        "ctyhocn" => @hotel_code,
         "guestId"=>"0",
         "input"=> {
           "arrivalDate"=> @start_date.strftime('%Y-%m-%d'),
@@ -63,10 +64,14 @@ class Hilton < Site::SimpleString
           "numAdults"=>1,
           "numRooms"=>1,
         },
-        "language"=>"en"
+        "language"=>"en",
+        "operationName"=>"hotel_shopPropAvail"
       },
-      "operationName"=>"hotel_shopPropAvail"
     }
+    if @group_code
+      data["query"]  = "query hotel_shopPropAvail($language: String!, $ctyhocn: String!, $guestId: BigInt, $input: ShopPropAvailQueryInput!) { hotel(ctyhocn: $ctyhocn, language: $language) {shopAvail(guestId: $guestId, input: $input) { roomTypes {roomTypeName roomTypeDesc roomOccupancy roomRates { __typename ...RoomAvailabilityRateFragment } } } } } fragment RoomAvailabilityRateFragment on ShopRoomTypeRate { rateAmount ratePlan { ratePlanName ratePlanDesc ratePlanCode confidentialRates specialRateType } }"
+      data["variables"]["input"]["specialRates"] = {"groupCode" => @group_code}
+    end
     url = "https://m.hilton.io/graphql/customer?type=ShopMultiPropAvailQuery&operationName=shopMultiPropAvail_hotelSummaryOption&origin=HotelSearchResultsFragment&pod=android"
     headers = @base_headers.dup
     headers["authorization"] = "Bearer "+bearer
