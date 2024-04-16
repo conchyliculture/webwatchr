@@ -36,14 +36,21 @@ end
 #                   smtp_server: "localhost",
 #                   smtp_port: 25)
 #
-def send_mail(content:, formatted_content: , comment: , from: , to:, subject: , smtp_server: , smtp_port:)
+def send_mail(site:, from: , to:, smtp_server: , smtp_port:)
+  if not site
+    raise Exception.new("Need to pass a Site instance")
+  end
+
+  subject = site.get_email_subject() || "Update from #{site.class}"
+
+  formatted_content = site.get_formatted_content()
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
 To: #{to}
 MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
-Subject: #{subject} #{comment if comment}
+Subject: #{subject}
 
 #{formatted_content}
 END_OF_MESSAGE
@@ -56,6 +63,32 @@ END_OF_MESSAGE
     rescue Net::SMTPFatalError => e
         $logger.error "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
     end
+end
+
+def make_telegram_message_pieces(site:)
+  if not site
+    raise Exception.new("Need to pass a Site instance")
+  end
+  msg_pieces = []
+  if args[:site].content.class == Array
+    args[:site].content.each do |item|
+        line = item["title"]
+          if item["url"]
+            if line
+              line += ": "+item["url"]
+            else
+              line = item["url"]
+            end
+
+            line += ": "+item["url"]
+          end
+          msg_pieces << line
+      end
+  else
+    msg_pieces << args[:site].content
+  end
+  return msg_pieces
+
 end
 
 def make_alerts(c)
@@ -81,26 +114,9 @@ def make_alerts(c)
               res_procs["telegram"] = Proc.new { |args|
                 cid = c["alerts"]["telegram"]["chat_id"]
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
-                title = "Update from "+args[:name]
-                title += " (#{args[:comment]})" if args[:comment]
+                title = args[:site].get_email_subject
                 msg_pieces = [title]
-                if args[:content].class == Array
-                    args[:content].each do |item|
-                      line = item["title"]
-                        if item["url"]
-                          if line
-                            line += ": "+item["url"]
-                          else
-                            line = item["url"]
-                          end
-
-                          line += ": "+item["url"]
-                        end
-                        msg_pieces << line
-                    end
-                else
-                  msg_pieces << args[:content]
-                end
+                msg_pieces << make_telegram_message_pieces(site: args[:site])
                 msg_pieces = msg_pieces.map{|x| x.size > 4096?  x.split("\n") : x}.flatten()
                 split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4000 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
 

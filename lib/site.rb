@@ -20,11 +20,14 @@ class Site
 
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
 
-    attr_accessor :state_file, :url, :wait, :logger
+    attr_accessor :state_file, :url, :wait, :logger, :name
+
     def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [], rand_sleep:0)
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(@config["log"] || STDOUT)
-        @logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
+        if @logger.level > Logger::DEBUG
+          @logger.level = Logger::DEBUG if $VERBOSE
+        end
         @name = url.dup()
         @comment = comment
         @post_data = post_data
@@ -49,6 +52,8 @@ class Site
         @logger.debug "using #{@state_file} to store updates"
         state = load_state_file()
         @wait = state["wait"] || every
+
+        @did_stuff = false
     end
 
     def set_http_header(key, value)
@@ -60,6 +65,15 @@ class Site
         return fetch_url2(url, max_redir:max_redir)
       end
       return fetch_url1(url, max_redir:max_redir)
+    end
+
+    def get_email_subject()
+      # Generates the subject of the email to be sent
+      subject = "Update from #{self.class}"
+      if @comment
+        subject += " (#{comment})"
+      end
+      return subject
     end
 
     def fetch_url2(url, max_redir:10)
@@ -184,13 +198,20 @@ class Site
         save_state_file(state)
     end
 
-    def alert(previous_content, new_content)
+    def alert(new_content)
         @logger.debug "Alerting new stuff"
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
-             p.call(content: new_content, formatted_content: format(new_content), name: @name, comment: @comment)
+             p.call(site: self)
           end
         end
+    end
+
+    def content()
+      if not @did_stuff
+        raise Exception.new('Trying to access @content, but we have not pulled any data yet')
+      end
+      return @content
     end
 
     def get_content()
@@ -261,7 +282,7 @@ class Site
                 if @test
                     puts "Would have sent an email with #{format(new_stuff)}"
                 else
-                    alert(previous_content, new_stuff)
+                    alert(new_stuff)
                     update_state_file({
                       "content" => new_stuff,
                       "previous_content" => previous_content})
@@ -276,9 +297,10 @@ class Site
         else
             @logger.info "Too soon to update #{@url}"
         end
+        @did_stuff = true
     end
 
-    def format(content)
+    def get_formatted_content()
         message_html = Site::HTML_HEADER.dup
         message_html += @content
         return message_html
@@ -298,9 +320,10 @@ class Site
             return new_stuff
         end
 
-        def format(content)
+        def get_formatted_content()
+          return nil if not @content
             message_html = Site::HTML_HEADER.dup
-            message_html += content
+            message_html += @content
             return message_html
         end
     end
@@ -309,7 +332,7 @@ class Site
       begin
         require "diffy"
 
-        def format(content)
+        def get_formatted_content()
           diff_html = Site::HTML_HEADER.dup
           diff_html += "<head><style>"
           diff_html += Diffy::CSS
@@ -324,7 +347,7 @@ class Site
 
       rescue LoadError
         require "test/unit/diff"
-        def format(content)
+        def get_formatted_content()
           diff_html = Site::HTML_HEADER.dup
           diff_html += @diffed.to_s
           diff_html += "</body></html>"
@@ -350,11 +373,12 @@ class Site
       end
 
 
-      def alert(previous_content, new_content)
+      def alert(new_content)
         @logger.debug "Alerting new stuff"
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
-            p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
+            p.call({site: self})
+            #p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
           end
         end
       end
@@ -414,10 +438,10 @@ class Site
             save_state_file(state)
         end
 
-        def format(content)
+        def get_formatted_content()
             message_html = Site::HTML_HEADER.dup
             message_html << "<ul style='list-style-type: none;'>\n"
-            content.each do |item|
+            @content.each do |item|
                 msg = "<li id='#{item["id"]}'>"
                 if item["url"]
                     msg += "<a href='#{item["url"]}'>"
