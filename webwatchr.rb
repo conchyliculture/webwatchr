@@ -43,7 +43,7 @@ def send_mail(site:, from: , to:, smtp_server: , smtp_port:)
 
   subject = site.get_email_subject() || "Update from #{site.class}"
 
-  formatted_content = site.get_formatted_content()
+  formatted_content = site.get_html_content()
 
     msgstr = <<END_OF_MESSAGE
 From: #{from}
