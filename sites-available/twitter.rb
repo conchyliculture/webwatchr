@@ -21,6 +21,10 @@ class Twitter < Site::Articles
         @state_file = ".lasts/last-twitter_#{account.downcase}"
     end
 
+    def get_email_subject()
+      return "Update from Twitter #{@account}"
+    end
+
     def get_working_nitters
       cache = ".cached_nitters"
       if not File.exist?(cache) or (Time.now() - File.mtime(cache) ) > 1000
