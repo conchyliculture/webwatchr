@@ -21,10 +21,9 @@ class PostSE < Site::SimpleString
       res = []
       res << Site::HTML_HEADER
       res << "<ul>"
-      @events.each do|event|
-        res << "<li>#{@event}</li>"
+      @events.each do|e|
+        res << "<li>#{e}</li>"
       end
-      res += @events
       res << "</ul>"
       return res.join("\n")
     end
