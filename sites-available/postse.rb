@@ -18,6 +18,7 @@ class PostSE < Site::SimpleString
     end
 
     def get_html_content()
+      res = []
       res << Site::HTML_HEADER
       res << "<ul>"
       @events.each do|event|

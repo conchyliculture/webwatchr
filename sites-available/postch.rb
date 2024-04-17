@@ -23,6 +23,7 @@ class PostCH < Site::SimpleString
     end
 
     def get_html_content()
+      res = []
       res << Site::HTML_HEADER
       res << "<ul>"
       @events.each do|event|
@@ -34,22 +35,19 @@ class PostCH < Site::SimpleString
     end
 
     def get_content()
-      res = []
-
       if @parsed_content["ok"] == "true"
         @parsed_content["events"].each do |event|
           msg = "#{event['date']} #{event['time']}: #{event['description']}"
           if event['city'] != ""
             msg += " (#{event['city']} #{event['zip']})"
           end
-          res << msg
+          @events << msg
         end
       else
         return "No result from PostCH API for #{@track_id}"
       end
 
-      @events = res
-      return res.join("\n")
+      return @events.join("\n")
     end
 end
 
