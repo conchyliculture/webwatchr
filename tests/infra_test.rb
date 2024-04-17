@@ -18,6 +18,7 @@ class TestClasse < Test::Unit::TestCase
     Config.set_config($CONF)
     $logger_test_io = StringIO.new()
     $logger = Logger.new($logger_test_io)
+    $logger.level = Logger::DEBUG
     #$logger = Logger.new("/dev/null")
 
     class TestFileHandler < WEBrick::HTTPServlet::FileHandler
@@ -82,8 +83,7 @@ class TestClasse < Test::Unit::TestCase
 
         c = TestStringSite.new(url: url, comment:"comment")
         assert {c.load_state_file() == {}}
-        empty_last = {"formatted_content"=>nil, "time"=>-9999999999999}
-        assert {c.should_update?(empty_last["time"]) == true}
+        assert {c.should_update?(-9999999999999)}
         assert {c.should_update?((Time.now() - wait + 30).to_i) == false}
         html = c.fetch_url(url)
         assert {whole_html == html}
@@ -94,9 +94,9 @@ class TestClasse < Test::Unit::TestCase
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
         first_pass_content = Site::HTML_HEADER + content_html
-        assert {result[:content] == content_html}
-        assert {result[:formatted_content] == first_pass_content}
-        assert {result[:name] == url}
+        assert {c.content == content_html}
+        assert {c.get_html_content == first_pass_content}
+        assert {result == {site: c}}
 
         File.open(File.join($wwwroot,$content_is_string),"w+") do |f|
             f.write whole_html.gsub("</div>"," new ! </div>")
@@ -106,18 +106,18 @@ class TestClasse < Test::Unit::TestCase
         expected_error = "INFO -- : Too soon to update #{url}"
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
-        assert {result[:content] == content_html}
-        assert {result[:formatted_content] == first_pass_content}
-        assert {result[:name] == url}
+        assert {c.content == nil}
+        assert {c.get_html_content == nil}
+        assert {c.name == url}
 
         c.wait = 0
         c.update()
         expected_error = "DEBUG -- : Alerting new stuff"
         last_error = $logger_test_io.string.split("\n")[-1]
         assert {last_error.end_with?(expected_error)}
-        assert {result[:content] == content_html+" new ! "}
-        assert {result[:formatted_content] == first_pass_content+" new ! "}
-        assert {result[:name] == url}
+        assert {c.content == content_html+" new ! "}
+        assert {c.get_html_content == first_pass_content+" new ! "}
+        assert {c.name == url}
         result_last = JSON.parse(File.read(c.state_file))
         result_last.delete("time")
         assert {result_last["url"] == url}
@@ -152,9 +152,8 @@ class TestClasse < Test::Unit::TestCase
         Config.set_config($CONF)
 
         c = TestArraySite.new(url: url, every: wait)
-        empty_last = {"formatted_content"=>nil, "time"=>-9999999999999}
         assert {c.load_state_file() == {}}
-        assert {c.should_update?(empty_last["time"])}
+        assert {c.should_update?(-9999999999999)}
         assert { ! c.should_update?((Time.now() - wait + 30).to_i)}
         html = c.fetch_url(url)
         assert {html == whole_html}
@@ -171,12 +170,11 @@ class TestClasse < Test::Unit::TestCase
             "<li id='lol'><a href='lol'>lilo</a></li>",
             "<li id='fi'><a href='fi'>fu</a></li>",
             "</ul>"].join("\n")
-        result[:content].each{|x| x.delete('_timestamp')}
-        assert {result[:content] == [
+        c.content.each{|x| x.delete('_timestamp')}
+        assert {c.content == [
           {"id"=>"lol", "url"=>"lol", "title"=>"lilo"},
           {"id"=>"fi", "url"=>"fi", "title"=>"fu"}]}
-        assert {result[:formatted_content] == expected_html}
-        assert {result[:name] == url}
+        assert {c.get_html_content == expected_html}
         assert {called}
 
         result = ""
@@ -209,10 +207,9 @@ class TestClasse < Test::Unit::TestCase
             "</ul>"].join("\n")
         assert {called}
 
-        result[:content].each{|x| x.delete('_timestamp')}
-        assert {result[:content] == [{"id"=>"new!", "url"=>"new!", "title"=>"new"}]}
-        assert {result[:formatted_content] == expected_html}
-        assert {result[:name] == url}
+        c.content.each{|x| x.delete('_timestamp')}
+        assert {c.content == [{"id"=>"new!", "url"=>"new!", "title"=>"new"}]}
+        assert {c.get_html_content == expected_html}
         expected_last = {"url"=>"http://localhost:#{$wwwport}/content_is_array.html",
                          "previous_content"=>[{"id"=>"lol", "url"=>"lol", "title"=>"lilo"},
                                               {"id"=>"fi", "url"=>"fi", "title"=>"fu"}],

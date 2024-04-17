@@ -50,7 +50,7 @@ From: #{from}
 To: #{to}
 MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
-Subject: #{subject}
+Subject: [Webwatchr] #{subject}
 
 #{formatted_content}
 END_OF_MESSAGE
@@ -70,8 +70,8 @@ def make_telegram_message_pieces(site:)
     raise Exception.new("Need to pass a Site instance")
   end
   msg_pieces = []
-  if args[:site].content.class == Array
-    args[:site].content.each do |item|
+  if site.content.class == Array
+    site.content.each do |item|
         line = item["title"]
           if item["url"]
             if line
@@ -85,7 +85,7 @@ def make_telegram_message_pieces(site:)
           msg_pieces << line
       end
   else
-    msg_pieces << args[:site].content
+    msg_pieces << site.content
   end
   return msg_pieces
 
@@ -97,10 +97,6 @@ def make_alerts(c)
         case a
         when "email"
             res_procs["email"] = Proc.new { |args|
-                unless args[:subject]
-                    args[:subject] = "[Webwatchr] Site #{args[:name]} updated"
-                    args[:subject] += " (#{args[:comment]})" if args[:comment]
-                end
                 args.delete(:name)
                 args[:smtp_server] = c["alerts"]["email"]["smtp_server"]
                 args[:smtp_port] = c["alerts"]["email"]["smtp_port"]

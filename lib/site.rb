@@ -71,7 +71,7 @@ class Site
       # Generates the subject of the email to be sent
       subject = "Update from #{self.class}"
       if @comment
-        subject += " (#{comment})"
+        subject += " (#{@comment})"
       end
       return subject
     end
@@ -278,6 +278,7 @@ class Site
             sleep(@rand_sleep) if (@rand_sleep > 0 and not @test)
             pull_things()
             new_stuff = get_new(previous_content)
+            @did_stuff = true
             if new_stuff
                 if @test
                     puts "Would have sent an email with #{format(new_stuff)}"
@@ -295,12 +296,12 @@ class Site
             end
             update_state_file({})
         else
+            @did_stuff = true
             @logger.info "Too soon to update #{@url}"
         end
-        @did_stuff = true
     end
 
-    def get_formatted_content()
+    def get_html_content()
         message_html = Site::HTML_HEADER.dup
         message_html += @content
         return message_html
@@ -320,11 +321,11 @@ class Site
             return new_stuff
         end
 
-        def get_formatted_content()
+        def get_html_content()
           return nil if not @content
-            message_html = Site::HTML_HEADER.dup
-            message_html += @content
-            return message_html
+          message_html = Site::HTML_HEADER.dup
+          message_html += @content
+          return message_html
         end
     end
 
@@ -332,7 +333,7 @@ class Site
       begin
         require "diffy"
 
-        def get_formatted_content()
+        def get_html_content()
           diff_html = Site::HTML_HEADER.dup
           diff_html += "<head><style>"
           diff_html += Diffy::CSS
@@ -347,7 +348,7 @@ class Site
 
       rescue LoadError
         require "test/unit/diff"
-        def get_formatted_content()
+        def get_html_content()
           diff_html = Site::HTML_HEADER.dup
           diff_html += @diffed.to_s
           diff_html += "</body></html>"
@@ -438,7 +439,7 @@ class Site
             save_state_file(state)
         end
 
-        def get_formatted_content()
+        def get_html_content()
             message_html = Site::HTML_HEADER.dup
             message_html << "<ul style='list-style-type: none;'>\n"
             @content.each do |item|
