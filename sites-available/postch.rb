@@ -13,12 +13,24 @@ class PostCH < Site::SimpleString
             comment: comment,
         )
         @track_id = track_id
+        @events = []
     end
 
     def pull_things()
         # First we need an anonymous userId
         json_body = Net::HTTP.get(URI.parse(@url))
         @parsed_content = JSON.parse(json_body)
+    end
+
+    def get_html_content()
+      res << Site::HTML_HEADER
+      res << "<ul>"
+      @events.each do|event|
+        res << "<li>#{@event}</li>"
+      end
+      res += @events
+      res << "</ul>"
+      return res.join("\n")
     end
 
     def get_content()
@@ -36,6 +48,7 @@ class PostCH < Site::SimpleString
         return "No result from PostCH API for #{@track_id}"
       end
 
+      @events = res
       return res.join("\n")
     end
 end
