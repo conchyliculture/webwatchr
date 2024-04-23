@@ -67,6 +67,10 @@ class Site
       return fetch_url1(url, max_redir:max_redir)
     end
 
+    def get_email_url()
+      return @url
+    end
+
     def get_email_subject()
       # Generates the subject of the email to be sent
       subject = "Update from #{self.class}"

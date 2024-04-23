@@ -43,6 +43,16 @@ class Hilton < Site::SimpleString
     }
   end
 
+  def get_email_url()
+    h = @hotel_code.downcase
+    start = @start_date.strftime('%Y-%m-%d')
+    stop = @end_date.strftime('%Y-%m-%d')
+    url = "https://www.hilton.com/en/book/reservation/rooms/?ctyhocn=#{h}&arrivalDate=#{start}&departureDate=#{stop}&room1NumAdults=1"
+    if @group_code
+      url += "&groupCode=#{@group_code.upcase}"
+    end
+  end
+
   def _get_bearer
     url = "https://m.hilton.io/dx-customer/auth/applications/token"
     res = @mechanize.post(url, {"app_id": @app_id}.to_json, @base_headers)
@@ -95,8 +105,8 @@ class Hilton < Site::SimpleString
         msg << "  <ul>"
         room['roomRates'].each do |rate|
 #          next unless rate["ratePlan"]["ratePlanName"] == "Flexible Rate"
-          price = rate["ratePlan"]["rateAmountFmt"] || rate["ratePlan"]["rateAmount"]
-          msg << "    <li>#{rate["ratePlan"]["ratePlanName"]} #{}</li>"
+          price = rate["ratePlan"]["rateAmountFmt"] || rate["rateAmount"]
+          msg << "    <li>#{rate["ratePlan"]["ratePlanName"]} #{price}</li>"
           price
         end
         msg << "  </ul>"

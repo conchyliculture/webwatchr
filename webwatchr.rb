@@ -52,6 +52,8 @@ MIME-Version: 1.0
 Content-type: text/html; charset=UTF-8
 Subject: [Webwatchr] #{subject}
 
+Update from #{site.get_email_url()}
+
 #{formatted_content}
 END_OF_MESSAGE
 
@@ -112,6 +114,8 @@ def make_alerts(c)
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 title = args[:site].get_email_subject
                 msg_pieces = [title]
+                msg_pieces << [args[:site].get_email_url()]
+
                 msg_pieces << make_telegram_message_pieces(site: args[:site])
                 msg_pieces = msg_pieces.map{|x| x.size > 4096?  x.split("\n") : x}.flatten()
                 split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4000 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
