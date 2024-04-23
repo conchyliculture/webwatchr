@@ -21,18 +21,18 @@ class Hilton < Site::SimpleString
     @device_id = device_id
     @hotel_code = hotel_code.upcase
     @group_code = group_code
-    raise Exception.new("Invalid app_id:'#{app_id}'. hilton.rb needs an app_id (ie: '01892712-1281-0192-0192-118201928102')") if not @app_id=~/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ 
+    raise Exception.new("Invalid app_id:'#{app_id}'. hilton.rb needs an app_id (ie: '01892712-1281-0192-0192-118201928102')") if not @app_id=~/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
     raise Exception.new("Invalid device_id: '#{device_id}'. hilton.rb needs a device_id (ie: '19acb812dfe18cb1')") if not device_id=~/^[0-9a-f]{16}$/
     raise Exception.new("hilton.rb needs a hotel_code (ie: 'AOSLWKA')") if not @hotel_code=~/^[A-Z]{7}$/
     begin
       @start_date = Date.parse(start_date)
     rescue
-      raise Exception.new("hilton.rb needs a valid start_date, not '#{start_date}')") 
+      raise Exception.new("hilton.rb needs a valid start_date, not '#{start_date}')")
     end
     begin
       @end_date = Date.parse(end_date)
     rescue
-      raise Exception.new("hilton.rb needs a valid end_date, not '#{end_date}')") 
+      raise Exception.new("hilton.rb needs a valid end_date, not '#{end_date}')")
     end
     @base_headers = {
       "content-type" => "application/json; charset=UTF-8",
@@ -44,7 +44,7 @@ class Hilton < Site::SimpleString
   end
 
   def _get_bearer
-    url = "https://m.hilton.io/dx-customer/auth/applications/token" 
+    url = "https://m.hilton.io/dx-customer/auth/applications/token"
     res = @mechanize.post(url, {"app_id": @app_id}.to_json, @base_headers)
     bearer = JSON.parse(res.body)["access_token"]
     @bearer = bearer
@@ -88,16 +88,18 @@ class Hilton < Site::SimpleString
     if rooms.empty?
       msg << "No room available for these dates"
     else
-      msg << "Available rooms:" 
+      msg << "Available rooms:"
       msg << "<ul>"
-      rooms.each do |room| 
-        msg << "<li>#{room['roomTypeName']} (#{room['roomOccupancy']} pers):</li>"
-        msg << "<ul>"
-        room['roomRates'].each do |rate| 
-          next unless rate["ratePlan"]["ratePlanName"] == "Flexible Rate"
-          msg << "<li>#{rate["ratePlan"]["ratePlanName"]} #{rate["rateAmountFmt"]}</li>"
+      rooms.each do |room|
+        msg << "  <li>#{room['roomTypeName']} (#{room['roomOccupancy']} pers):</li>"
+        msg << "  <ul>"
+        room['roomRates'].each do |rate|
+#          next unless rate["ratePlan"]["ratePlanName"] == "Flexible Rate"
+          price = rate["ratePlan"]["rateAmountFmt"] || rate["ratePlan"]["rateAmount"]
+          msg << "    <li>#{rate["ratePlan"]["ratePlanName"]} #{}</li>"
+          price
         end
-        msg << "</ul>"
+        msg << "  </ul>"
       end
       msg << "</ul>"
     end
