@@ -285,7 +285,7 @@ class Site
             @did_stuff = true
             if new_stuff
                 if @test
-                    puts "Would have sent an email with #{format(new_stuff)}"
+                    puts "Would have sent an email with #{new_stuff}"
                 else
                     alert(new_stuff)
                     update_state_file({
@@ -383,7 +383,6 @@ class Site
         @config["alert_procs"].each do |alert_name, p|
           if @alert_only.empty? or @alert_only.include?(alert_name)
             p.call({site: self})
-            #p.call({content: @diffed.to_s, formatted_content: format(@diffed), name: @name, comment: @comment})
           end
         end
       end
