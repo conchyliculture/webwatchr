@@ -114,9 +114,9 @@ def make_alerts(c)
                 bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
                 title = args[:site].get_email_subject
                 msg_pieces = [title]
-                msg_pieces << [args[:site].get_email_url()]
+                msg_pieces << args[:site].get_email_url()
 
-                msg_pieces << make_telegram_message_pieces(site: args[:site])
+                msg_pieces += make_telegram_message_pieces(site: args[:site])
                 msg_pieces = msg_pieces.map{|x| x.size > 4096?  x.split("\n") : x}.flatten()
                 split_msg = msg_pieces.inject(['']) { |sum, str| sum.last.length + str.length > 4000 ? sum << str +"\n" : sum.last << str+"\n" ; sum }
 

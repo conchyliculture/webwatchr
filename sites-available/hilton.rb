@@ -51,6 +51,7 @@ class Hilton < Site::SimpleString
     if @group_code
       url += "&groupCode=#{@group_code.upcase}"
     end
+    return url
   end
 
   def _get_bearer
