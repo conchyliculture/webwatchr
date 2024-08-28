@@ -86,8 +86,16 @@ class Site
 
     def fetch_url2(url, max_redir:10)
 
-      c = Curl::Easy.new(url)
-      c.set(:HTTP_VERSION, Curl::HTTP_2_0)
+      c = Curl::Easy.new(url) do |curl|
+        curl.set(:HTTP_VERSION, Curl::HTTP_2_0)
+        if @useragent
+          curl.headers['User-Agent'] = @useragent
+        end
+#        curl.verbose = true
+        @extra_headers.each do |k, v|
+          curl.headers[k] = v
+        end
+      end
 
       c.perform
       return c.body_str
@@ -99,7 +107,7 @@ class Site
         req = nil
         http_o = Net::HTTP.new(uri.host, uri.port)
         http_o.use_ssl = (uri.scheme == 'https')
-#        http_o.set_debug_output $stderr
+        http_o.set_debug_output $stderr if $VERBOSE
         http_o.start do |http|
             if @post_data
                 req = Net::HTTP::Post.new(uri)
