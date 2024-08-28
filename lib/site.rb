@@ -22,7 +22,7 @@ class Site
 
     attr_accessor :state_file, :url, :wait, :logger, :name
 
-    def initialize(url:, every: 60*60, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [], rand_sleep:0)
+    def initialize(url:, every: nil, post_data: nil, post_json:nil, test: false, comment: nil, useragent: nil, http_ver:1, alert_only: [], rand_sleep:0)
         @config = Config.config || {"last_dir"=>File.join(File.dirname(__FILE__), "..", ".lasts")}
         @logger = $logger || Logger.new(@config["log"] || STDOUT)
         if @logger.level > Logger::DEBUG
@@ -51,7 +51,11 @@ class Site
         end
         @logger.debug "using #{@state_file} to store updates"
         state = load_state_file()
-        @wait = state["wait"] || every
+        if every
+          @wait = every
+        else
+          @wait = state["wait"] || 60 * 60 # Defaults to one hour
+        end
 
         @did_stuff = false
     end
