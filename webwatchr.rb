@@ -211,7 +211,14 @@ Usage: ruby #{__FILE__} """
         config = JSON.parse(File.read(options[:config]))
     end
     Config.set_config(config)
-    $logger = Logger.new(config["log"] || STDOUT)
+    log_dir = config["log_dir"] || "logs"
+    if not File.absolute_path?(log_dir)
+      log_dir = File.join(File.absolute_path(Dir.getwd()), log_dir)
+    end
+    if not File.exist?(log_dir)
+      FileUtils.mkdir_p(log_dir)
+    end
+    $logger = Logger.new(File.join(log_dir, 'webwatchr.log'), 'weekly')
     $logger.level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
     if File.exist?(config["pid_file"]) and not options[:site]

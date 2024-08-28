@@ -13,6 +13,7 @@
     "default_alert" : ["email", "telegram"],
     "pid_file": "webwatchr.pid",
     "last_dir": ".lasts",
+    "log_dir": "logs",
     "site_timeout": 120,
     "log": "webwatchr.log"
 }
