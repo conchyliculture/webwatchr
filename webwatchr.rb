@@ -172,6 +172,11 @@ def load_site(site, timeout=10*60)
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
         $logger.warn "Failed pulling #{site}: #{e.message}"
         # Do nothing, try later
+    rescue SystemExit => e
+        msg = "User requested we quite while updating #{site}\n"
+        $logger.error msg
+        $stderr.puts msg
+        raise e
     rescue StandardError => e
         msg = "Issue with #{site} : #{e}\n"
         msg += "#{e.message}\n"
@@ -179,6 +184,7 @@ def load_site(site, timeout=10*60)
         msg += e.backtrace.join("\n")
         $logger.debug e.backtrace.join("\n")
         $stderr.puts msg
+        raise e
     end
 end
 
