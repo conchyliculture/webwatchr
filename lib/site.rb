@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-require "curb"
 require "digest/md5"
 require "json"
 require "logger"
@@ -85,6 +84,7 @@ class Site
     end
 
     def fetch_url2(url, max_redir:10)
+      require "curb"
 
       c = Curl::Easy.new(url) do |curl|
         curl.set(:HTTP_VERSION, Curl::HTTP_2_0)
