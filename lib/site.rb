@@ -31,7 +31,8 @@ class Site
         @comment = comment
         @post_data = post_data
         @post_json = post_json
-        @test = test
+        @ignore_state = $forcetest || false
+        @test = test || $forcetest
         @url = url
         @useragent = useragent
         @extra_headers = {}
@@ -285,7 +286,7 @@ class Site
             "content" => nil,
         }
         state = load_state_file()
-        if state
+        if state and not @ignore_state
             previous_state.update(state)
         end
         previous_content = previous_state["content"]
@@ -306,7 +307,7 @@ class Site
                 end
             else
                 if @test
-                    puts "Nothing new"
+                    puts "Nothing new for #{@url}"
                 end
                 @logger.info "Nothing new for #{@url}"
             end

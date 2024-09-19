@@ -134,7 +134,7 @@ def make_alerts(c)
     return res_procs
 end
 
-def init(config, site: nil)
+def init(config)
     $logger.debug("Starting WebWatchr")
 
     current_dir = File.dirname(__FILE__)
@@ -147,16 +147,28 @@ def init(config, site: nil)
 
     timeout = config["site_timeout"]
     config["alert_procs"] = make_alerts(config)
-    if site
-        site_rb = File.join("sites-enabled", site)
+
+    case config[:mode]
+    when :single
+        site_rb = File.join("sites-enabled", config[:site])
         load_site(site_rb, timeout)
-    else
+    when :checkall
+        $forcetest = true
         sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
         if sites.empty?
             $stderr.puts "Didn't find any site to parse. You might want to:"
             $stderr.puts "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
         end
         sites.each {|s| load_site(s, timeout)}
+    when :normal
+        sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
+        if sites.empty?
+            $stderr.puts "Didn't find any site to parse. You might want to:"
+            $stderr.puts "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
+        end
+        sites.each {|s| load_site(s, timeout)}
+    else
+      raise Exception.new("Unknown WebWatchr mode: #{config[:mode]}")
     end
 end
 
@@ -189,7 +201,7 @@ def load_site(site, timeout=10*60)
 end
 
 def main()
-    options = {config: "config.json"}
+    options = {config: "config.json", mode: :normal}
     OptionParser.new { |o|
         o.banner = """WebWatchr is a script to poll websites and alert on changes.
 Exemple uses:
@@ -201,10 +213,16 @@ Exemple uses:
 Usage: ruby #{__FILE__} """
         o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of a script in sites-enabled.") do |v|
             options[:site] = v
+            options[:mode] = :single
         end
         o.on("-cCONF", "--config=CONF", "Use a specific config file (default: ./config.json") do |v|
             options[:config] = v
         end
+        o.on("--checkall", "Pulls information from all websites, as a way to check that the parsers still work") do |v|
+            options[:mode] = :checkall
+            options[:config] = v
+        end
+
         o.on("-h", "--help", "Prints this help"){puts o; exit}
     }.parse!
 
@@ -216,6 +234,10 @@ Usage: ruby #{__FILE__} """
     else
         config = JSON.parse(File.read(options[:config]))
     end
+
+    config[:mode] = options[:mode]
+    config[:site] = options[:site]
+
     Config.set_config(config)
     log_dir = config["log_dir"] || "logs"
     if not File.absolute_path?(log_dir)
@@ -235,7 +257,7 @@ Usage: ruby #{__FILE__} """
     begin
         File.open(config["pid_file"],'w+') {|f|
             f.puts($$)
-            init(Config.config, site:options[:site])
+            init(Config.config)
         }
     ensure
         if File.exist?(config["pid_file"])
