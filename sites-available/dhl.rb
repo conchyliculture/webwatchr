@@ -3,14 +3,14 @@
 
 require_relative "../lib/site.rb"
 
-require "curb"
+require "net/http"
 require "json"
 
 class DHL < Site::SimpleString
 
     def initialize(track_id:, api_key: nil, every:, comment:nil, test:false)
         unless api_key
-          raise Exception.new('DHL requires an API key for fetching tracking information. Get one by registering for a free account at https://developer.dhl.com/')
+          raise Site::ParseError.new('DHL requires an API key for fetching tracking information. Get one by registering for a free account at https://developer.dhl.com/')
         end
         @api_key = api_key
         @track_id = track_id
@@ -23,13 +23,24 @@ class DHL < Site::SimpleString
     end
 
     def pull_things()
-      c = Curl.get("https://api-eu.dhl.com//track/shipments?trackingNumber=#{@track_id}")
-      c.headers["DHL-API-Key"] = @api_key
-      c.perform
-      @parsed_content = JSON.parse(c.body_str)
+      uri = URI("https://api-eu.dhl.com//track/shipments?trackingNumber=#{@track_id}")
+      req = Net::HTTP::Get.new(uri)
+      req['DHL-API-Key'] = @api_key
+      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) {|http|
+        http.use_ssl = true
+        http.request(req)
+      }
+      @parsed_content = JSON.parse(res.body)
     end
 
     def get_content()
+
+      case @parsed_content["status"]
+      when 401
+        raise Exception.new("Error pulling data from DHL API: #{@parsed_content["status"]} #{@parsed_content["detail"]}")
+      when 404
+        return @parsed_content['detail']
+      end
       shipment = @parsed_content["shipments"][0]
       res = []
       if @comment
