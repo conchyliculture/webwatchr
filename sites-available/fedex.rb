@@ -9,6 +9,8 @@ class Fedex < Site::SimpleString
     require "net/http"
 
     def initialize(track_id:, every:, comment:nil, test:false)
+
+      raise Exception.new("Fedex moved to Akamai, abandon hope this would work")
         super(
             url: "https://www.fedex.com/trackingCal/track",
             post_data: Fedex.make_post_data(track_id),
