@@ -15,8 +15,7 @@ No bullshit gem from hell.
 apt-get install ruby ruby-nokogiri 
 
 # if you want fancier Diffs, for DiffString objects, apt install ruby-diffy
-# I can't decide which web lib is the least bad
-apt install ruby-curb ruby-mechanize
+apt install ruby-mechanize
 
 git clone https://github.com/conchyliculture/webwatchr/
 cd webwatchr
