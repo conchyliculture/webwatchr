@@ -10,34 +10,28 @@ class DPD < Site::SimpleString
 
     def initialize(track_id:, every:, comment:nil, test:false)
         super(
-            url: "https://tracking.dpd.de/cgi-bin/simpleTracking.cgi?parcelNr=#{track_id}&locale=en_D2&type=1&jsoncallback=_jqjsp",
-            every: every,
-            test: test,
-            comment: comment,
+          url: "https://tracking.dpd.de/rest/plc/en_US/#{track_id}",
+          every: every,
+          test: test,
+          comment: comment,
         )
     end
 
-    def parse_content(html)
-        if html=~/_jqjsp\((.+)\)/m
-            return JSON.parse($1)
-        end
-        return nil
-    end
-
     def get_content()
-        res = []
-        j = @parsed_content
+        res = ["<ul>"]
+        j = JSON.parse(@html_content)
         if j
-            j["TrackingStatusJSON"]["statusInfos"].each{|x|
-                date = x["date"]+" "+x["time"]
-                place = x["city"]
-                descr = x["contents"].map {|c| c["label"]}.join
-                res << "#{date} #{place} #{descr}"
-            }
+          j["parcellifecycleResponse"]["parcelLifeCycleData"]["statusInfo"].select{|i| i["statusHasBeenReached"]}.each{|x|
+            date = x["date"]
+            place = x["location"]
+            descr = x["description"]["content"].join(' ')
+            res << "<li>#{date} #{place} #{descr}</li>"
+          }
         else
             raise Site::ParseError.new "Please verify the DPD tracking ID"
         end
-        return res.join("<br/>\n")
+        res << ["</ul>"]
+        return res.join("\n")
     end
 end
 
