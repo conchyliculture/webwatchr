@@ -16,6 +16,7 @@ class YanWen < Site::SimpleString
 
     def get_content()
         res = []
+        date = ""
         @parsed_content.css('div.czhaodl dd,div.czhaodl dt').each do |jj|
           case jj.name
           when "dt"
