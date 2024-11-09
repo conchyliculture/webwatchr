@@ -16,18 +16,22 @@ class YanWen < Site::SimpleString
 
     def get_content()
         res = []
-        return @parsed_content.css('div.container div div.cx_top_nr div.colFlex')[4].text
-#        @parsed_content.css('div.czhaodl ul li').each  do |jj|
-#          time = jj.css("div.cz_r p")[0].text
-#          desc = jj.css("div.cz_r h6")[0].text
-#          res << "<li>" + time + ": " + desc + "</li>"
-#        end
-#        res.sort!.uniq!
-#        if res.size() > 0
-#          res = ["<ul>"] << res << ["</ul>"]
-#          return res.join("\n")
-#        end
-#        return nil
+        @parsed_content.css('div.czhaodl dd,div.czhaodl dt').each do |jj|
+          case jj.name
+          when "dt"
+            date = jj.text
+          when "dd"
+            time = jj.css("p.timePoint")[0].text
+            desc = jj.css("div.cz_r h6")[0].text
+            res << "<li>" +date +" " + time + ": " + desc + "</li>"
+          end
+        end
+        res.sort!.uniq!
+        if res.size() > 0
+          res = ["<ul>"] << res << ["</ul>"]
+          return res.join("\n")
+        end
+        return nil
     end
 end
 
