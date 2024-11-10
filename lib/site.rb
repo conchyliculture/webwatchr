@@ -373,6 +373,7 @@ class Site
         end
 
         def get_differ(previous, new)
+          return new if not previous
           return Test::Unit::Diff.unified(previous, new)
         end
       end
