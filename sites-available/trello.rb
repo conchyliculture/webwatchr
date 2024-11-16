@@ -6,10 +6,11 @@ require "json"
 require "mechanize"
 
 class TrelloStruct
-  def initialize(mechanize, json)
+  def initialize(mechanize, json, ignores: nil)
     @mechanize = mechanize
     @name = json['name']
     @lists = {}
+    @ignores = ignores
     @cards = []
     json['lists'].each do |list|
       add_list(list['name'], list['id'])
@@ -20,11 +21,11 @@ class TrelloStruct
   end
 
   def add_list(name, id)
-    @lists[id] = name
+    @lists[id] = name unless should_ignore?(name)
   end
 
   def add_card(name, id, list_id)
-    @cards << {name: name, id:id, list_id:list_id, details: get_card_details(name, id)}
+    @cards << {name: name, id:id, list_id: list_id, details: get_card_details(name, id)}
   end
 
   def get_card_details(name, id)
@@ -38,12 +39,12 @@ class TrelloStruct
     return @cards.select{|c| c[:list_id] == list_id}
   end
 
-  def should_ignore?(ignores, ln)
-    if ignores.size > 0
-      if ignores[0].class == String
-        return ignores.include?(ln)
-      elsif ignores[0].class == Regexp
-        return (ignores.map{|x| ln=~x}.compact.size > 0)
+  def should_ignore?(ln)
+    if @ignores.size > 0
+      if @ignores[0].class == String
+        return @ignores.include?(ln)
+      elsif @ignores[0].class == Regexp
+        return (@ignores.map{|x| ln=~x}.compact.size > 0)
       end
     end
     return false
@@ -52,7 +53,6 @@ class TrelloStruct
   def to_html(ignores:[])
     res = ""
     @lists.each do |li,ln|
-      next if should_ignore?(ignores, ln)
       res << "<b>#{ln}</b> \n<ul>\n"
       get_cards_by_list_id(li).each do |c|
         card_html = "  <li>"
@@ -102,8 +102,8 @@ class Trello < Site::DiffString
     end
 
     def get_content()
-      t=TrelloStruct.new(@mechanize, @json)
-      return t.to_html(ignores: @ignores)
+      t=TrelloStruct.new(@mechanize, @json, ignores: @ignores)
+      return t.to_html()
     end
 end
 
