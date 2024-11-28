@@ -59,6 +59,7 @@ class PostCH < Site::SimpleString
           if ccode[0] == ttmm[0] and ccode[3] == ttmm[3]
             event['description'] = @text_messages["shipment-text--"][tm]
             @parsed_content << event
+            break
           end
         end
       end
