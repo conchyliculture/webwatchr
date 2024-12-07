@@ -1,13 +1,16 @@
 #!/usr/bin/ruby
 
 require_relative "../lib/site.rb"
-require "json"
+require "digest"
 
 class YanWen < Site::SimpleString
 
     def initialize(track_id:, every:, comment:nil, test:false)
+      key= "00#78a13&ba6c;73"
+      md5 = Digest::MD5.hexdigest(track_id+key) # lol
         super(
-          url: "https://track.yw56.com.cn/en/querydel?nums=#{track_id}",
+          url: "https://track.yw56.com.cn/en/querydel?nums=#{track_id}&cyp=#{md5}",
+          post_data: {'timeZone'=>1},
           every: every,
           test: test,
           comment: comment,
