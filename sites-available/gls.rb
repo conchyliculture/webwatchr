@@ -15,9 +15,9 @@ require "json"
 class GLS < Site::SimpleString
 
     attr_accessor :messages
-    def initialize(track_id:, every:, comment:nil, test:false)
+    def initialize(track_id:, postal_code:, every:, comment:nil, test:false)
         super(
-            url: "https://gls-group.eu/app/service/open/rest/GROUP/en/rstt001?match=#{track_id}",
+          url: "https://gls-group.eu/app/service/open/rest/FR/en/rstt027?match=#{track_id}&postalCode=#{postal_code}&type=&caller=witt002&millis=#{Time.now.to_i}#{rand(1000)}",
             every: every,
             test: test,
             comment: comment,
@@ -25,17 +25,10 @@ class GLS < Site::SimpleString
         @track_id = track_id
     end
 
-    def pull_things()
-      c = Curl::Easy.new(@url)
-      c.set(:SSL_CIPHER_LIST, "DEFAULT:!DH") # Lol wtf srsly
-      c.perform
-      @parsed_content = JSON.parse(c.body_str)
-    end
-
     def get_content()
       res = "<ul><li>"
 
-      res << @parsed_content["tuStatus"][0]["history"].map{|x| "#{x['date']}: #{x['evtDscr']} (#{x['address'].values.sort.map(&:strip).join(' ')})"}.join("</li><li>")
+      res << JSON.parse(@html_content)["tuStatus"][0]["history"].map{|x| "#{x['date']} #{x['time']}: #{x['evtDscr']} (#{x['address'].values.sort.map(&:strip).join(' ')})"}.join("</li><li>")
 
       res << "</li></ul>"
     end
@@ -44,7 +37,8 @@ end
 # Example:
 #
 # GLS.new(
-#     track_id: "12345678911",
+#     track_id: "1234567890",
+#     postal_code: 12345,
 #     every: 30*60,
 #     test: __FILE__ == $0
 # ).update
