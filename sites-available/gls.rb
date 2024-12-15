@@ -11,6 +11,7 @@ class GLS < Site::SimpleString
       test: test,
       comment: comment,
    )
+    @state_file_name = "last-gls-#{track_id}-#{postal_code}"
     @track_id = track_id
   end
 
