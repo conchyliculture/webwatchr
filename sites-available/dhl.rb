@@ -60,7 +60,7 @@ class DHL < Site::SimpleString
     end
     res << "</ul>"
 
-    return res.join("\n")
+    return res.sort.reverse.join("\n")
   end
 end
 
