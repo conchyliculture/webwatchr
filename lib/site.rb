@@ -18,6 +18,7 @@ class Site
     end
 
     Site::HTML_HEADER="<!DOCTYPE html>\n<meta charset=\"utf-8\">\n"
+    Site::DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
     attr_accessor :state_file, :url, :wait, :logger, :name
 
@@ -34,7 +35,7 @@ class Site
         @ignore_state = $forcetest || false
         @test = test || $forcetest
         @url = url
-        @useragent = useragent
+        @useragent = useragent || Site::DEFAULT_USER_AGENT
         @extra_headers = {}
         @alert_only = alert_only
         @http_ver = http_ver
