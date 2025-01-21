@@ -1,76 +1,79 @@
+require_relative "../lib/site"
+
 require "json"
+require "curb"
 require "mechanize"
-require_relative "../lib/site.rb"
 
 class UPS < Site::SimpleString
-    require "date"
-    require "net/http"
-    require "json"
+  def initialize(track_id:, every:, comment: nil, test: false)
+    super(
+      url: "https://www.ups.com/track?track=yes&trackNums=#{track_id}&loc=en_US&requester=ST/trackdetails",
+      every: every,
+      test: test,
+      comment: comment,
+    )
+    @track_id = track_id
+  end
 
-    def initialize(track_id:, every:, comment:nil, test:false)
-      raise Exception.new("UPS Website switched to Akamai bot protection. They also offer no free/dev API tokens.")
-        super(
-          url: "https://www.ups.com/track?loc=null&tracknum=#{track_id}",
-            every: every,
-            test: test,
-            comment: comment,
-        )
-        @track_id = track_id
-        @mechanize = Mechanize.new()
-    end
+  def pull_things()
+    uri = URI(@url)
+    req = Net::HTTP::Get.new(uri)
+    user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0"
+    req['User-Agent'] = user_agent
 
-    def pull_things()
-        url = "https://www.ups.com/track"
-        # Just get cookies
-        @mechanize.get(url)
-        data = {'Locale'=> 'en_US', 'TrackingNumber' => [@track_id]}
-        headers = {'X-XSRF-TOKEN' => @mechanize.cookie_jar.cookies().select{|c| c.name == "X-XSRF-TOKEN-ST"}[0].value,
-                    "Content-Type" => 'application/json',
-                    "Cookie" => @mechanize.cookie_jar().map{|c| c.name+"="+c.value}.join('; ')}
-        res = @mechanize.post("https://www.ups.com/track/api/Track/GetStatus?loc=en_US", data.to_json, headers)
+    http = Net::HTTP.new(uri.hostname, uri.port)
+    http.use_ssl = true
+    res = http.request(req)
+    xsrf = res.get_fields('set-cookie').map { |x| x.split("=")[0..1] }.select { |k, _| k == "X-XSRF-TOKEN-ST" }[0][1].gsub('; domain', '')
+    csrf = res.get_fields('set-cookie').map { |x| x.split("=")[0..1] }.select { |k, _| k == "X-CSRF-TOKEN" }[0][1].gsub('; domain', '')
 
-        @json = JSON.parse(res.body)
-        return @json
-    end
+    headers = {
+      'Accept' => '*/*',
+      'Accept-Encoding' => 'deflate, gzip, br, zstd',
+      'User-Agent' => user_agent,
+      'X-XSRF-TOKEN' => xsrf,
+      'Content-Type' => "application/json",
+      'DNT' => "1",
+      "Connection" => "keep-alive",
+      'Cookie' => "X-CSRF-TOKEN=#{csrf}",
+      'Sec-Fetch-Site' => "same-site",
+      "TE" => "trailers"
+    }
 
-    def proper_time(date, time)
-      at = DateTime.strptime(date+" "+time,  "%m/%d/%Y %l:%M %p")
-      return at
-    end
-
-    def get_content()
-      res = []
-      deets = @json["trackDetails"].select{|deets|deets['requestedTrackingNumber'] == @track_id}[0]
-      sched_date = deets["scheduledDeliveryDate"]
-      if sched_date and sched_date != ""
-        sched_msg = "Scheduled delivery date: #{DateTime.strptime(sched_date, "%m/%d/%Y").strftime('%Y-%m-%d')}"
-        case deets["scheduledDeliveryTime"]
-        when "cms.stapp.eod"
-          sched_msg << " by end of day"
-        when "cms.stapp.9pm"
-          sched_msg << " by 21h"
-        when "cms.stapp.3pm"
-          sched_msg << " by 15h"
-        end
-
-        res << sched_msg
+    data = {
+      "TrackingNumber" => [@track_id]
+    }
+    c = Curl::Easy.http_post("https://webapis.ups.com/track/api/Track/GetStatus?loc=en_US", data.to_json) do |curl|
+      headers.each do |k, v|
+        curl.set(:HTTP_VERSION, Curl::HTTP_2_0)
+        curl.headers[k] = v
       end
-
-      res << "<ul>"
-      deets["shipmentProgressActivities"].each do |e|
-        next unless e["activityScan"]
-        res << "<li>#{proper_time(e["date"], e["time"])}: #{e["activityScan"]} (#{e["location"]})</li>"
-      end
-      res << "</ul>"
-
-      return res.join("\n")
     end
+    c.perform
+    gz = Zlib::GzipReader.new(StringIO.new(c.body_str))
+    uncompressed_string = gz.read
+    @parsed_content = JSON.parse(uncompressed_string)
+  end
+
+  def proper_time(date, time)
+    at = DateTime.strptime("#{date} #{time}", "%m/%d/%Y %l:%M %p")
+    return at
+  end
+
+  def get_content
+    res = ['<ul>']
+    @parsed_content['trackDetails'][0]['shipmentProgressActivities'].each do |e|
+      res << "<li>#{proper_time(e['date'], e['time'])}: #{e['activityScan']} (#{e['location']})</li>"
+    end
+    res << "</ul>"
+    return res.join("\n")
+  end
 end
 
-# Example:
+# Exemple:
 #
 # UPS.new(
-#    track_id: "1Z0000000000000000",
-#    every: 30*60,
-#    test: __FILE__ == $0
-#).update
+#   track_id: "89999019281729100",
+#   every: 30 * 60,
+#   test: __FILE__ == $0
+# ).update
