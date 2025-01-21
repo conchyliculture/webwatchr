@@ -1,16 +1,14 @@
 # Simple HTTP Archive (.har) file parser.
-
 require "json"
 
 class HARParser
-
   class Entry
     def initialize(dict)
       @dict = dict
     end
 
-    def is_text?()
-      if (@dict.dig("response", "content", "mimeType")|| '') =~ /^(text\/html|application\/.*json)/
+    def text?()
+      if (@dict.dig("response", "content", "mimeType") || '') =~ /^(text\/html|application\/.*json)/
         return true
       else
         return false
@@ -22,28 +20,27 @@ class HARParser
     end
 
     def to_s()
-      req = @dict.dig('request')
-      req_headers = req.dig('headers')
-      resp = @dict.dig('response')
-      resp_headers = resp.dig('headers')
-      result = ""
-      result = "=> #{req.dig('method')} #{req.dig('url')} #{req.dig('httpVersion')}\n"
-      cookies = req_headers.select{|h| h['name'] == 'Cookie'}.map{|x| x["value"].split("; ").join("\n    * ")}.join("\n")
-      if cookies.size > 0
+      req = @dict['request']
+      req_headers = req['headers']
+      resp = @dict['response']
+      resp_headers = resp['headers']
+      result = "=> #{req['method']} #{req['url']} #{req['httpVersion']}\n"
+      cookies = req_headers.select { |h| h['name'] == 'Cookie' }.map { |x| x["value"].split("; ").join("\n    * ") }.join("\n")
+      if cookies.size.empty?
         result << "  - Cookies: " << cookies << "\n"
       end
 
-      result += "<= #{resp.dig('status')}"
-      if resp_headers.size > 0
-        size_h = resp_headers.select{|h| h['name'] == 'Content-Length'}
-        if size_h.size > 0 
-          result += " Size: #{resp_headers.select{|h| h['name'] == 'Content-Length'}[0]['value']}"
+      result += "<= #{resp['status']}"
+      if resp_headers.size.empty?
+        size_h = resp_headers.select { |h| h['name'] == 'Content-Length' }
+        if size_h.size.empty?
+          result += " Size: #{resp_headers.select { |h| h['name'] == 'Content-Length' }[0]['value']}"
         end
       end
       result << "\n"
 
-      if is_text? and resp.dig("content", "text")
-        result << resp.dig("content", "text").gsub("\n", "\n        ") 
+      if text? and resp.dig("content", "text")
+        result << resp.dig("content", "text").gsub("\n", "\n        ")
       end
 
       result << "\n"
@@ -51,21 +48,20 @@ class HARParser
     end
 
     def to_curl
-      req = @dict.dig('request')
+      req = @dict['request']
       result_cmd = ["curl", "-X", req['method']]
       if req["httpVersion"] == "HTTP/2.0"
         result_cmd << "--http2 "
       end
       result_cmd << req["url"]
-      result_cmd << req["headers"].map{|h| "-H '#{h['name'].split('-').map(&:capitalize).join('-')}: #{h['value']}'"}
-
+      result_cmd << req["headers"].map { |h| "-H '#{h['name'].split('-').map(&:capitalize).join('-')}: #{h['value']}'" }
 
       return result_cmd.join(" ")
     end
-
   end
 
   attr_accessor :entries, :text_entries
+
   def initialize(src)
     unless src.is_a?(File) || src.is_a?(String)
       puts 'Argument must be String or File!'
@@ -74,7 +70,7 @@ class HARParser
     src = src.read() if src.is_a?(File)
     begin
       @json = JSON.parse(src)
-    rescue
+    rescue StandardError
       puts "The input could not be parsed."
       raise JSON::ParserError
     end
@@ -87,8 +83,8 @@ class HARParser
     @json["log"]["entries"].each do |e|
       entry = Entry.new(e)
       @entries << entry
-      if entry.is_text?()
-        @text_entries << entry 
+      if entry.text?()
+        @text_entries << entry
       end
     end
   end
@@ -98,33 +94,34 @@ def help
   puts "Usage: ruby parse_har.rb <har_file> [command]"
   puts ""
   puts "If command is not set, will display a summary of the requests that contain text content."
-  puts 
+  puts
   puts "<command> can be either:"
   puts "  all    : display all requests and responses."
   puts "  [0-1]+ : display a specific request number in detail, in curl format."
 end
 
-if ARGV.size == 0
+if ARGV.empty?
   help()
   exit
 end
 
 entries = HARParser.new(File.read(ARGV[0])).entries
 if ARGV.size == 1
-  entries.each_with_index do |e, index| 
-    next unless e.is_text?
+  entries.each_with_index do |e, index|
+    next unless e.text?
+
     puts "= Entry #{index} =================="
     puts e.to_s
   end
 else
   case ARGV[1]
   when "all"
-    entries.each_with_index do |e, index| 
+    entries.each_with_index do |e, index|
       puts "= Entry #{index} =================="
       puts e.to_s
     end
   when /^(\d+)$/
-    entry_number = $1.to_i
+    entry_number = Regexp.last_match(1).to_i
     puts entries[entry_number].to_curl
   end
 end
