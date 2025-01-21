@@ -1,13 +1,9 @@
-#!/usr/bin/ruby
-# encoding: utf-8
-
 require "digest/md5"
 require "json"
 require "logger"
 require "net/http"
 require "nokogiri"
-require_relative "./config.rb"
-
+require_relative "./config"
 
 class Site
 
@@ -88,7 +84,15 @@ class Site
     def fetch_url2(url, max_redir:10)
       require "curb"
 
-      c = Curl::Easy.new(url) do |curl|
+      if @post_data
+        cmethod = Curl::Easy.method(:http_post)
+        params = [url, @post_data]
+      else
+        cmethod = Curl::Easy.method(:new)
+        params = [url]
+      end
+
+      c = cmethod.call(*params) do |curl|
         curl.set(:HTTP_VERSION, Curl::HTTP_2_0)
         if @useragent
           curl.headers['User-Agent'] = @useragent
