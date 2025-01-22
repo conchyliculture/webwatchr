@@ -11,6 +11,8 @@ require_relative "lib/config"
 require_relative "lib/logger"
 require_relative "todo"
 
+$: << "./lib/" # for telegram to load
+
 trap("INT") do
   warn "User interrupted"
   exit
