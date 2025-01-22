@@ -9,7 +9,6 @@ require "timeout"
 
 require_relative "lib/config"
 require_relative "lib/logger"
-require_relative "todo"
 
 $: << "./lib/" # for telegram to load
 
@@ -153,6 +152,8 @@ class Webwatchr
     FileUtils.mkdir_p(config["cache_dir"])
 
     config["alert_procs"] = make_alerts(config)
+
+    require_relative "todo"
 
     case config[:mode]
     when :single

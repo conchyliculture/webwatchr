@@ -1,4 +1,6 @@
 logs/*
+sites/.cached_nitters
+sites/.cache
 .lasts
 libs
 config.json
