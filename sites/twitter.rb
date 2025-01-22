@@ -68,9 +68,9 @@ class Twitter < Site::Articles
       @parsed_content = parse_content(@html_content)
       return
     rescue Exception => e
-      @logger.debug("While fetching #{url} we got #{e}")
+      logger.debug("While fetching #{url} we got #{e}")
     end
-    @logger.debug("no more instances to try :'(")
+    logger.debug("no more instances to try :'(")
   end
 
   def parse_content(html)
