@@ -98,18 +98,18 @@ def make_alerts(config)
     when "email"
       res_procs["email"] = proc { |args|
         args.delete(:name)
-        args[:smtp_server] = c["alerts"]["email"]["smtp_server"]
-        args[:smtp_port] = c["alerts"]["email"]["smtp_port"]
-        args[:to] = c["alerts"]["email"]["dest_email"]
-        args[:from] = c["alerts"]["email"]["from_email"]
+        args[:smtp_server] = config["alerts"]["email"]["smtp_server"]
+        args[:smtp_port] = config["alerts"]["email"]["smtp_port"]
+        args[:to] = config["alerts"]["email"]["dest_email"]
+        args[:from] = config["alerts"]["email"]["from_email"]
         send_mail(**args)
       }
     when "telegram"
       begin
         require 'telegram/bot'
         res_procs["telegram"] = proc { |args|
-          cid = c["alerts"]["telegram"]["chat_id"]
-          bot = Telegram::Bot::Client.new(c["alerts"]["telegram"]["token"])
+          cid = config["alerts"]["telegram"]["chat_id"]
+          bot = Telegram::Bot::Client.new(config["alerts"]["telegram"]["token"])
           title = args[:site].get_email_subject
           msg_pieces = [title]
           msg_pieces << args[:site].get_email_url()
