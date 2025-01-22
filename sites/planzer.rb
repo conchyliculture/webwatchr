@@ -3,11 +3,10 @@ require_relative "../lib/site"
 require "json"
 
 class Planzer < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil, test: false)
+  def initialize(track_id:, every:, comment: nil)
     super(
       url: "https://parcelsearch.quickpac.ch/api/ParcelSearch/GetPublicTracking/#{track_id}/en/false",
       every: every,
-      test: test,
       comment: comment,
     )
     @track_id = track_id
@@ -49,5 +48,4 @@ end
 # Planzer.new(
 #    track_id: "91920481920180918890",
 #    every: 30*60,
-#    test: __FILE__ == $0
 # ).update

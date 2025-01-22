@@ -74,5 +74,4 @@ end
 # UPS.new(
 #   track_id: "89999019281729100",
 #   every: 30 * 60,
-#   test: __FILE__ == $0
 # ).update

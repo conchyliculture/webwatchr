@@ -8,7 +8,6 @@ class Ebay < Site::Articles
         super(
             url:  "https://www.ebay.com/sch/i.html?LH_PrefLoc=2&_nkw=#{search_request}",
             every: every,
-            test: test,
             comment: comment,
         )
     end
@@ -46,6 +45,5 @@ end
 #     Ebay.new(
 #         search_request: term,
 #         every: 30*60,
-#         test: __FILE__ == $0
 #     ).update
 # end

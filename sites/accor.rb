@@ -1,4 +1,4 @@
-require_relative "../lib/site.rb"
+require_relative "../lib/site"
 
 class Accor < Site::SimpleString
   require "mechanize"
@@ -9,32 +9,31 @@ class Accor < Site::SimpleString
     $?.success?
   end
 
-  def initialize(hotel_id:, start_date: , nights: , every:, comment:nil, test:false)
+  def initialize(hotel_id:, start_date:, nights:, every:, comment: nil)
     @state_file_name = "last-accor-#{hotel_id}-#{start_date}-#{nights}_nights"
     @api_key = "l7xx5b9f4a053aaf43d8bc05bcc266dd8532"
     @client_id = "all.accor"
 
-    if not command?('qjs')
-      raise Exception.new('you need to install quickjs first')
+    unless command?('qjs')
+      raise Exception, 'you need to install quickjs first'
     end
 
     super(
       url: "https://all.accor.com/ssr/app/accor/rates/#{hotel_id}/index.en.shtml?compositions=1&dateIn=#{start_date}&nights=#{nights}&hideHotelDetails=false&hideWDR=false&destination=",
       every: every,
-      test: test,
       comment: comment
     )
     @hotel_id = hotel_id
     @start_date = start_date
     @nights = nights
-    if not @hotel_id.to_s=~/^\d+$/
-      raise Exception.new("accor.rb needs a valid hotel ID such as '1234', not '#{@hotel_id}')")
+    unless @hotel_id.to_s =~ /^\d+$/
+      raise Exception, "accor.rb needs a valid hotel ID such as '1234', not '#{@hotel_id}')"
     end
-    if not @start_date=~/^\d\d\d\d-\d\d-\d\d$/
-      raise Exception.new("accor.rb needs a valid start_date, in format YYYY-MM-DD, not '#{@start_date}')")
+    unless @start_date =~ /^\d\d\d\d-\d\d-\d\d$/
+      raise Exception, "accor.rb needs a valid start_date, in format YYYY-MM-DD, not '#{@start_date}')"
     end
-    if not @nights.to_s=~/^\d+$/
-      raise Exception.new("accor.rb needs a valid number of nights, not '#{@nights}')")
+    unless @nights.to_s =~ /^\d+$/
+      raise Exception, "accor.rb needs a valid number of nights, not '#{@nights}')"
     end
   end
 
@@ -47,9 +46,9 @@ class Accor < Site::SimpleString
     return res.body
   end
 
-  def get_rooms(hotel_id,start_date,nights)
+  def get_rooms(hotel_id, start_date, nights)
     res = get_api("https://api.accor.com/availability/v3/hotels/#{hotel_id}/rooms?fields=rooms.capacity,rooms.code,rooms.commercialOffers,rooms.offers,rooms.referenceOffers,rooms.roomClass&adults=1&childrenAges=&dateIn=#{start_date}&nights=#{nights}&pricing=true&pricingDetails=true&pricingFees=true&roomFamilies=&roomIndex=0")
-    j =  JSON.parse(res)
+    j = JSON.parse(res)
     return j
   end
 
@@ -57,7 +56,7 @@ class Accor < Site::SimpleString
     m = Mechanize.new()
     res = m.get("https://all.accor.com/ssr/app/accor/rates/#{hotel_id}/index.en.shtml?compositions=1&dateIn=#{start_date}&nights=#{nights}&hideHotelDetails=false&hideWDR=false&destination=").body
     js = res.scan(/(__NUXT__.*\)\);)<\/script>/)[0][0]
-    io = IO.popen(['qjs', '-e', js+'print(JSON.stringify(__NUXT__))'])
+    io = IO.popen(['qjs', '-e', js + 'print(JSON.stringify(__NUXT__))'])
     data = JSON.parse(io.read)["data"][1]
 
     res = {}
@@ -77,18 +76,18 @@ class Accor < Site::SimpleString
     res = ["<ul>"]
     rooms.each do |r|
       d = data[r['code']]
-      res <<  "<li>#{d['name']}<ul>"
+      res << "<li>#{d['name']}<ul>"
       r['offers'].each do |o|
         price = o['pricing']['amount']['hotelKeeper']
         currency = o['pricing']['currency']
         code = o['code']
-#        link = "https://api.accor.com/availability/"+o['href']
+        #        link = "https://api.accor.com/availability/"+o['href']
         res << "<li>#{price} #{currency} code: #{code}</li>"
       end
       res << "</li>"
     end
     res << "</ul>"
-    @html_content = res 
+    @html_content = res
   end
 
   def get_content
@@ -105,6 +104,5 @@ end
 #      nights: 3,
 #      hotel_id: "5011",
 #      every: 60*60,
-#      test: __FILE__ == $0
 #  ).update
-# 
+#

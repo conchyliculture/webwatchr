@@ -5,11 +5,10 @@ require "mechanize"
 require "json"
 
 class Colissimo < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil, test: false)
+  def initialize(track_id:, every:, comment: nil)
     super(
       url: "https://api.laposte.fr/ssu/v1/suivi-unifie/idship/#{@track_id}?lang=en_GB",
       every: every,
-      test: test,
       comment: comment,
     )
     @track_id = track_id
@@ -40,5 +39,4 @@ end
 # Colissimo.new(
 #     track_id: "CB0129291929FR",
 #     every: 2*60*60,
-#     test: __FILE__ == $0
 # ).update

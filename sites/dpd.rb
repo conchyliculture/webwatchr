@@ -5,11 +5,10 @@ require_relative "../lib/site"
 require "json"
 
 class DPD < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil, test: false)
+  def initialize(track_id:, every:, comment: nil)
     super(
       url: "https://tracking.dpd.de/rest/plc/en_US/#{track_id}",
       every: every,
-      test: test,
       comment: comment,
     )
     @track_id = track_id
@@ -42,5 +41,4 @@ end
 # DPD.new(
 #     track_id: "000000000000",
 #     every: 30*60,
-#     test: __FILE__ == $0
 # ).update

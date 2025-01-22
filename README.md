@@ -28,7 +28,9 @@ sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
 sudo find / -name ".rvm" -exec rm -rf "{}" \;
 ```
 
-Then edit config.json to your needs, and enable some sites for checking by symlinking from `sites-available` into `sites-enabled`
+Then edit config.json to your needs
+
+And then edit `todo.rb`
 
 Run the cron often:
 

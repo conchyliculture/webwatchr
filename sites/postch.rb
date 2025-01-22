@@ -5,11 +5,10 @@ require "json"
 require "mechanize"
 
 class PostCH < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil, test: false)
+  def initialize(track_id:, every:, comment: nil)
     super(
       url: "https://www.post.ch/api/TrackAndTrace/Get?sc_lang=en&id=#{track_id}",
       every: every,
-      test: test,
       comment: comment,
     )
     @track_id = track_id
@@ -90,5 +89,4 @@ end
 # PostCH.new(
 #     track_id: "99.60.00000.00000000",
 #     every: 30*60,
-#     test: __FILE__ == $0
 # ).update

@@ -1,18 +1,17 @@
-require_relative "../lib/site.rb"
+require_relative "../lib/site"
 
 class CNE < Site::SimpleString
-
-  def initialize(track_id:, req_ts:, signature:, md5:, every:, comment:nil, test:false)
+  def initialize(track_id:, req_ts:, signature:, md5:, every:, comment: nil)
     super(
       url: "https://wapi.cne.com/tracking/officialWebsite?t=#{req_ts}",
       every: every,
-      test: test,
       comment: comment,
     )
     @track_id = track_id
     @md5 = md5
     @signature = signature
   end
+
   def pull_things()
     # First we need an anonymous userId
     uri = URI(@url)
@@ -45,19 +44,17 @@ class CNE < Site::SimpleString
         res << msg
       end
     else
-        return "No result from CNE API for #{@track_id}"
+      return "No result from CNE API for #{@track_id}"
     end
     return res.join("\n")
   end
 end
 
-
-
 # Example:
 #
 # Curl POST would look like:
 #
-# curl 'https://wapi.cne.com/tracking/officialWebsite?t=<req_ts>' -X POST 
+# curl 'https://wapi.cne.com/tracking/officialWebsite?t=<req_ts>' -X POST
 #  -H 'Content-Type: application/json'
 #  -H 'signature: <signature>'
 #  --data-raw '{"logisticsNo":"<track_id>","lan":"en","md5":"<m5>"}'
@@ -68,6 +65,4 @@ end
 #    md5: "9eaaaaaaaaaaaaaaaaaaa",
 #    signature: "9a198201820198201982",
 #    every: 30*60,
-#    test: __FILE__ == $0
 #).update
-

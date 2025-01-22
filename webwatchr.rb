@@ -152,13 +152,14 @@ class Webwatchr
 
     config["alert_procs"] = make_alerts(config)
 
-    runner = Runner.new()
-
     case config[:mode]
     when :single
-      sites_to_run = runner.sites_to_watch.select { |s| rb_file = File.basename(Object.const_source_location(s.class.name)[0]);  rb_file == config[:site] }
+      sites_to_run = SITES_TO_WATCH.select { |s|
+        rb_file = File.basename(Object.const_source_location(s.class.name)[0])
+        rb_file == config[:site]
+      }
     when :normal
-      sites_to_run = runner.sites_to_watch
+      sites_to_run = SITES_TO_WATCH
     else
       raise StandardError, "Unknown WebWatchr mode: #{config[:mode]}"
     end

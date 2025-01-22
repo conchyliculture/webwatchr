@@ -6,7 +6,7 @@ require "net/http"
 require "json"
 
 class DHL < Site::SimpleString
-  def initialize(track_id:, every:, api_key: nil, comment: nil, test: false)
+  def initialize(track_id:, every:, api_key: nil, comment: nil)
     unless api_key
       raise Site::ParseError,
             'DHL requires an API key for fetching tracking information. Get one by registering for a free account at https://developer.dhl.com/'
@@ -17,7 +17,6 @@ class DHL < Site::SimpleString
     super(
       url: "https://www.dhl.com/ch-en/home/tracking/tracking-express.html?submit=1&tracking-id=#{track_id}",
       every: every,
-      test: test,
       comment: comment
     )
   end
@@ -69,5 +68,4 @@ end
 #     track_id: "1234567890",
 #     api_key: "j6VSqAm4RmlljLKJLajlP",
 #     every: 60*60,
-#     test: __FILE__ == $0
 # ).update
