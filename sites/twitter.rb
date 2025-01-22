@@ -1,7 +1,13 @@
 require_relative "../lib/site"
 
 class Twitter < Site::Articles
-  def initialize(account:, regex: nil, with_replies: true, no_retweets: false, every: 60 * 60, nitter_instance: "nitter.unixfox.eu")
+  def initialize(account:, regex: nil, no_retweets: false, every: 60 * 60, nitter_instance: "nitter.unixfox.eu")
+    super(
+      comment: "Twitter: #{account}",
+      url: "https://#{nitter_instance}/#{account}",
+      every: every
+    )
+
     @regex = regex
     @no_retweets = no_retweets
     @account = account
