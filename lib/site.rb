@@ -410,7 +410,7 @@ class Site
   end
 
   class Articles < Site
-    def initialize(url:, every: 60 * 60, post_data: nil, test: false, comment: nil, useragent: nil, alert_only: [], http_ver: 1, rand_sleep: 0)
+    def initialize(url:, every: 60 * 60, post_data: nil, comment: nil, useragent: nil, alert_only: [], http_ver: 1, rand_sleep: 0)
       super
       @content = []
     end
