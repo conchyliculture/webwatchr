@@ -5,8 +5,10 @@ require "logger"
 require "net/http"
 require "nokogiri"
 require_relative "./config"
+require_relative "./logger"
 
 class Site
+  include Loggable
   class ParseError < StandardError
   end
 
@@ -16,20 +18,15 @@ class Site
   HTML_HEADER = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n".freeze
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
-  attr_accessor :state_file, :url, :wait, :logger, :name
+  attr_accessor :state_file, :url, :wait, :name
 
   def initialize(url:, every: nil, post_data: nil, post_json: nil, test: false, comment: nil, useragent: nil, http_ver: 1, alert_only: [], rand_sleep: 0)
     @config = Config.config || { "last_dir" => File.join(File.dirname(__FILE__), "..", ".lasts") }
-    @logger = $logger || Logger.new(@config["log"] || STDOUT)
-    if @logger.level > Logger::DEBUG && $VERBOSE
-      @logger.level = Logger::DEBUG
-    end
     @name = url.dup()
     @comment = comment
     @post_data = post_data
     @post_json = post_json
-    @ignore_state = $forcetest || false
-    @test = test || $forcetest
+    @test = test
     @url = url
     @useragent = useragent || Site::DEFAULT_USER_AGENT
     @extra_headers = {}
@@ -50,7 +47,7 @@ class Site
                  else
                    File.join(".cache", @cache_dir)
                  end
-    @logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
+    logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
     state = load_state_file()
     @wait = every || state["wait"] || 60 * 60
 
@@ -158,7 +155,7 @@ class Site
         end
 
         @url = location
-        @logger.debug "Redirecting to #{location}"
+        logger.debug "Redirecting to #{location}"
         return fetch_url(location, max_redir: max_redir - 1)
       end
 
@@ -170,7 +167,7 @@ class Site
         end
 
         @url = "#{uri.scheme}://#{uri.hostname}:#{uri.port}#{::Regexp.last_match(1)}"
-        @logger.debug "Redirecting to #{location}"
+        logger.debug "Redirecting to #{location}"
         return fetch_url(@url, max_redir: max_redir - 1)
       end
 
@@ -180,7 +177,7 @@ class Site
                html.encode("UTF-8", "binary", invalid: :replace, undef: :replace, replace: "")
              end
     end
-    @logger.debug "Fetched #{url}"
+    logger.debug "Fetched #{url}"
     return html
   end
 
@@ -227,7 +224,7 @@ class Site
   end
 
   def alert(_new_content)
-    @logger.debug "Alerting new stuff"
+    logger.debug "Alerting new stuff"
     @config["alert_procs"].each do |alert_name, p|
       if @alert_only.empty? or @alert_only.include?(alert_name)
         p.call(site: self)
@@ -261,7 +258,7 @@ class Site
   rescue Site::RedirectError
     msg = "Error parsing page #{@url}, too many redirects"
     msg += ". Will retry in #{@wait} + 30 minutes"
-    @logger.error msg
+    logger.error msg
     warn msg
     update_state_file({ "wait" => @wait + 30 * 60 })
   rescue Site::ParseError => e
@@ -270,7 +267,7 @@ class Site
       msg += " with error : #{e.message}"
     end
     msg += ". Will retry in #{@wait} + 30 minutes"
-    @logger.error msg
+    logger.error msg
     warn msg
     update_state_file({ "wait" => @wait + 30 * 60 })
   rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
@@ -279,7 +276,7 @@ class Site
       msg += " : #{e.message}"
     end
     msg += ". Will retry in #{@wait} + 30 minutes"
-    @logger.error msg
+    logger.error msg
     warn msg
     update_state_file({ "wait" => @wait + 30 * 60 })
   end
@@ -296,12 +293,12 @@ class Site
       "content" => nil
     }
     state = load_state_file()
-    if state and not @ignore_state
+    if state
       previous_state.update(state)
     end
     previous_content = previous_state["content"]
     if should_update?(previous_state["time"]) or @test
-      @logger.info "Time to update #{@url}" unless @test
+      logger.info "Time to update #{@url}" unless @test
       sleep(@rand_sleep) if @rand_sleep > 0 and not @test
       pull_things()
       new_stuff = get_new(previous_content)
@@ -320,12 +317,12 @@ class Site
         if @test
           puts "Nothing new for #{@url}"
         end
-        @logger.info "Nothing new for #{@url}"
+        logger.info "Nothing new for #{@url}"
       end
       update_state_file({})
     else
       @did_stuff = true
-      @logger.info "Too soon to update #{@url}"
+      logger.info "Too soon to update #{@url}"
     end
   end
 
@@ -406,7 +403,7 @@ class Site
     end
 
     def alert(_new_content)
-      @logger.debug "Alerting new stuff"
+      logger.debug "Alerting new stuff"
       @config["alert_procs"].each do |alert_name, p|
         if @alert_only.empty? or @alert_only.include?(alert_name)
           p.call({ site: self })
@@ -429,7 +426,7 @@ class Site
     end
 
     def add_article(item)
-      @logger.debug "Found article #{item['id']}"
+      logger.debug "Found article #{item['id']}"
       validate(item)
       item["_timestamp"] = Time.now().to_i
       @content << item unless @content.map { |x| x['id'] }.include?(item['id'])

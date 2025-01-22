@@ -1,27 +1,29 @@
-require "logger"
+require 'logger'
+require 'singleton'
 
-class MyLogger
-  def initialize(logfile: $stderr)
-    @logger = Logger.new(logfile)
+class MyLog
+  include Singleton
+
+  def initialize
+    @many_loggers = {}
   end
 
-  def err(msg)
-    @logger.error Colors.red(msg)
+  def logger(class_name)
+    unless @many_loggers[class_name]
+      @many_loggers[class_name] = Logger.new(@default_out, @default_rotation, level: @default_level)
+    end
+    return @many_loggers[class_name]
   end
 
-  def warn(msg)
-    @logger.warn Colors.yellow(msg)
+  def configure(out, rotation, level)
+    @default_out = out
+    @default_rotation = rotation
+    @default_level = level
   end
+end
 
-  def info(msg)
-    @logger.info Colors.blue(msg)
-  end
-
-  def debug(msg)
-    @logger.info Colors.grey(msg)
-  end
-
-  def success(msg)
-    @logger.info Colors.green(msg)
+module Loggable
+  def logger
+    MyLog.instance.logger(self.class.name)
   end
 end
