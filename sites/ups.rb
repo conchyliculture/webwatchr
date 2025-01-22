@@ -5,11 +5,10 @@ require "curb"
 require "mechanize"
 
 class UPS < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil, test: false)
+  def initialize(track_id:, every:, comment: nil)
     super(
       url: "https://www.ups.com/track?track=yes&trackNums=#{track_id}&loc=en_US&requester=ST/trackdetails",
       every: every,
-      test: test,
       comment: comment,
     )
     @track_id = track_id

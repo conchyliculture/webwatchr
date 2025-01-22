@@ -9,6 +9,7 @@ require "timeout"
 
 require_relative "lib/config"
 require_relative "lib/logger"
+require_relative "todo"
 
 trap("INT") do
   warn "User interrupted"
@@ -68,7 +69,7 @@ class Webwatchr
 
   def make_telegram_message_pieces(site:)
     unless site
-      raise Exception, "Need to pass a Site instance"
+      raise StandardError, "Need to pass a Site instance"
     end
 
     msg_pieces = []
@@ -77,12 +78,12 @@ class Webwatchr
         line = item["title"]
         if item["url"]
           if line
-            line += ": " + item["url"]
+            line += ": #{item['url']}"
           else
             line = item["url"]
           end
 
-          line += ": " + item["url"]
+          line += ": #{item['url']}"
         end
         msg_pieces << line
       end
@@ -148,47 +149,39 @@ class Webwatchr
     end
     FileUtils.mkdir_p(config["last_dir"])
     FileUtils.mkdir_p(config["cache_dir"])
-    FileUtils.mkdir_p(File.join(current_dir, "sites-enabled"))
 
-    timeout = config["site_timeout"]
     config["alert_procs"] = make_alerts(config)
+
+    runner = Runner.new()
 
     case config[:mode]
     when :single
-      site_rb = File.join("sites-enabled", config[:site])
-      load_site(site_rb, timeout)
+      sites_to_run = runner.sites_to_watch.select { |s| rb_file = File.basename(Object.const_source_location(s.class.name)[0]);  rb_file == config[:site] }
     when :normal
-      sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
-      if sites.empty?
-        warn "Didn't find any site to parse. You might want to:"
-        warn "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
-      end
-      sites.each { |s| load_site(s, timeout) }
+      sites_to_run = runner.sites_to_watch
     else
       raise StandardError, "Unknown WebWatchr mode: #{config[:mode]}"
     end
-  end
-
-  def load_site(site, timeout = 10 * 60)
-    unless File.exist?(site)
-      raise "Can't find site to load #{File.realpath(site)}"
+    if sites_to_run.empty?
+      warn "Didn't find any site to parse. edit todo.rb"
     end
 
-    begin
-      logger.info "loading #{File.basename(site)} file"
-      Timeout.timeout(timeout) {
-        load site
+    sites_to_run.each do |site_obj|
+      logger.info "Running #{site_obj.name}"
+      Timeout.timeout(config["site_timeout"]) {
+        site_obj.test = config[:test]
+        site_obj.update()
       }
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
       logger.warn "Failed pulling #{site}: #{e.message}"
     # Do nothing, try later
     rescue SystemExit => e
-      msg = "User requested we quite while updating #{site}\n"
+      msg = "User requested we quit while updating #{site}\n"
       logger.error msg
       warn msg
       raise e
     rescue StandardError => e
-      msg = "Issue with #{site} : #{e}\n"
+      msg = "Issue with #{site_obj} : #{e}\n"
       msg += "#{e.message}\n"
       logger.error msg
       msg += e.backtrace.join("\n")
@@ -199,7 +192,7 @@ class Webwatchr
   end
 
   def main()
-    options = { config: "config.json", mode: :normal }
+    options = { config: "config.json", mode: :normal , test: false, force: false}
     OptionParser.new { |o|
       o.banner = """WebWatchr is a script to poll websites and alert on changes.
   Exemple uses:
@@ -222,6 +215,9 @@ class Webwatchr
       o.on("-f", "--force", "Ignore waiting time between updates") do
         options[:force] = true
       end
+      o.on("-t", "--test", "Check website and return what we've parsed") do
+        options[:test] = true
+      end
       o.on("-h", "--help", "Prints this help") {
         puts o
         exit
@@ -241,6 +237,7 @@ class Webwatchr
     config[:mode] = options[:mode]
     config[:site] = options[:site]
     config[:force] = options[:force]
+    config[:test] = options[:test]
 
     Config.set_config(config)
     log_dir = config["log_dir"] || "logs"

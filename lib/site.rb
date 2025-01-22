@@ -18,15 +18,15 @@ class Site
   HTML_HEADER = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n".freeze
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
-  attr_accessor :state_file, :url, :wait, :name
+  attr_accessor :state_file, :url, :wait, :name, :test
 
-  def initialize(url:, every: nil, post_data: nil, post_json: nil, test: false, comment: nil, useragent: nil, http_ver: 1, alert_only: [], rand_sleep: 0)
+  def initialize(url:, every: nil, post_data: nil, post_json: nil, comment: nil, useragent: nil, http_ver: 1, alert_only: [], rand_sleep: 0)
     @config = Config.config || { "last_dir" => File.join(File.dirname(__FILE__), "..", ".lasts") }
     @name = url.dup()
     @comment = comment
     @post_data = post_data
     @post_json = post_json
-    @test = test
+    @test = false
     @url = url
     @useragent = useragent || Site::DEFAULT_USER_AGENT
     @extra_headers = {}
@@ -305,7 +305,7 @@ class Site
       @did_stuff = true
       if new_stuff
         if @test
-          puts "Would have sent an email with #{new_stuff}"
+          logger.info "Would have sent an email with:\n#{new_stuff}"
         else
           alert(new_stuff)
           update_state_file({
@@ -314,9 +314,6 @@ class Site
                             })
         end
       else
-        if @test
-          puts "Nothing new for #{@url}"
-        end
         logger.info "Nothing new for #{@url}"
       end
       update_state_file({})
