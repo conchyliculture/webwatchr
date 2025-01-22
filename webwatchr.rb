@@ -1,16 +1,14 @@
 #!/usr/bin/ruby
 
-$: << "lib"
-
 require "fileutils"
 require "json"
-require "logger"
 require "net/http"
 require "net/smtp"
 require "optparse"
 require "timeout"
 
-require "config"
+require_relative "lib/config"
+require_relative "lib/logger"
 
 trap("INT") do
   warn "User interrupted"
@@ -159,13 +157,6 @@ class Webwatchr
     when :single
       site_rb = File.join("sites-enabled", config[:site])
       load_site(site_rb, timeout)
-    when :checkall
-      sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
-      if sites.empty?
-        warn "Didn't find any site to parse. You might want to:"
-        warn "cd sites-enabled/ ; ln -s ../sites-available/something.rb . "
-      end
-      sites.each { |s| load_site(s, timeout) }
     when :normal
       sites = Dir.glob(File.join(current_dir, "sites-enabled", "*.rb"))
       if sites.empty?
@@ -225,11 +216,12 @@ class Webwatchr
       o.on("-cCONF", "--config=CONF", "Use a specific config file (default: ./config.json") do |v|
         options[:config] = v
       end
-      o.on("--checkall", "Pulls information from all websites, as a way to check that the parsers still work") do |v|
-        options[:mode] = :checkall
-        options[:config] = v
+      o.on("-v", "--verbose", "Be verbose (output to STDOUT instead of logfile") do
+        options[:verbose] = true
       end
-
+      o.on("-f", "--force", "Ignore waiting time between updates") do
+        options[:force] = true
+      end
       o.on("-h", "--help", "Prints this help") {
         puts o
         exit
@@ -245,8 +237,10 @@ class Webwatchr
       config = JSON.parse(File.read(options[:config]))
     end
 
+    config[:verbose] = options[:verbose]
     config[:mode] = options[:mode]
     config[:site] = options[:site]
+    config[:force] = options[:force]
 
     Config.set_config(config)
     log_dir = config["log_dir"] || "logs"
@@ -256,7 +250,11 @@ class Webwatchr
     unless File.exist?(log_dir)
       FileUtils.mkdir_p(log_dir)
     end
-    log_out_file = File.join(log_dir, 'webwatchr.log')
+    log_out_file = if config[:verbose]
+                     $stdout
+                   else
+                     File.join(log_dir, 'webwatchr.log')
+                   end
     log_out_file_rotation = 'weekly'
     log_level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
@@ -281,4 +279,5 @@ class Webwatchr
   end
 end
 
-main()
+w = Webwatchr.new()
+w.main()

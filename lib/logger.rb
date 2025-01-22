@@ -6,6 +6,8 @@ class MyLog
 
   def initialize
     @many_loggers = {}
+    @default_level = Logger::DEBUG
+    @defailt_out = $stdout
   end
 
   def logger(class_name)
