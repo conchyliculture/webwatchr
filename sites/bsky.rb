@@ -1,7 +1,7 @@
 require_relative "../lib/site"
 require "mechanize"
 
-class Bsky < Site::SimpleString
+class Bsky < Site::Articles
   def initialize(account:, regex: nil, every: 30 * 60)
     super(
       url: "https://bsky.app/profile/#{account}",
@@ -34,16 +34,18 @@ class Bsky < Site::SimpleString
   end
 
   def get_content
-    res = ["<ul>"]
     @parsed_content['feed'].each do |p|
       post = p['post']
       post_id = post["uri"].split("/")[-1]
       text = post['record']['text']
-      if @regex and text =~ @regex
-        res << "<li><a href='https://bsky.app/profile/#{@account}/post/#{post_id}'>#{post['record']['createdAt']}: #{text}</li>"
+      art = {
+        "id" => post["uri"],
+        "url" => "https://bsky.app/profile/#{@account}/post/#{post_id}",
+        "title" => "#{post['record']['createdAt']}: #{text}"
+      }
+      if !@regex or (@regex and text =~ @regex)
+        add_article(art)
       end
     end
-    res << ["</ul>"]
-    return res.join("\n")
   end
 end
