@@ -180,7 +180,7 @@ class Webwatchr
       logger.warn "Failed pulling #{site}: #{e.message}"
     # Do nothing, try later
     rescue SystemExit => e
-      msg = "User requested we quit while updating #{site}\n"
+      msg = "User requested we quit while updating #{site_obj}\n"
       logger.error msg
       warn msg
       raise e
