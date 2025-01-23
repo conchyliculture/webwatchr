@@ -2,11 +2,12 @@ require_relative "../lib/site"
 require "mechanize"
 
 class Bsky < Site::Articles
-  def initialize(account:, regex: nil, every: 30 * 60)
+  def initialize(account:, regex: nil, reposts: false, every: 30 * 60)
     super(
       url: "https://bsky.app/profile/#{account}",
       every: every
     )
+    @reposts = reposts
     @account = account
     @mechanize = Mechanize.new()
     @regex = regex
@@ -43,9 +44,12 @@ class Bsky < Site::Articles
         "url" => "https://bsky.app/profile/#{@account}/post/#{post_id}",
         "title" => "#{post['record']['createdAt']}: #{text}"
       }
-      if !@regex or (@regex and text =~ @regex)
-        add_article(art)
-      end
+
+      next if @regex and (text !~ @regex)
+
+      next if !@reposts and (post['author']['handle'] != @account)
+
+      add_article(art)
     end
   end
 end
