@@ -3,7 +3,6 @@
 require_relative "../lib/site"
 
 require "json"
-require "logger"
 require "net/http"
 
 class PostSE < Site::SimpleString

@@ -54,7 +54,7 @@ class Dealabs < Site::Articles
         img = JSON.parse(CGI.unescapeHTML(img_.attr('data-lazy-img')))["src"]
       end
       if match_category(categories)
-        @logger.debug "Ignoring #{title} because #{categories} have bad category"
+        logger.debug "Ignoring #{title} because #{categories} have bad category"
         next
       end
       add_article({

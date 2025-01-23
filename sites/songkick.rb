@@ -5,7 +5,7 @@ class Songkick < Site::Articles
   def initialize(*)
     super
     unless @url.end_with?("/calendar")
-      @logger.warn("Songkick should end with /calendar to get all concerts")
+      logger.warn("Songkick should end with /calendar to get all concerts")
     end
   end
 

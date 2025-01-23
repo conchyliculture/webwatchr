@@ -18,7 +18,7 @@ class Bandcamp < Site::Articles
         @parsed_content = Nokogiri::HTML.parse(@html_content)
         item = @parsed_content.css('div#merch-item')
         if item.css(".notable").text == "Sold Out"
-          @logger.debug "That item is sold out =("
+          logger.debug "That item is sold out =("
           return
         end
         url = new_url
@@ -33,7 +33,7 @@ class Bandcamp < Site::Articles
       else
         @parsed_content.css('ol.merch-grid li').each do |xx|
           unless xx.css('p.sold-out').empty?
-            @logger.debug "That item is sold out =("
+            logger.debug "That item is sold out =("
             next
           end
           x = xx.css('a')
