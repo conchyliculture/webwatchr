@@ -2,9 +2,12 @@ Dir['./sites/**/*.rb'].sort.each do |path|
   require_relative path
 end
 
+# Add instances here
 SITES_TO_WATCH = [
-  UPS.new(
-    track_id: "899997501792460130",
-    every: 30 * 60
-  )
-].freeze
+  # Example:
+  #
+  #  Bsky.new(
+  #    account: "swiftonsecurity.com",
+  #    every: 30 * 60
+  #  )
+]
