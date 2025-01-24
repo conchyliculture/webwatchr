@@ -3,7 +3,7 @@ require_relative "../lib/site"
 require "json"
 
 class Quickpac < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     track_id_re = /^[0-9]{2}\.[0-9]{2}\.[0-9]{6}\.[0-9]{8}$/
     unless track_id =~ track_id_re
       raise Site::ParseError, "track_id should match #{track_id_re}"
