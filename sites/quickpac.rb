@@ -4,9 +4,13 @@ require "json"
 
 class Quickpac < Site::SimpleString
   def initialize(track_id:, every: 60 * 60, comment: nil)
-    track_id_re = /^[0-9]{2}\.[0-9]{2}\.[0-9]{6}\.[0-9]{8}$/
-    unless track_id =~ track_id_re
-      raise Site::ParseError, "track_id should match #{track_id_re}"
+    case track_id
+    when /^[0-9]{18}$/
+      @track_id = track_id.scan(/^(..)(..)(......)(........)$/)[0].join(".")
+    when /^[0-9]{2}\.[0-9]{2}\.[0-9]{6}\.[0-9]{8}$/
+      @track_id = track_id
+    else
+      raise Site::ParseError, "track_id should either in fortmat 121212345612345678 or 12.12.123456.12345678"
     end
 
     super(
@@ -14,7 +18,6 @@ class Quickpac < Site::SimpleString
       every: every,
       comment: comment,
     )
-    @track_id = track_id
   end
 
   def parse_content(html)
@@ -39,5 +42,4 @@ end
 #
 # Quickpac.new(
 #    track_id: "11.00.101900.29374912",
-#    every: 30*60,
-# ).update
+# )
