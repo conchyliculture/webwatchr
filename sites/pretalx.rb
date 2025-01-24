@@ -1,7 +1,7 @@
 require_relative "../lib/site"
 
 class Pretalx < Site::SimpleString
-  def initialize(every:)
+  def initialize(every: 6 * 60 * 60)
     url = "https://docs.pretalx.org/changelog/#changelog"
     super(url: url, every: every, comment: "Pretalx security updates", test: test)
   end
