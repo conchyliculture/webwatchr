@@ -13,10 +13,10 @@ class Ebay < Site::Articles
     @parsed_content.css('li.s-item').each do |article|
       a = article.css('div.s-item__image a')
       url = nil
-      if a.size.empty?
+      if a.empty?
         uri = a[0]['href']
         url = URI.parse(uri)
-        url = "https://#{url.host}#{url.path}"
+        url = "https://#{url.host + url.path}"
       end
 
       next unless url
