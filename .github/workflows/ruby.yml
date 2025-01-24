@@ -26,6 +26,6 @@ jobs:
         bundler-cache: true
         ruby-version: head
     - name: Install Dependencies
-      run: gem install nokogiri diffy webrick
+      run: gem install nokogiri mechanize curb diffy webrick
     - name: Run tests
       run: ruby tests/tests.rb
