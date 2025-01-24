@@ -5,7 +5,7 @@ require "json"
 require "mechanize"
 
 class PostCH < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://www.post.ch/api/TrackAndTrace/Get?sc_lang=en&id=#{track_id}",
       every: every,
