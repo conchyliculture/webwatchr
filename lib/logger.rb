@@ -1,30 +1,31 @@
-#!/usr/bin/ruby
-# encoding: utf-8
+require 'logger'
+require 'singleton'
 
-class MyLogger
-    require "logger"
-    def initialize(logfile: STDERR)
-        @logger = Logger.new(logfile)
-    end
+class MyLog
+  include Singleton
 
-    def err(msg)
-        @logger.error Colors.red(msg)
-    end
+  def initialize
+    @many_loggers = {}
+    @default_level = Logger::DEBUG
+    @defailt_out = $stdout
+  end
 
-    def warn(msg)
-        @logger.warn Colors.yellow(msg)
+  def logger(class_name)
+    unless @many_loggers[class_name]
+      @many_loggers[class_name] = Logger.new(@default_out, @default_rotation, level: @default_level, progname: class_name)
     end
+    return @many_loggers[class_name]
+  end
 
-    def info(msg)
-        @logger.info Colors.blue(msg)
-    end
-
-    def debug(msg)
-        @logger.info Colors.grey(msg)
-    end
-
-    def success(msg)
-        @logger.info Colors.green(msg)
-    end
+  def configure(out, rotation, level)
+    @default_out = out
+    @default_rotation = rotation
+    @default_level = level
+  end
 end
 
+module Loggable
+  def logger
+    MyLog.instance.logger(self.class.name)
+  end
+end
