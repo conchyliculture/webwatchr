@@ -46,7 +46,7 @@ class PostCH < Site::SimpleString
     @parsed_content = []
 
     json_content.each do |event|
-      @text_messages["shipment-text--"].each_keys do |tm|
+      @text_messages["shipment-text--"].each_key do |tm|
         ttmm = tm.split(".")
         ccode = event["eventCode"].split(".")
         next unless ccode[0] == ttmm[0] and ccode[3] == ttmm[3]
