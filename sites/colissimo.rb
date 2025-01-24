@@ -1,11 +1,9 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 require "mechanize"
 require "json"
 
 class Colissimo < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://api.laposte.fr/ssu/v1/suivi-unifie/idship/#{@track_id}?lang=en_GB",
       every: every,
@@ -36,7 +34,4 @@ class Colissimo < Site::SimpleString
 end
 
 # Example:
-# Colissimo.new(
-#     track_id: "CB0129291929FR",
-#     every: 2*60*60,
-# ).update
+# Colissimo.new(track_id: "CB0129291929FR")

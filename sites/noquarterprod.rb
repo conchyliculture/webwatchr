@@ -1,11 +1,10 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class NQP < Site::Articles
   require "net/http"
   require "nokogiri"
 
-  def initialize(artist_id:, every:, comment: nil)
+  def initialize(artist_id:, every: 60 * 60, comment: nil)
     super(
       url: "http://www.noquarterprod.com/product-category/#{artist_id}/",
       every: every,
@@ -50,5 +49,4 @@ end
 #
 # NQP.new(
 #     artist_id: "carpenter-brut-en",
-#     every: 12*60*60,
-# ).update
+#     )

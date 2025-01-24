@@ -1,12 +1,11 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 require "mechanize"
 require "json"
 
 class PostPL < Site::SimpleString
-  def initialize(track_id:, every:, comment:)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
-      url: "https://emonitoring.poczta-polska.pl/?lang=EN&numer=#{@track_id}",
+      url: "https://emonitoring.poczta-polska.pl/?lang=EN&numer=#{track_id}",
       every: every,
       comment: comment,
     )
@@ -42,6 +41,4 @@ end
 #
 # PostPL.new(
 #     track_id: "RR192837465PL",
-#     every: 30*60,
-#     comment: nil,
-# ).update
+#     )

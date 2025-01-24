@@ -3,7 +3,7 @@ require_relative "../lib/site"
 require "json"
 
 class PostFR < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://www.laposte.fr/ssu/sun/back/suivi-unifie/#{track_id}?lang=en_GB",
       every: every,
@@ -25,5 +25,4 @@ end
 #
 # PostFR.new(
 #     track_id: "LD467901456FR",
-#     every: 30*60,
-# ).update
+#     )

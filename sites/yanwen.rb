@@ -1,10 +1,8 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 require "digest"
 
 class YanWen < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     key = "00#78a13&ba6c;73"
     md5 = Digest::MD5.hexdigest(track_id + key) # lol
     super(
@@ -41,5 +39,4 @@ end
 #
 # YanWen.new(
 #     track_id: "UJ000000000YP",
-#     every: 30*60,
-# ).update
+#     )

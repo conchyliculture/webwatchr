@@ -1,7 +1,7 @@
 require_relative "../lib/site"
 
 class CNE < Site::SimpleString
-  def initialize(track_id:, req_ts:, signature:, md5:, every:, comment: nil)
+  def initialize(track_id:, req_ts:, signature:, md5:, every: 60 * 60, comment: nil)
     super(
       url: "https://wapi.cne.com/tracking/officialWebsite?t=#{req_ts}",
       every: every,
@@ -63,6 +63,5 @@ end
 #    track_id: "3A5V000000000",
 #    req_ts: 1687770000000,
 #    md5: "9eaaaaaaaaaaaaaaaaaaa",
-#    signature: "9a198201820198201982",
-#    every: 30*60,
-#).update
+#    signature: "9a198201820198201982"
+#    )

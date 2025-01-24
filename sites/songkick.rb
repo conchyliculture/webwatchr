@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class Songkick < Site::Articles
@@ -14,7 +13,7 @@ class Songkick < Site::Articles
       next if event["class"] =~ /with-date/
 
       date = event.css("time")[0]["datetime"].gsub("T", " ")
-      url = "https://www.songkick.com" + event.css('p a')[0]["href"]
+      url = "https://www.songkick.com#{event.css('p a')[0]['href']}"
       artist = event.css("p a span").text.strip
       location = event.css('p.location').text.gsub(/\s+/, " ")
       add_article({
@@ -30,6 +29,5 @@ end
 #
 # Songkick.new(
 #     url: "https://www.songkick.com/artists/7214659-carpenter-brut/calendar",
-#     every: 12 * 60 * 60,
 #     comment: "CarpenterBrut concerts",
-# ).update
+#     )

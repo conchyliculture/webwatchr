@@ -9,13 +9,13 @@ class Accor < Site::SimpleString
     $?.success?
   end
 
-  def initialize(hotel_id:, start_date:, nights:, every:, comment: nil)
+  def initialize(hotel_id:, start_date:, nights:, every: 60 * 60, comment: nil)
     @state_file_name = "last-accor-#{hotel_id}-#{start_date}-#{nights}_nights"
     @api_key = "l7xx5b9f4a053aaf43d8bc05bcc266dd8532"
     @client_id = "all.accor"
 
     unless command?('qjs')
-      raise Exception, 'you need to install quickjs first'
+      raise StandardError, 'you need to install quickjs first'
     end
 
     super(
@@ -27,13 +27,13 @@ class Accor < Site::SimpleString
     @start_date = start_date
     @nights = nights
     unless @hotel_id.to_s =~ /^\d+$/
-      raise Exception, "accor.rb needs a valid hotel ID such as '1234', not '#{@hotel_id}')"
+      raise Site::ParseError, "accor.rb needs a valid hotel ID such as '1234', not '#{@hotel_id}')"
     end
     unless @start_date =~ /^\d\d\d\d-\d\d-\d\d$/
-      raise Exception, "accor.rb needs a valid start_date, in format YYYY-MM-DD, not '#{@start_date}')"
+      raise Site::ParseError, "accor.rb needs a valid start_date, in format YYYY-MM-DD, not '#{@start_date}')"
     end
     unless @nights.to_s =~ /^\d+$/
-      raise Exception, "accor.rb needs a valid number of nights, not '#{@nights}')"
+      raise Site::ParseError, "accor.rb needs a valid number of nights, not '#{@nights}')"
     end
   end
 
@@ -56,7 +56,7 @@ class Accor < Site::SimpleString
     m = Mechanize.new()
     res = m.get("https://all.accor.com/ssr/app/accor/rates/#{hotel_id}/index.en.shtml?compositions=1&dateIn=#{start_date}&nights=#{nights}&hideHotelDetails=false&hideWDR=false&destination=").body
     js = res.scan(/(__NUXT__.*\)\);)<\/script>/)[0][0]
-    io = IO.popen(['qjs', '-e', js + 'print(JSON.stringify(__NUXT__))'])
+    io = IO.popen(['qjs', '-e', "#{js}print(JSON.stringify(__NUXT__))"])
     data = JSON.parse(io.read)["data"][1]
 
     res = {}
@@ -99,10 +99,9 @@ end
 # Get hotel code (ie: 1234) from the URL on the relevant Accor website
 #
 # Example:
+#
 # Accor.new(
 #      start_date: "2024-07-18",
 #      nights: 3,
 #      hotel_id: "5011",
-#      every: 60*60,
-#  ).update
-#
+#  )

@@ -1,12 +1,10 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 
 require "json"
 require "net/http"
 
 class PostSE < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://api2.postnord.com/rest/shipment/v1/trackingweb/shipmentInformation?shipmentId=#{track_id}&locale=en",
       every: every,
@@ -52,5 +50,4 @@ end
 #
 # PostSE.new(
 #     track_id: "LY000000000SE",
-#     every: 30*60,
-# ).update
+#     )

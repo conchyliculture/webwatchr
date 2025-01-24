@@ -1,12 +1,10 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 
 require "net/http"
 require "json"
 
 class DHL < Site::SimpleString
-  def initialize(track_id:, every:, api_key: nil, comment: nil)
+  def initialize(track_id:, every: 60 * 60, api_key: nil, comment: nil)
     unless api_key
       raise Site::ParseError,
             'DHL requires an API key for fetching tracking information. Get one by registering for a free account at https://developer.dhl.com/'
@@ -66,6 +64,4 @@ end
 # example:
 # DHL.new(
 #     track_id: "1234567890",
-#     api_key: "j6VSqAm4RmlljLKJLajlP",
-#     every: 60*60,
-# ).update
+#     api_key: "j6VSqAm4RmlljLKJLajlP")

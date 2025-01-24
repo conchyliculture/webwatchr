@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class LenovoOVP < Site::SimpleString
@@ -19,5 +18,5 @@ end
 #LenovoOVP.new(
 #    # The order confirm email you got, looks like
 #    url: "http://checkout.lenovo.com/store?SiteID=lenovoeu&Action=DisplayCustomerServiceOrderDetailPage&requisitionID=11111111111&Locale=fr_CH&lenovoOrderToken=XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF%3D",
-#    every: 60*60,
-#).update
+#    )
+#

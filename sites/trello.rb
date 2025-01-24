@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 require "json"
 require "mechanize"
@@ -37,18 +36,18 @@ class TrelloStruct
     return @cards.select { |c| c[:list_id] == list_id }
   end
 
-  def should_ignore?(ln)
-    if @ignores.size > 0
+  def should_ignore?(line)
+    if @ignores.size.empty?
       if @ignores[0].instance_of?(String)
-        return @ignores.include?(ln)
+        return @ignores.include?(line)
       elsif @ignores[0].instance_of?(Regexp)
-        return (@ignores.map { |x| ln =~ x }.compact.size > 0)
+        return @ignores.map { |x| line =~ x }.compact.empty?
       end
     end
     return false
   end
 
-  def to_html(ignores: [])
+  def to_html()
     res = ""
     @lists.each do |li, ln|
       res << "<b>#{ln}</b> \n<ul>\n"
@@ -76,7 +75,7 @@ class TrelloStruct
 end
 
 class Trello < Site::DiffString
-  def initialize(url:, every:, ignores: [], messages: nil, comment: nil)
+  def initialize(url:, every: 60 * 60, ignores: [], comment: nil)
     super(
       url: url,
       every: every,
@@ -107,5 +106,4 @@ end
 # Trello.new(
 #     url: "https://trello.com/b/AI1A9SJ1/some_trello",
 #     ignores: ['General Info', 'Done'], # Ignores specific List names
-#     every: 30*60,
-# ).update
+#)

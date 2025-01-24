@@ -1,23 +1,21 @@
-#!/usr/bin/ruby
-
 require "cgi"
 require "json"
 
 require_relative "../lib/site"
 
 # Here list the categories you're not interested in
-$BADCATEGORY = Regexp.union(
-  [
-    /^mode$/,
-    /^(e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
-    /^Épicerie$/,
-    /itunes/,
-    /google play/
-  ]
-)
 
 class Dealabs < Site::Articles
-  def initialize(every:, comment: nil)
+  BADCATEGORY = Regexp.union(
+    [
+      /^mode$/,
+      /^(e\. leclerc|carrefour|auchan|boulanger|fnac)$/,
+      /^Épicerie$/,
+      /itunes/,
+      /google play/
+    ]
+  )
+  def initialize(every: 60 * 60, comment: nil)
     super(
       url: "https://www.dealabs.com/",
       every: every,
@@ -27,7 +25,7 @@ class Dealabs < Site::Articles
 
   def match_category(categories)
     categories.each do |category|
-      return true if category =~ $BADCATEGORY
+      return true if category =~ BADCATEGORY
     end
     return false
   end
@@ -42,8 +40,6 @@ class Dealabs < Site::Articles
       unless img_html.empty?
         link = img_html.attr('href').text
       end
-      title = ""
-      img = ""
       next if header_div.empty?
 
       title = header_div.css('a.thread-link').text.strip
@@ -66,9 +62,3 @@ class Dealabs < Site::Articles
     end
   end
 end
-
-# Example:
-#
-# Dealabs.new(
-#     every: 30*60,
-# ).update

@@ -1,8 +1,7 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class PostDE < Site::SimpleString
-  def initialize(track_id:, post_day:, post_month:, post_year:, every:, comment: nil)
+  def initialize(track_id:, post_day:, post_month:, post_year:, every: 60 * 60, comment: nil)
     super(
       url: "https://www.deutschepost.de/sendung/simpleQueryResult.html",
       post_data: {
@@ -18,13 +17,13 @@ class PostDE < Site::SimpleString
 
   def get_content()
     res = []
-    table = @parsed_content.css("div.dp-table table tr").map { |row| row.css("td").map { |r| r.text.strip } }.delete_if { |x| x.empty? }
-    if table.size == 0
+    table = @parsed_content.css("div.dp-table table tr").map { |row| row.css("td").map { |r| r.text.strip } }.delete_if(&:empty?)
+    if table.empty?
       raise Site::ParseError, "Please verify the PostDE tracking ID"
-      return nil
     end
+
     table.each do |r|
-      res << "#{r[1]}"
+      res << r[1].to_s
     end
     return res.join("")
   end
@@ -37,5 +36,4 @@ end
 #     post_day: 16,
 #     post_month: 2 ,
 #     post_year: 2017,
-#     every: 30*60,
-# ).update
+#)

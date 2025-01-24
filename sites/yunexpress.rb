@@ -7,7 +7,7 @@ class YunExpress < Site::SimpleString
   require "net/http"
   require "json"
 
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://services.yuntrack.com/Track/Query&tracknum=#{track_id}",
       every: every,
@@ -34,7 +34,7 @@ class YunExpress < Site::SimpleString
       # Just get cookies
     end
 
-    headers['Cookie'] = @mechanize.cookie_jar().select { |c| c.name == "acw_tc" }.map { |c| c.name + "=" + c.value }.join('; ')
+    headers['Cookie'] = @mechanize.cookie_jar().select { |c| c.name == "acw_tc" }.map { |c| "#{c.name}=#{c.value}" }.join('; ')
     res = @mechanize.post(url, data.to_json, headers)
 
     @json = JSON.parse(res.body)
@@ -59,5 +59,4 @@ end
 #
 # YunExpress.new(
 #    track_id: "YT0000000000000000",
-#    every: 30*60,
-#).update
+#    )

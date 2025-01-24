@@ -5,7 +5,7 @@ class Bandcamp < Site::Articles
   require "net/http"
   require "nokogiri"
 
-  def initialize(band, every, merch = true)
+  def initialize(band, every: 60 * 60, merch: true)
     @merch = merch
     super(url: "https://#{band}.bandcamp.com/#{'merch' if @merch}", every: every)
   end
@@ -37,7 +37,7 @@ class Bandcamp < Site::Articles
             next
           end
           x = xx.css('a')
-          url = "http://" + URI.parse(@url).host + x.attr('href').text
+          url = "http://#{URI.parse(@url).host + x.attr('href').text}"
           img = x.css('img')
           img_url = img.attr('src').text
           if img_url =~ /\/img\/43.gif/
@@ -59,16 +59,9 @@ class Bandcamp < Site::Articles
   end
 end
 
-# Insert your favorite groups here
-# ex: bandcamp = [
-# "group1",
-# "group2"
-# ]
-# bandcamp=[
-# ].each do |band|
-#     Bandcamp.new(
-#         band,
-#         12*60*60,
-#         true
-#     ).update
-# end
+# Example:
+#
+# Bandcamp.new(
+#     band,
+#     merch: true
+# )

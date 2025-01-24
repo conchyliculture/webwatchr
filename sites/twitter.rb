@@ -66,8 +66,7 @@ class Twitter < Site::Articles
       url = URI.parse("https://#{nitter}/#{path}")
       @html_content = fetch_url1(url)
       @parsed_content = parse_content(@html_content)
-      return
-    rescue Exception => e
+    rescue StandardError => e
       logger.debug("While fetching #{url} we got #{e}")
     end
     logger.debug("no more instances to try :'(")
@@ -75,11 +74,11 @@ class Twitter < Site::Articles
 
   def parse_content(html)
     parsed = Nokogiri::HTML.parse(html)
-    if parsed.css('noscript').size > 0 && (parsed.css('noscript')[0].text =~ /Please turn JavaScript on and reload the page./)
-      raise Exception, "Instance requires javascript tests"
+    if parsed.css('noscript').empty? && (parsed.css('noscript')[0].text =~ /Please turn JavaScript on and reload the page./)
+      raise Site::ParseError, "Instance requires javascript tests"
     end
     if parsed.text =~ /Instance has been rate limited/
-      raise Exception, "Instance has been rate limited"
+      raise Site::ParseError, "Instance has been rate limited"
     end
 
     return parsed
@@ -94,12 +93,12 @@ class Twitter < Site::Articles
       end
 
       text = tweet.css('div.tweet-content')[0].text
-      if @no_retweets and tweet.css('div.retweet-header').size() > 0
+      if @no_retweets and tweet.css('div.retweet-header').empty?
         next
       end
 
-      tweet_uri = URI('https://twitter.com' + tweet.css('a.tweet-link')[0]['href'])
-      tweet_url = "https://twitter.com" + tweet_uri.path
+      tweet_uri = URI("https://twitter.com#{tweet.css('a.tweet-link')[0]['href']}")
+      tweet_url = "https://twitter.com#{tweet_uri.path}"
 
       if @regex
         if text =~ @regex
@@ -115,8 +114,7 @@ end
 if __FILE__ == $0
   Twitter.new(
     account: "mobile_test_2",
-    every: 6 * 60 * 60,
     test: true,
     no_retweets: true
-  ).update
+  )
 end

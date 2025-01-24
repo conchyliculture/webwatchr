@@ -1,11 +1,10 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class Hilton < Site::SimpleString
   require "mechanize"
   require "json"
 
-  def initialize(hotel_code:, start_date:, end_date:, device_id:, app_id:, every:, comment: nil, group_code: nil)
+  def initialize(hotel_code:, start_date:, end_date:, device_id:, app_id:, every: 60 * 60, comment: nil, group_code: nil)
     @state_file_name = "last-hilton-#{hotel_code}-#{start_date}-#{end_date}"
     super(
       url: "https://m.hilton.io/graphql/customer?type=ShopPropAvail&operationName=hotel_shopPropAvail&origin=ChooseRoomQBDataModel&pod=android",
@@ -18,19 +17,19 @@ class Hilton < Site::SimpleString
     @device_id = device_id
     @hotel_code = hotel_code.upcase
     @group_code = group_code
-    raise Exception, "Invalid app_id:'#{app_id}'. hilton.rb needs an app_id (ie: '01892712-1281-0192-0192-118201928102')" unless @app_id =~ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-    raise Exception, "Invalid device_id: '#{device_id}'. hilton.rb needs a device_id (ie: '19acb812dfe18cb1')" unless device_id =~ /^[0-9a-f]{16}$/
-    raise Exception, "hilton.rb needs a hotel_code (ie: 'AOSLWKA')" unless @hotel_code =~ /^[A-Z]{7}$/
+    raise Site::ParseError, "Invalid app_id:'#{app_id}'. hilton.rb needs an app_id (ie: '01892712-1281-0192-0192-118201928102')" unless @app_id =~ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    raise Site::ParseError, "Invalid device_id: '#{device_id}'. hilton.rb needs a device_id (ie: '19acb812dfe18cb1')" unless device_id =~ /^[0-9a-f]{16}$/
+    raise Site::ParseError, "hilton.rb needs a hotel_code (ie: 'AOSLWKA')" unless @hotel_code =~ /^[A-Z]{7}$/
 
     begin
       @start_date = Date.parse(start_date)
     rescue StandardError
-      raise Exception, "hilton.rb needs a valid start_date, not '#{start_date}')"
+      raise Site::ParseError, "hilton.rb needs a valid start_date, not '#{start_date}')"
     end
     begin
       @end_date = Date.parse(end_date)
     rescue StandardError
-      raise Exception, "hilton.rb needs a valid end_date, not '#{end_date}')"
+      raise Site::ParseError, "hilton.rb needs a valid end_date, not '#{end_date}')"
     end
     @base_headers = {
       "content-type" => "application/json; charset=UTF-8",
@@ -83,7 +82,7 @@ class Hilton < Site::SimpleString
     end
     url = "https://m.hilton.io/graphql/customer?type=ShopMultiPropAvailQuery&operationName=shopMultiPropAvail_hotelSummaryOption&origin=HotelSearchResultsFragment&pod=android"
     headers = @base_headers.dup
-    headers["authorization"] = "Bearer " + bearer
+    headers["authorization"] = "Bearer #{beared}"
     headers["forter-mobile-uid"] = @device_id
     headers["x-hilton-anonymous"] = "true"
     headers["dx-platform"] = "mobile"
@@ -106,7 +105,6 @@ class Hilton < Site::SimpleString
           #          next unless rate["ratePlan"]["ratePlanName"] == "Flexible Rate"
           price = rate["ratePlan"]["rateAmountFmt"] || rate["rateAmount"]
           msg << "    <li>#{rate['ratePlan']['ratePlanName']} #{price}</li>"
-          price
         end
         msg << "  </ul>"
       end
@@ -128,5 +126,4 @@ end
 #     hotel_code: "XXXXXXX",
 #     device_id: "10a9c65bcd612341",
 #     app_id: "98bc7acd-1234-1234-1234-abcdef123456",
-#     every: 60*60,
-# ).update
+#     )

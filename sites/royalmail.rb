@@ -1,10 +1,9 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class RoyalMail < Site::SimpleString
   require "date"
 
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://www.royalmail.com/track-your-item?trackNumber=#{track_id}",
       every: every,
@@ -20,16 +19,16 @@ class RoyalMail < Site::SimpleString
     # Selects the content of the first table tag with the CSS class result-summary
     res = ""
     table = @parsed_content.css("table.sticky-enabled")
-    if table.size == 0
+    if table.size.empty?
       raise Site::ParseError, "Please verify the RoyalMail tracking ID #{@url}"
     end
 
-    table.css("tr")[1..-1].each do |tr|
+    table.css("tr")[1..].each do |tr|
       row = tr.css("td").map { |x| x.text.strip().gsub(/[\r\n\t]/, "").gsub(/  +/, " ") }
       begin
         time = DateTime.strptime("#{row[0]} #{row[1]}", "%d/%m/%y %H:%M")
         res << "#{time} : #{row[2]}<br/>\n"
-      rescue Exception
+      rescue StandardError
         res << row.join(" ")
       end
     end
@@ -41,5 +40,4 @@ end
 #
 # RoyalMail.new(
 #     track_id: "RN000000000GB",
-#     every: 60*60,
-# ).update
+#     )

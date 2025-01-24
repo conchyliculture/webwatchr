@@ -8,7 +8,7 @@ module Galaxus
       article = @parsed_content.css("article.pd-product")
       price = article.css("div.product-price").text
       product_text = article.css('h1.product-name span').map() { |x| x.text.strip }.join(' ')
-      return product_text + " " + price.strip() + " CHF"
+      return "#{product_text} #{price.strip()} CHF"
     end
   end
 
@@ -19,7 +19,7 @@ module Galaxus
         img = a.css('img[src^="http"]')[0]['src']
         site_base = URI.parse(@url)
         site_base = site_base.to_s.sub(site_base.request_uri, "")
-        url = site_base + "/" + a.css('a')[0]['href']
+        url = "#{site_base}/#{a.css('a')[0]['href']}"
         title = a.css('div.productName').map() { |x| x.text.strip }.join(' ')
         price = a.css('div span strong').text
         add_article({
@@ -36,6 +36,4 @@ end
 # Example:
 #
 #Galaxus::Product.new(
-#    url:  "",
-#    every: 2*60*60,
-#).update
+#    url:  "")

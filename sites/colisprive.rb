@@ -1,8 +1,7 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class Colisprive < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://www.colisprive.com/moncolis/pages/detailColis.aspx?numColis=#{track_id}",
       every: every,
@@ -13,7 +12,7 @@ class Colisprive < Site::SimpleString
   def get_content()
     res = []
     table = @parsed_content.css("table.tableHistoriqueColis tr").map { |row| row.css("td").map { |r| r.text.strip } }
-    if table.size == 0
+    if table.size.empty?
       raise Site::ParseError, "Please verify the ColisPrivé tracking ID"
     end
 
@@ -31,8 +30,4 @@ class Colisprive < Site::SimpleString
 end
 
 # Example:
-# Colisprive.new(
-#     track_id: "55600000000000000",
-#     every: 60*60,
-# ).update
-#
+# Colisprive.new(track_id: "55600000000000000")

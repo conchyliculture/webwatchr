@@ -1,11 +1,10 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class FedexApi < Site::SimpleString
   require "stringio"
   require "zlib"
 
-  def initialize(track_id:, client_id:, secret_key:, every:, comment: nil)
+  def initialize(track_id:, client_id:, secret_key:, every: 60 * 60, comment: nil)
     @client_id = client_id
     @secret_key = secret_key
     @track_id = track_id
@@ -57,9 +56,7 @@ class FedexApi < Site::SimpleString
       datetime = DateTime.strptime(date, "%Y-%m-%dT%H:%M:%S%z").to_s
       res += "- #{datetime} #{status} #{location}<br/>\n"
     end
-    puts res
-    exit
-    return res
+    pp res
   end
 
   def _get_bearer()
@@ -87,7 +84,7 @@ class Fedex < Site::SimpleString
   require "json"
   require "net/http"
 
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     raise Exception, "Fedex moved to Akamai, abandon hope this would work. Use FedexApi instead."
     super(
       url: "https://www.fedex.com/trackingCal/track",
@@ -133,5 +130,4 @@ end
 #
 # Fedex.new(
 #     track_id: "999999999",
-#     every: 60*60,
-# ).update
+# )

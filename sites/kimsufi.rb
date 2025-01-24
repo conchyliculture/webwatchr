@@ -41,11 +41,11 @@ class Kimsufi < Site::SimpleString
 
     "141bk1" => "BK-8T",
     "141bk2" => "BK-24T"
-  }
+  }.freeze
 
-  def initialize(machines:, every: 60 * 60)
-    url = "https://ws.ovh.com/dedicated/r2/ws.dispatcher/getAvailability2"
+  def initialize(machines:, every: 5 * 60)
     @machines = machines
+    super(url: "https://ws.ovh.com/dedicated/r2/ws.dispatcher/getAvailability2", every: every)
   end
 
   def get_content
@@ -54,7 +54,7 @@ class Kimsufi < Site::SimpleString
       machine = Kimsufi::TYPETONAME[m["reference"]]
       next unless @machines.include?(machine)
 
-      available_zones = (m["zones"] || []).select { |m| m["availability"] !~ /^(unavailable|unknown)$/ }.map { |z| z["zone"] }
+      available_zones = (m["zones"] || []).reject { |mm| mm["availability"] =~ /^(unavailable|unknown)$/ }.map { |z| z["zone"] }
       unless available_zones.empty?
         dispos[machine] = available_zones
       end
@@ -70,6 +70,4 @@ end
 # Example:
 #
 # Kimsufi.new(
-#     every: 5*60,
-#     machines: ["KS-1", "KS-2B"],
-# ).update
+#     machines: ["KS-1", "KS-2B"])

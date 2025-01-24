@@ -1,10 +1,8 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 require "json"
 
 class Cainiao < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://global.cainiao.com/global/detail.json?mailNos=#{track_id}",
       every: every,
@@ -25,7 +23,4 @@ end
 
 # Example:
 #
-# Cainiao.new(
-#     track_id: "RB000000000SG",
-#     every: 30*60,
-# ).update
+# Cainiao.new(track_id: "RB000000000SG")

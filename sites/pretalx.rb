@@ -11,6 +11,4 @@ class Pretalx < Site::SimpleString
   end
 end
 
-# Pretalx.new(
-#   every: 24 * 3600,
-# ).update
+# Pretalx.new()

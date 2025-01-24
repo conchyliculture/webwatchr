@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class Wix < Site::SimpleString
@@ -12,7 +11,7 @@ class Wix < Site::SimpleString
       j.each do |_k, v|
         if v["type"] =~ /text/i
           r = Nokogiri::HTML.parse(v["text"])
-          res += r.text + "\n"
+          res += "#{r.text}\n"
         end
       end
     end
@@ -24,6 +23,4 @@ end
 #
 #Wix.new(
 #    url: "http://a.website/made.with/wix.com"
-#    every: 2*60*60,
-#    test: __FILE__== $0,
-#).update
+#    )

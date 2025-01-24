@@ -4,7 +4,7 @@ require_relative "../lib/site"
 require "json"
 
 class Post4PX < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://track.4px.com/track/v2/front/listTrackV2",
       every: every,
@@ -23,11 +23,11 @@ class Post4PX < Site::SimpleString
     @parsed_content["data"][0]["tracks"].each do |t|
       m = "#{t['tkDateStr']}: #{t['tkDesc']}"
       unless t['tkLocation'].empty?
-        m << " (" + t['tkLocation'] + ")"
+        m << " (#{t['tkLocation']})"
       end
-      res << "<li>" + m + "</li>"
+      res << "<li>#{m}</li>"
     end
-    if res.size() > 0
+    if res.empty?
       res = ["<ul>"] << res << ["</ul>"]
       return res.join("\n")
     end
@@ -37,7 +37,4 @@ end
 
 # Example:
 #
-# Post4PX.new(
-#    track_id: "4PX0000000000000CN",
-#     every: 30*60,
-#).update
+# Post4PX.new(track_id: "4PX0000000000000CN")

@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 require "json"
 require "mechanize"
@@ -88,5 +86,4 @@ end
 #
 # PostCH.new(
 #     track_id: "99.60.00000.00000000",
-#     every: 30*60,
-# ).update
+#     )

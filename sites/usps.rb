@@ -1,9 +1,8 @@
-#!/usr/bin/ruby
 require "nokogiri"
 require_relative "../lib/site"
 
 class USPS < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     warn "This is most likely broken :("
 
     super(
@@ -38,9 +37,9 @@ class USPS < Site::SimpleString
 end
 
 class USPSAPI < Site::SimpleString
-  def initialize(track_id:, every:, username: nil, comment: nil)
+  def initialize(track_id:, every: 60 * 60, username: nil, comment: nil)
     unless username
-      raise Exception, 'USPS requires you to register to their Web API at https://registration.shippingapis.com/ for fetching tracking information.'
+      raise StandardError, 'USPS requires you to register to their Web API at https://registration.shippingapis.com/ for fetching tracking information.'
     end
 
     @username = username
@@ -63,7 +62,7 @@ class USPSAPI < Site::SimpleString
     res = [root.css("TrackResponse TrackSummary")]
     res << "<ul>"
     root.css("TrackResponse TrackInfo TrackDetail").each do |deet|
-      res << "<li>" + deet.text + "</li>"
+      res << "<li>#{deet.text}</li>"
     end
     res << "</ul>"
     return res.join("\n")
@@ -76,11 +75,10 @@ end
 #    username: "111OOOOO2222",
 #    track_id: "UE000000000US",
 #    every: 60*60,
-#).update()
+#()
 #
 #
 # This is most likely broken, use USPSAPI class above instead
 # USPS.new(
 #     track_id: "LZ000000000US",
-#     every: 60*60,
-# ).update
+#)

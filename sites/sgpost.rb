@@ -1,8 +1,7 @@
-#!/usr/bin/ruby
 require_relative "../lib/site"
 
 class PostSG < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "http://www.singpost.com/track-items",
       post_data: {
@@ -22,7 +21,7 @@ class PostSG < Site::SimpleString
   def get_content()
     res = []
     l = @parsed_content.css("div.tracking-info-header div")
-    if l.size == 0
+    if l.empty?
       raise Site::ParseError, "Please verify the PostSG tracking ID"
     end
 
@@ -51,5 +50,4 @@ end
 #
 # PostSG.new(
 #     track_id: "RB000000000SG",
-#     every: 60*60,
-# ).update
+#     )

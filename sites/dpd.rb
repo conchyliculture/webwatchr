@@ -1,11 +1,9 @@
-#!/usr/bin/ruby
-
 require_relative "../lib/site"
 
 require "json"
 
 class DPD < Site::SimpleString
-  def initialize(track_id:, every:, comment: nil)
+  def initialize(track_id:, every: 60 * 60, comment: nil)
     super(
       url: "https://tracking.dpd.de/rest/plc/en_US/#{track_id}",
       every: every,
@@ -39,6 +37,4 @@ end
 # Example:
 #
 # DPD.new(
-#     track_id: "000000000000",
-#     every: 30*60,
-# ).update
+#     track_id: "000000000000")
