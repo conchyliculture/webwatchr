@@ -25,14 +25,15 @@ class Quickpac < Site::SimpleString
   end
 
   def get_content()
-    res = []
+    res = ["<ul>"]
     if not @parsed_content or not @parsed_content["Protocol"]
       raise Site::ParseError, "Nothing found for #{@track_id}. Check it is correct."
     end
 
     @parsed_content["Protocol"].each do |p|
-      res << "#{p['Time']}: #{p['StatusText']}}"
+      res << "<li>#{p['Time']}: #{p['StatusText']}}</li>"
     end
+    res << "</ul>"
 
     return res.join("\n")
   end
