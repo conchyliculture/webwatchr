@@ -70,7 +70,7 @@ class PostCH < Site::SimpleString
   end
 
   def get_content()
-    @parsed_content.each do |event|
+    @parsed_content.sort_by { |e| DateTime.strptime(e['timestamp']) }.reverse.each do |event|
       msg = "#{event['timestamp']}: #{event['description']}"
       if event['city'] != ""
         msg += " (#{event['city']} #{event['zip']})"
@@ -85,5 +85,5 @@ end
 # Example:
 #
 # PostCH.new(
-#     track_id: "99.60.00000.00000000",
-#     )
+#     track_id: "99.10.100000.100000003",
+# )
