@@ -31,7 +31,7 @@ class Quickpac < Site::SimpleString
     end
 
     @parsed_content["Protocol"].each do |p|
-      res << "<li>#{p['Time']}: #{p['StatusText']}}</li>"
+      res << "<li>#{p['Time']}: #{p['StatusText']}</li>"
     end
     res << "</ul>"
 
