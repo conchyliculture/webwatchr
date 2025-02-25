@@ -15,7 +15,7 @@ class PostCH < Site::SimpleString
     @mechanize.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
   end
 
-  def pull_things()
+  def _pull_things()
     # First we need an anonymous userId
     resp = @mechanize.get("https://service.post.ch/ekp-web/api/user", nil, nil, { 'accept' => 'application/json' })
     user_id = JSON.parse(resp.body)['userIdentifier']
@@ -70,7 +70,11 @@ class PostCH < Site::SimpleString
   end
 
   def get_content()
-    @parsed_content.sort_by { |e| DateTime.strptime(e['timestamp']) }.reverse.each do |event|
+    evs = JSON.parse(@html_content)['events'].map { |e|
+      e['timestamp'] = DateTime.strptime("#{e['date']} #{e['time']}", "%d.%m.%Y %H:%M:%S")
+      e
+    }
+    evs.sort_by { |e| e['timestamp'] }.reverse.each do |event|
       msg = "#{event['timestamp']}: #{event['description']}"
       if event['city'] != ""
         msg += " (#{event['city']} #{event['zip']})"
