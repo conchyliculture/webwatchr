@@ -173,8 +173,7 @@ class Webwatchr
     sites_to_run.each do |site_obj|
       logger.info "Running #{site_obj.name}"
       Timeout.timeout(config["site_timeout"]) {
-        site_obj.test = config[:test]
-        site_obj.update()
+        site_obj.update(test: config[:test])
       }
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
       logger.warn "Failed pulling #{site}: #{e.message}"

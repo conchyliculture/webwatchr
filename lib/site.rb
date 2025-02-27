@@ -253,7 +253,8 @@ class Site
     return @content
   end
 
-  def update()
+  def update(test: false)
+    @test = test
     do_stuff()
   rescue Site::RedirectError
     msg = "Error parsing page #{@url}, too many redirects"
@@ -316,7 +317,7 @@ class Site
       else
         logger.info "Nothing new for #{@url}"
       end
-      update_state_file({})
+      update_state_file({}) unless @test
     else
       @did_stuff = true
       logger.info "Too soon to update #{@url}"
