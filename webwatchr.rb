@@ -162,17 +162,15 @@ class Webwatchr
       }
       if sites_to_run.empty?
         puts "Can't find Site #{config[:site]}. The known specified sites to run in todo.rb are:\n"
-        TODO::SITES_TO_WATCH.each do |s|
-          puts "	- #{s.class}"
-        end
+        puts TODO::SITES_TO_WATCH.map { |s| s.class.to_s }.sort.uniq.map { |s| "	- #{s}\n" }
       end
     when :normal
       sites_to_run = TODO::SITES_TO_WATCH
+      if sites_to_run.empty?
+        warn "Didn't find any site to parse. edit todo.rb"
+      end
     else
       raise StandardError, "Unknown WebWatchr mode: #{config[:mode]}"
-    end
-    if sites_to_run.empty?
-      warn "Didn't find any site to parse. edit todo.rb"
     end
 
     sites_to_run.each do |site_obj|
@@ -251,7 +249,7 @@ class Webwatchr
     unless File.exist?(log_dir)
       FileUtils.mkdir_p(log_dir)
     end
-    log_out_file = if (config[:verbose] || config[:test])
+    log_out_file = if config[:verbose] || config[:test]
                      $stdout
                    else
                      File.join(log_dir, 'webwatchr.log')
