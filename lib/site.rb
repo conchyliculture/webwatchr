@@ -32,7 +32,7 @@ class Site
     @extra_headers = {}
     @alert_only = alert_only
     @http_ver = http_ver
-    @rand_sleep = rand_sleep
+    @rand_sleep = rand(rand_sleep).floor
 
     md5 = Digest::MD5.hexdigest(url)
     @state_file_name ||= "last-#{URI.parse(url).hostname}-#{md5}"
