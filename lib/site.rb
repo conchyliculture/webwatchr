@@ -245,7 +245,7 @@ class Site
   end
 
   def should_update?(prevous_time)
-    return @config[:force] || Time.now().to_i >= prevous_time + @wait
+    return Time.now().to_i >= prevous_time + @wait
   end
 
   def get_new(_previous_content = nil)

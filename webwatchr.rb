@@ -157,12 +157,17 @@ class Webwatchr
 
     case config[:mode]
     when :single
-      sites_to_run = SITES_TO_WATCH.select { |s|
-        rb_file = File.basename(Object.const_source_location(s.class.name)[0])
-        rb_file == config[:site]
+      sites_to_run = TODO::SITES_TO_WATCH.select { |s|
+        s.class.to_s == config[:site]
       }
+      if sites_to_run.empty?
+        puts "Can't find Site #{config[:site]}. The known specified sites to run in todo.rb are:\n"
+        TODO::SITES_TO_WATCH.each do |s|
+          puts "	- #{s.class}"
+        end
+      end
     when :normal
-      sites_to_run = SITES_TO_WATCH
+      sites_to_run = TODO::SITES_TO_WATCH
     else
       raise StandardError, "Unknown WebWatchr mode: #{config[:mode]}"
     end
@@ -195,7 +200,7 @@ class Webwatchr
   end
 
   def main()
-    options = { config: "config.json", mode: :normal , test: false, force: false}
+    options = { config: "config.json", mode: :normal, test: false }
     OptionParser.new { |o|
       o.banner = """WebWatchr is a script to poll websites and alert on changes.
   Exemple uses:
@@ -205,7 +210,7 @@ class Webwatchr
       ruby #{__FILE__} -s site.rb
 
   Usage: ruby #{__FILE__} """
-      o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of a script in sites-enabled.") do |v|
+      o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of the class for that site.") do |v|
         options[:site] = v
         options[:mode] = :single
       end
@@ -214,9 +219,6 @@ class Webwatchr
       end
       o.on("-v", "--verbose", "Be verbose (output to STDOUT instead of logfile") do
         options[:verbose] = true
-      end
-      o.on("-f", "--force", "Ignore waiting time between updates") do
-        options[:force] = true
       end
       o.on("-t", "--test", "Check website and return what we've parsed") do
         options[:test] = true
@@ -239,7 +241,6 @@ class Webwatchr
     config[:verbose] = options[:verbose]
     config[:mode] = options[:mode]
     config[:site] = options[:site]
-    config[:force] = options[:force]
     config[:test] = options[:test]
 
     Config.set_config(config)
@@ -250,7 +251,7 @@ class Webwatchr
     unless File.exist?(log_dir)
       FileUtils.mkdir_p(log_dir)
     end
-    log_out_file = if config[:verbose]
+    log_out_file = if (config[:verbose] || config[:test])
                      $stdout
                    else
                      File.join(log_dir, 'webwatchr.log')
