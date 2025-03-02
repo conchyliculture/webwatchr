@@ -7,6 +7,4 @@ config.json
 TODO
 *.log
 *.swp
-sites-enabled/*
-!sites-enabled/.empty
 lib/telegram
