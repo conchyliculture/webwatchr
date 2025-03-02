@@ -299,8 +299,12 @@ class Site
     end
     previous_content = previous_state["content"]
     if should_update?(previous_state["time"]) or @test
-      logger.info "Time to update #{@url}" unless @test
-      sleep(@rand_sleep) if @rand_sleep > 0 and not @test
+      if @rand_sleep > 0 and not @test
+        logger.info "Time to update #{@url} (sleeping #{@rand_sleep} sec)"
+        sleep(@rand_sleep)
+      else
+        logger.info "Time to update #{@url}"
+      end
       pull_things()
       new_stuff = get_new(previous_content)
       @did_stuff = true
