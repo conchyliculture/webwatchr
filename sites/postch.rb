@@ -82,7 +82,6 @@ class PostCH < Site::SimpleString
       @events << msg
     end
 
-    pp @events
     return @events.join("\n")
   end
 end
