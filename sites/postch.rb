@@ -74,7 +74,7 @@ class PostCH < Site::SimpleString
       e['timestamp'] = DateTime.strptime(e['timestamp'], "%Y-%m-%dT%H:%M:%S+01:00")
       e
     }
-    evs.sort_by { |e| e['timestamp'] }.reverse.each do |event|
+    evs.sort { |a, b| a['timestamp'] == b['timestamp'] ? a['description'] <=> b['description'] : a['timestamp'] <=> b['timestamp'] }.reverse.each do |event|
       msg = "#{event['timestamp']}: #{event['description']}"
       if event['city'] and event['city'] != ""
         msg += " (#{event['city']} #{event['zip']})"
