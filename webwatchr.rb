@@ -179,7 +179,7 @@ class Webwatchr
         site_obj.update(test: config[:test])
       }
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
-      logger.warn "Failed pulling #{site}: #{e.message}"
+      logger.warn "Failed pulling #{site_obj}: #{e.message}"
     # Do nothing, try later
     rescue SystemExit => e
       msg = "User requested we quit while updating #{site_obj}\n"
