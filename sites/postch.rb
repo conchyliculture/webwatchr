@@ -13,6 +13,27 @@ class PostCH < Site::SimpleString
     @events = []
     @mechanize = Mechanize.new()
     @mechanize.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
+    @text_messages = {}
+  end
+
+  def code_to_message(code)
+    @text_messages = JSON.parse(@mechanize.get("https://service.post.ch/ekp-web/core/rest/translations/en/shipment-text-messages").body)['shipment-text--'] if @text_messages == {}
+    @text_messages.each do |k, v| # W: Unused block argument - `v`. If it's necessary, use `_` or `_v` as an argument …
+      ccode = code.split('.')
+      kk = k.split('.')
+      0.upto(ccode.size()) do |i|
+        c = ccode[i]
+        e = kk[i]
+        if c.nil? and i == kk.size - 1
+          return v
+        end
+        next if e == "*"
+        next if c == e
+
+        break
+      end
+    end
+    return code
   end
 
   def pull_things()
@@ -40,21 +61,12 @@ class PostCH < Site::SimpleString
 
     resp = @mechanize.get("https://service.post.ch/ekp-web/api/shipment/id/#{identity}/events", nil, nil, headers)
 
-    @text_messages = JSON.parse(@mechanize.get("https://service.post.ch/ekp-web/core/rest/translations/en/shipment-text-messages").body)
-
     json_content = JSON.parse(resp.body)
     @parsed_content = []
 
     json_content.each do |event|
-      @text_messages["shipment-text--"].each_key do |tm|
-        ttmm = tm.split(".")
-        ccode = event["eventCode"].split(".")
-        next unless ccode[0] == ttmm[0] and ccode[3] == ttmm[3]
-
-        event['description'] = @text_messages["shipment-text--"][tm]
-        @parsed_content << event
-        break
-      end
+      event['description'] = code_to_message(event['eventCode'])
+      @parsed_content << event
     end
   end
 
