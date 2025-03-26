@@ -89,7 +89,7 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.parse_noko(html).css("title").text == "test" }
     assert { c.state_file().end_with?("last-localhost-2182cd5c8685baed48f692ed72d7a89f") }
     c.update()
-    expected_error = "DEBUG -- : Alerting new stuff"
+    expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     first_pass_content = Site::HTML_HEADER + content_html
@@ -102,7 +102,7 @@ class TestSimpleStringSite < BaseWebrickTest
     end
     c = TestStringSite.new(url: url, comment: "lol")
     c.update()
-    expected_error = "INFO -- : Too soon to update #{url}"
+    expected_error = "INFO -- TestSimpleStringSite::TestStringSite: Too soon to update #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     assert { c.content.nil? }
@@ -111,7 +111,7 @@ class TestSimpleStringSite < BaseWebrickTest
 
     c.wait = 0
     c.update()
-    expected_error = "DEBUG -- : Alerting new stuff"
+    expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     assert { c.content == "#{content_html} new ! " }
@@ -166,7 +166,7 @@ class TestArraySites < BaseWebrickTest
 
     # First full run, Get 2 things
     c.update()
-    expected_error = "DEBUG -- : Alerting new stuff"
+    expected_error = "DEBUG -- TestArraySites::TestArraySite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1].strip()
     assert { last_error.end_with?(expected_error) }
     expected_html = Site::HTML_HEADER.dup + [
@@ -194,7 +194,7 @@ class TestArraySites < BaseWebrickTest
     c = TestArraySite.new(url: url)
     # Second run don't d anything because we shouldn't rerun
     c.update()
-    expected_error = "INFO -- : Too soon to update #{url}"
+    expected_error = "INFO -- TestArraySites::TestArraySite: Too soon to update #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     assert { !called }
@@ -208,7 +208,7 @@ class TestArraySites < BaseWebrickTest
     c.wait = 0
     # This time we set new things, and wait is 0 so we are good to go
     c.update()
-    expected_error = "DEBUG -- : Alerting new stuff"
+    expected_error = "DEBUG -- TestArraySites::TestArraySite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     expected_html = Site::HTML_HEADER.dup + [
@@ -245,7 +245,7 @@ class TestArraySites < BaseWebrickTest
     c.wait = 0
     # Now, we don't call the alert Proc because we have no new things
     c.update()
-    expected_error = "INFO -- : Nothing new for #{url}"
+    expected_error = "INFO -- TestArraySites::TestArraySite: Nothing new for #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     expected_html = Site::HTML_HEADER.dup + [
