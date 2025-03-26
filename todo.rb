@@ -14,3 +14,9 @@ module TODO
     #  )
   ]
 end
+
+if __FILE__ == $0
+  TODO::SITES_TO_WATCH.each do |site|
+    site.update(test: true)
+  end
+end
