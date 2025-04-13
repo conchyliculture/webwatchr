@@ -1,7 +1,7 @@
 require_relative "../lib/site"
 
 class Songkick < Site::Articles
-  def initialize(*)
+  def initialize(**kwargs)
     super
     unless @url.end_with?("/calendar")
       logger.warn("Songkick should end with /calendar to get all concerts")
@@ -9,13 +9,13 @@ class Songkick < Site::Articles
   end
 
   def get_content()
-    @parsed_content.css('ul.event-listings li').each do |event|
-      next if event["class"] =~ /with-date/
-
-      date = event.css("time")[0]["datetime"].gsub("T", " ")
-      url = "https://www.songkick.com#{event.css('p a')[0]['href']}"
-      artist = event.css("p a span").text.strip
-      location = event.css('p.location').text.gsub(/\s+/, " ")
+    @parsed_content.css('ol.event-listings li').each do |event|
+      j = JSON.parse(event.css('script')[0].text)[0]
+      date = j["startDate"]
+      url = j["url"]
+      artist = j["name"]
+      loc = j["location"]
+      location = "#{loc['name']} #{loc['address']['addressLocality']}, #{loc['address']['addressCountry']}"
       add_article({
                     "id" => url,
                     "url" => url,
