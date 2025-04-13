@@ -9,7 +9,8 @@ class Songkick < Site::Articles
   end
 
   def get_content()
-    @parsed_content.css('ol.event-listings li').each do |event|
+    events = @parsed_content.css('ol.event-listings')[0]
+    events.css('li').each do |event|
       j = JSON.parse(event.css('script')[0].text)[0]
       date = j["startDate"]
       url = j["url"]
