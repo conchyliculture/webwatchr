@@ -392,7 +392,7 @@ class Site
       return nil unless @content
 
       message_html = Site::HTML_HEADER.dup
-      message_html += @content.message
+      message_html += @content.to_html
       return message_html
     end
 
