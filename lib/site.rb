@@ -381,11 +381,12 @@ class Site
 
     def get_new(previous_content = nil)
       # Is a ResultObject
-      @content = get_content()
-      raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class < ResultObject
+      if @content
+        raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class < ResultObject
+      else
+        @content = get_content()
+      end
       return nil if @content == previous_content or not @content
-
-      return @content
     end
 
     def generate_html_content()
