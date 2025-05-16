@@ -397,7 +397,7 @@ class Site
     end
 
     def generate_telegram_message_pieces()
-      return [@content]
+      return [@content.to_telegram]
     end
   end
 
