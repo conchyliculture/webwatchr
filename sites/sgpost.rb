@@ -39,7 +39,7 @@ class PostSG < Site::SimpleString
     end
 
     unless res.empty?
-      return res.join("<br/>\n\n\n\n")
+      return ResultObject.new(res.join("<br/>\n\n\n\n"))
     end
 
     return nil

@@ -15,7 +15,7 @@ class Wix < Site::SimpleString
         end
       end
     end
-    return res
+    return ResultObject.new(res)
   end
 end
 

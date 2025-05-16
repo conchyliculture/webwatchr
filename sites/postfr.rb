@@ -17,7 +17,7 @@ class PostFR < Site::SimpleString
     j[0]['shipment']['event'].each do |e|
       res << "#{e['date']}: #{e['label']} (country: #{e['country']})"
     end
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

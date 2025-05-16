@@ -30,7 +30,7 @@ class DPD < Site::SimpleString
       raise Site::ParseError, "Please verify the DPD tracking ID"
     end
     res << ["</ul>"]
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

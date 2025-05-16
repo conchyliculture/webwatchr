@@ -109,7 +109,7 @@ class Fedex < Site::SimpleString
       datetime = DateTime.strptime(date + "T" + time + tz, "%Y-%m-%dT%H:%M:%S%z").to_s
       res += "- #{datetime} #{status} #{location}<br/>\n"
     end
-    return res
+    return ResultObject.new(res)
   end
 
   def self.make_post_data(fedex_id)

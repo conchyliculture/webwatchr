@@ -51,7 +51,7 @@ class YunExpress < Site::SimpleString
       res << "<li>#{e['CreatedOn']}: #{e['ProcessContent']} (#{e['ProcessLocation']})</li>"
     end
 
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

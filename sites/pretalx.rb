@@ -7,7 +7,7 @@ class Pretalx < Site::SimpleString
   end
 
   def get_content
-    @parsed_content.css("ul.simple li").map(&:text).select { |x| x =~ /(security|vulnerability|cve)/i }.join("\n")
+    return ResultObject.new(@parsed_content.css("ul.simple li").map(&:text).select { |x| x =~ /(security|vulnerability|cve)/i }.join("\n"))
   end
 end
 

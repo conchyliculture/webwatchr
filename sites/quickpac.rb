@@ -35,7 +35,7 @@ class Quickpac < Site::SimpleString
     end
     res << "</ul>"
 
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

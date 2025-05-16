@@ -10,7 +10,7 @@ class LenovoOVP < Site::SimpleString
       res += "<li><a href='#{@url}'>#{name}</a>: #{ship_status} #{ship_extra}</li>\n"
     end
     res += "</ul>\n"
-    return res
+    return ResultObject.new(res)
   end
 end
 

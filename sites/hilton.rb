@@ -110,7 +110,7 @@ class Hilton < Site::SimpleString
       end
       msg << "</ul>"
     end
-    return msg.join("\n")
+    return ResultObject.new(msg.join("\n"))
   end
 end
 

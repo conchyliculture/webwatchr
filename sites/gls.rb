@@ -22,6 +22,7 @@ class GLS < Site::SimpleString
     end.join("</li><li>")
 
     res << "</li></ul>"
+    return ResultObject.new(res)
   end
 end
 

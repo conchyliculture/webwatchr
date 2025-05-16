@@ -39,7 +39,7 @@ class Planzer < Site::SimpleString
       res << "#{p['eventDate']}: #{p['description']['english']}"
     end
 
-    return res.join("\n\n")
+    return ResultObject.new(res.join("\n\n"))
   end
 end
 

@@ -17,7 +17,7 @@ class Cainiao < Site::SimpleString
       res << "<li>#{jj['timeStr']}: #{jj['standerdDesc']}</li>"
     end
     res << ["</ul>"]
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

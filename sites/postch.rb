@@ -94,7 +94,7 @@ class PostCH < Site::SimpleString
       @events << msg
     end
 
-    return @events.join("\n")
+    return ResultObject.new(@events.join("\n"))
   end
 end
 

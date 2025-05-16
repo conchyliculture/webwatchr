@@ -25,7 +25,7 @@ class PostDE < Site::SimpleString
     table.each do |r|
       res << r[1].to_s
     end
-    return res.join("")
+    return ResultObject.new(res.join(""))
   end
 end
 

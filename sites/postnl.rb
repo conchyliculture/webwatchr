@@ -20,7 +20,7 @@ class PostNL < Site::SimpleString
     table.each do |r|
       res << "#{r[0]} : #{r[1]}<br/>\n"
     end
-    return res.join("")
+    return ResultObject.new(res.join(""))
   end
 end
 

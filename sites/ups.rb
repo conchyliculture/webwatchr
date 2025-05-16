@@ -65,7 +65,7 @@ class UPS < Site::SimpleString
       res << "<li>#{proper_time(e['date'], e['time'])}: #{e['activityScan']} (#{e['location']})</li>"
     end
     res << "</ul>"
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

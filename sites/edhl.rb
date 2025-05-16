@@ -31,7 +31,7 @@ class EDHL < Site::SimpleString
       end
     end
 
-    return res.join("<br/>\n")
+    return ResultObject.new(res.join("<br/>\n"))
   end
 end
 

@@ -25,7 +25,7 @@ class Colisprive < Site::SimpleString
       end
       res << "<br/>\n"
     end
-    return res.join("")
+    return ResultObject.new(res.join(""))
   end
 end
 
