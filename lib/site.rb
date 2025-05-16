@@ -382,7 +382,7 @@ class Site
     def get_new(previous_content = nil)
       # Is a ResultObject
       @content = get_content()
-      raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class == ResultObject
+      raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class < ResultObject
       return nil if @content == previous_content or not @content
 
       return @content
