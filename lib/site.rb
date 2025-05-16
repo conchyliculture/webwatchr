@@ -386,7 +386,9 @@ class Site
       else
         @content = get_content()
       end
-      return nil if @content == previous_content or not @content
+      return nil if @content == previous_content
+      
+      return @content
     end
 
     def generate_html_content()
