@@ -199,7 +199,7 @@ class Site
   def load_state_file()
     if File.exist?(@state_file)
       begin
-        return JSON.parse(File.read(@state_file))
+        return JSON.parse(File.read(@state_file), creater_additions: true)
       rescue JSON::ParserError
       end
     end
@@ -328,32 +328,61 @@ class Site
     end
   end
 
-  def get_html_content()
+  def generate_html_content()
     message_html = Site::HTML_HEADER.dup
     message_html += @content
     return message_html
   end
 
   class SimpleString < Site
-    def get_new(previous_content = nil)
-      new_stuff = nil
-      @content = get_content()
-      unless @content
-        return nil
+    class ResultObject
+      attr_accessor :message
+
+      def initialize(message = '')
+        @message = message
       end
 
-      if @content != previous_content
-        new_stuff = @content
+      def to_telegram()
+        return @message
       end
-      return new_stuff
+
+      def to_s
+        return @message
+      end
+
+      def to_html()
+        return @message
+      end
+
+      def to_json(*args)
+        {
+          JSON.create_id => self.class.name,
+          'message' => @message
+        }.to_json(*args)
+      end
+
+      def self.json_create(object)
+        new(*object['message'])
+      end
+
+      def ==(other)
+        self.class == other.class &&
+          @message == other.message
+      end
     end
 
-    def get_html_content()
-      return nil unless @content
+    def get_new(previous_content = nil)
+      # Is a ResultObject
+      @content = get_content()
+      raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class == ResultObject
+      return nil if @content == previous_content or not @content
 
-      message_html = Site::HTML_HEADER.dup
-      message_html += @content
-      return message_html
+      return @content
+    end
+
+    def generate_html_content()
+      return nil unless @content
+      super
     end
   end
 
@@ -361,7 +390,7 @@ class Site
     begin
       require "diffy"
 
-      def get_html_content()
+      def generate_html_content()
         diff_html = Site::HTML_HEADER.dup
         diff_html += "<head><style>"
         diff_html += Diffy::CSS
@@ -376,7 +405,7 @@ class Site
       end
     rescue LoadError
       require "test/unit/diff"
-      def get_html_content()
+      def generate_html_content()
         diff_html = Site::HTML_HEADER.dup
         diff_html += @diffed.to_s
         diff_html += "</body></html>"
@@ -470,7 +499,7 @@ class Site
       save_state_file(state)
     end
 
-    def get_html_content()
+    def generate_html_content()
       message_html = Site::HTML_HEADER.dup
       message_html << "<ul style='list-style-type: none;'>\n"
       @content.each do |item|

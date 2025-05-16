@@ -61,7 +61,7 @@ end
 class TestSimpleStringSite < BaseWebrickTest
   class TestStringSite < Site::SimpleString
     def get_content()
-      @parsed_content.css("div.content").text
+      return ResultObject.new(@parsed_content.css("div.content").text)
     end
   end
 
@@ -93,7 +93,7 @@ class TestSimpleStringSite < BaseWebrickTest
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     first_pass_content = Site::HTML_HEADER + content_html
-    assert { c.content == content_html }
+    assert { c.content.to_html == content_html }
     assert { c.get_html_content == first_pass_content }
     assert { result == { site: c } }
 
@@ -114,13 +114,13 @@ class TestSimpleStringSite < BaseWebrickTest
     expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
-    assert { c.content == "#{content_html} new ! " }
+    assert { c.content.to_html == "#{content_html} new ! " }
     assert { c.get_html_content == "#{first_pass_content} new ! " }
     assert { c.name == url }
-    result_last = JSON.parse(File.read(c.state_file))
+    result_last = JSON.parse(File.read(c.state_file), create_additions: true)
     result_last.delete("time")
     assert { result_last["url"] == url }
-    assert { result_last["content"] == "#{content_html} new ! " }
+    assert { result_last["content"].message == "#{content_html} new ! " }
     assert { result_last["wait"] == 0 }
   end
 end

@@ -4,14 +4,20 @@ module TODO
     require path
   end
 
+  class DummySite < Site::SimpleString
+    def initialize()
+      super(url: "https://www.toto.fr")
+    end
+    def get_content
+      return ResultObject.new("coin")
+    end
+  end
+
   # Add instances here
   SITES_TO_WATCH = [
     # Example:
     #
-    #  Bsky.new(
-    #    account: "swiftonsecurity.com",
-    #    every: 30 * 60
-    #  )
+    DummySite.new()
   ]
 end
 
