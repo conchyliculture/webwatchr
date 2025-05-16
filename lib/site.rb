@@ -543,7 +543,7 @@ class Site
 
     def generate_telegram_message_pieces()
       msg_pieces = []
-      site.content.each do |item|
+      @content.each do |item|
         line = item["title"]
         if item["url"]
           if line
