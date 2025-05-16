@@ -44,7 +44,7 @@ class Webwatchr
 
     subject = site.get_email_subject() || "Update from #{site.class}"
 
-    formatted_content = site.get_html_content()
+    formatted_content = site.generate_html_content()
 
     msgstr = <<~END_OF_MESSAGE
       From: #{from}
