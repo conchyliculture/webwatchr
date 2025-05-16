@@ -94,7 +94,7 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { last_error.end_with?(expected_error) }
     first_pass_content = Site::HTML_HEADER + content_html
     assert { c.content.to_html == content_html }
-    assert { c.get_html_content == first_pass_content }
+    assert { c.generate_html_content == first_pass_content }
     assert { result == { site: c } }
 
     File.open(File.join(TEST_CONFIG[:wwwroot], TEST_CONFIG[:content_is_string_file]), "w+") do |f|
@@ -106,7 +106,7 @@ class TestSimpleStringSite < BaseWebrickTest
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     assert { c.content.nil? }
-    assert { c.get_html_content.nil? }
+    assert { c.generate_html_content.nil? }
     assert { c.name == url }
 
     c.wait = 0
@@ -115,7 +115,7 @@ class TestSimpleStringSite < BaseWebrickTest
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     assert { c.content.to_html == "#{content_html} new ! " }
-    assert { c.get_html_content == "#{first_pass_content} new ! " }
+    assert { c.generate_html_content == "#{first_pass_content} new ! " }
     assert { c.name == url }
     result_last = JSON.parse(File.read(c.state_file), create_additions: true)
     result_last.delete("time")
@@ -182,7 +182,7 @@ class TestArraySites < BaseWebrickTest
         { "id" => "fi", "url" => "fi", "title" => "fu" }
       ]
     }
-    assert { c.get_html_content == expected_html }
+    assert { c.generate_html_content == expected_html }
     assert { called }
 
     result = ""
@@ -220,7 +220,7 @@ class TestArraySites < BaseWebrickTest
 
     c.content.each { |x| x.delete('_timestamp') }
     assert { c.content == [{ "id" => "new!", "url" => "new!", "title" => "new" }] }
-    assert { c.get_html_content == expected_html }
+    assert { c.generate_html_content == expected_html }
     expected_last = { "url" => "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_array_file]}",
                       "previous_content" => [{ "id" => "lol", "url" => "lol", "title" => "lilo" },
                                              { "id" => "fi", "url" => "fi", "title" => "fu" }],

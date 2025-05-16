@@ -71,17 +71,31 @@ class Site
     return fetch_url1(url, max_redir: max_redir)
   end
 
+  # Helper methonds for generating HTML emails
+
   def get_email_url()
     return @url
   end
 
   def get_email_subject()
-    # Generates the subject of the email to be sent
     subject = "Update from #{self.class}"
     if @comment
       subject += " (#{@comment})"
     end
     return subject
+  end
+
+  def generate_html_content()
+    return nil unless @content
+
+    message_html = Site::HTML_HEADER.dup
+    message_html += @content
+    return message_html
+  end
+
+  # Helper methods to generate Telegram content
+  def generate_telegram_message_pieces()
+    return [@content]
   end
 
   def fetch_url2(url)
@@ -328,12 +342,6 @@ class Site
     end
   end
 
-  def generate_html_content()
-    message_html = Site::HTML_HEADER.dup
-    message_html += @content
-    return message_html
-  end
-
   class SimpleString < Site
     class ResultObject
       attr_accessor :message
@@ -382,7 +390,14 @@ class Site
 
     def generate_html_content()
       return nil unless @content
-      super
+
+      message_html = Site::HTML_HEADER.dup
+      message_html += @content.message
+      return message_html
+    end
+
+    def generate_telegram_message_pieces()
+      return [@content]
     end
   end
 
@@ -521,6 +536,24 @@ class Site
       end
       message_html += "</ul>"
       return message_html
+    end
+
+    def generate_telegram_message_pieces()
+      msg_pieces = []
+      site.content.each do |item|
+        line = item["title"]
+        if item["url"]
+          if line
+            line += ": #{item['url']}"
+          else
+            line = item["url"]
+          end
+
+          line += ": #{item['url']}"
+        end
+        msg_pieces << line
+      end
+      return msg_pieces
     end
   end
 end

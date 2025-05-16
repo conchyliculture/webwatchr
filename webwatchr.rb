@@ -68,32 +68,6 @@ class Webwatchr
     end
   end
 
-  def make_telegram_message_pieces(site:)
-    unless site
-      raise StandardError, "Need to pass a Site instance"
-    end
-
-    msg_pieces = []
-    if site.content.instance_of?(Array)
-      site.content.each do |item|
-        line = item["title"]
-        if item["url"]
-          if line
-            line += ": #{item['url']}"
-          else
-            line = item["url"]
-          end
-
-          line += ": #{item['url']}"
-        end
-        msg_pieces << line
-      end
-    else
-      msg_pieces << site.content
-    end
-    return msg_pieces
-  end
-
   def make_alerts(config)
     res_procs = {}
     config["default_alert"].each do |a|
@@ -117,7 +91,7 @@ class Webwatchr
             msg_pieces = [title]
             msg_pieces << args[:site].get_email_url()
 
-            msg_pieces += make_telegram_message_pieces(site: args[:site])
+            msg_pieces += args[:site].generate_telegram_message_pieces()
             msg_pieces = msg_pieces.map { |x| x.size > 4096 ? x.split("\n") : x }.flatten()
             split_msg = msg_pieces.each_with_object(['']) { |str, sum|
               sum.last.length + str.length > 4000 ? sum << "#{str}\n" : sum.last << "#{str}\n"
