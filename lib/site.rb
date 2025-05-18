@@ -213,7 +213,7 @@ class Site
   def load_state_file()
     if File.exist?(@state_file)
       begin
-        return JSON.parse(File.read(@state_file), creater_additions: true)
+        return JSON.parse(File.read(@state_file), create_additions: true)
       rescue JSON::ParserError
       end
     end
