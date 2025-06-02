@@ -106,6 +106,7 @@ class BskyAccount < BskyBase
   def get_content
     @parsed_content['feed'].each do |p|
       post = p['post']
+      text = post['record']['text']
       next if @regex and (text !~ @regex)
       next if !@reposts and (post['author']['handle'] != @account)
 
