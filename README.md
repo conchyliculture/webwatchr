@@ -13,18 +13,13 @@ No bullshit gem from hell.
 ```shell
 apt-get install ruby ruby-mechanize ruby-curb ruby-nokogiri 
 
-# if you want fancier Diffs, for DiffString objects, apt install ruby-diffy
+bundle install --system
+
+# if you want fancier Diffs, for DiffString objects you can apt install ruby-diffy
 
 git clone https://github.com/conchyliculture/webwatchr/
 cd webwatchr
 cp config.json.template config.json
-
-# Take a breath here, it's going to be alright
-# I take no responsibility if you hate me after you ran that
-rvm implode
-gem uninstall --all
-sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
-sudo find / -name ".rvm" -exec rm -rf "{}" \;
 ```
 
 Then edit `config.json` to your needs

@@ -28,6 +28,6 @@ jobs:
     - name: apt install
       run: sudo apt-get install libcurl4 libcurl3-gnutls libcurl4-openssl-dev -y
     - name: Install Dependencies
-      run: gem install nokogiri mechanize curb diffy webrick
+      run: gem install nokogiri mechanize curb diffy webrick power_assert
     - name: Run tests
       run: ruby tests/tests.rb
