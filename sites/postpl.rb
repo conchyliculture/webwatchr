@@ -33,7 +33,7 @@ class PostPL < Site::SimpleString
     @json["mailInfo"]["events"].each do |e|
       res << "#{e['time']} #{e['name']}"
     end
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

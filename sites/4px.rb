@@ -29,7 +29,7 @@ class Post4PX < Site::SimpleString
     end
     if res.empty?
       res = ["<ul>"] << res << ["</ul>"]
-      return res.join("\n")
+      return ResultObject.new(res.join("\n"))
     end
     return nil
   end

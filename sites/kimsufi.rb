@@ -63,7 +63,7 @@ class Kimsufi < Site::SimpleString
     dispos.each do |machine, av|
       res << "#{machine} is available in zones: #{av.join(', ')}\n"
     end
-    return res
+    return ResultObject.new(res)
   end
 end
 

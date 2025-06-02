@@ -21,7 +21,7 @@ class ZenChef < Site::SimpleString
         res << "#{shift['name']}: Possible guests: #{shift['possible_guests']}\n"
       end
     end
-    return res
+    return ResultObject.new(res)
   end
 end
 

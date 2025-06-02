@@ -42,7 +42,7 @@ class PostSE < Site::SimpleString
       @events << "#{event['eventTime']}: #{event['eventDescription']} (#{location})"
     end
     @content = @events.join("\n")
-    return @content
+    return ResultObject.new(@content)
   end
 end
 

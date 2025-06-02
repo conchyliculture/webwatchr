@@ -32,7 +32,7 @@ class RoyalMail < Site::SimpleString
         res << row.join(" ")
       end
     end
-    return res
+    return ResultObject.new(res)
   end
 end
 

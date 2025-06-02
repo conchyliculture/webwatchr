@@ -17,7 +17,7 @@ class IParcel < Site::SimpleString
       res << "#{date} #{what}<br/>\n"
     }
 
-    return res.join("")
+    return ResultObject.new(res.join(""))
   end
 end
 

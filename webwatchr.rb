@@ -44,7 +44,7 @@ class Webwatchr
 
     subject = site.get_email_subject() || "Update from #{site.class}"
 
-    formatted_content = site.get_html_content()
+    formatted_content = site.generate_html_content()
 
     msgstr = <<~END_OF_MESSAGE
       From: #{from}
@@ -66,32 +66,6 @@ class Webwatchr
     rescue Net::SMTPFatalError => e
       logger.error "Couldn't send email from #{from} to #{to}. #{smtp_server}:#{smtp_port} said #{e.message}"
     end
-  end
-
-  def make_telegram_message_pieces(site:)
-    unless site
-      raise StandardError, "Need to pass a Site instance"
-    end
-
-    msg_pieces = []
-    if site.content.instance_of?(Array)
-      site.content.each do |item|
-        line = item["title"]
-        if item["url"]
-          if line
-            line += ": #{item['url']}"
-          else
-            line = item["url"]
-          end
-
-          line += ": #{item['url']}"
-        end
-        msg_pieces << line
-      end
-    else
-      msg_pieces << site.content
-    end
-    return msg_pieces
   end
 
   def make_alerts(config)
@@ -117,7 +91,7 @@ class Webwatchr
             msg_pieces = [title]
             msg_pieces << args[:site].get_email_url()
 
-            msg_pieces += make_telegram_message_pieces(site: args[:site])
+            msg_pieces += args[:site].generate_telegram_message_pieces()
             msg_pieces = msg_pieces.map { |x| x.size > 4096 ? x.split("\n") : x }.flatten()
             split_msg = msg_pieces.each_with_object(['']) { |str, sum|
               sum.last.length + str.length > 4000 ? sum << "#{str}\n" : sum.last << "#{str}\n"
@@ -157,27 +131,29 @@ class Webwatchr
 
     case config[:mode]
     when :single
-      sites_to_run = SITES_TO_WATCH.select { |s|
-        rb_file = File.basename(Object.const_source_location(s.class.name)[0])
-        rb_file == config[:site]
+      sites_to_run = TODO::SITES_TO_WATCH.select { |s|
+        s.class.to_s == config[:site]
       }
+      if sites_to_run.empty?
+        puts "Can't find Site #{config[:site]}. The known specified sites to run in todo.rb are:\n"
+        puts TODO::SITES_TO_WATCH.map { |s| s.class.to_s }.sort.uniq.map { |s| "	- #{s}\n" }
+      end
     when :normal
-      sites_to_run = SITES_TO_WATCH
+      sites_to_run = TODO::SITES_TO_WATCH
+      if sites_to_run.empty?
+        warn "Didn't find any site to parse. edit todo.rb"
+      end
     else
       raise StandardError, "Unknown WebWatchr mode: #{config[:mode]}"
-    end
-    if sites_to_run.empty?
-      warn "Didn't find any site to parse. edit todo.rb"
     end
 
     sites_to_run.each do |site_obj|
       logger.info "Running #{site_obj.name}"
       Timeout.timeout(config["site_timeout"]) {
-        site_obj.test = config[:test]
-        site_obj.update()
+        site_obj.update(test: config[:test])
       }
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
-      logger.warn "Failed pulling #{site}: #{e.message}"
+      logger.warn "Failed pulling #{site_obj}: #{e.message}"
     # Do nothing, try later
     rescue SystemExit => e
       msg = "User requested we quit while updating #{site_obj}\n"
@@ -196,7 +172,7 @@ class Webwatchr
   end
 
   def main()
-    options = { config: "config.json", mode: :normal , test: false, force: false}
+    options = { config: "config.json", mode: :normal, test: false }
     OptionParser.new { |o|
       o.banner = """WebWatchr is a script to poll websites and alert on changes.
   Exemple uses:
@@ -206,7 +182,7 @@ class Webwatchr
       ruby #{__FILE__} -s site.rb
 
   Usage: ruby #{__FILE__} """
-      o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of a script in sites-enabled.") do |v|
+      o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of the class for that site.") do |v|
         options[:site] = v
         options[:mode] = :single
       end
@@ -215,9 +191,6 @@ class Webwatchr
       end
       o.on("-v", "--verbose", "Be verbose (output to STDOUT instead of logfile") do
         options[:verbose] = true
-      end
-      o.on("-f", "--force", "Ignore waiting time between updates") do
-        options[:force] = true
       end
       o.on("-t", "--test", "Check website and return what we've parsed") do
         options[:test] = true
@@ -240,7 +213,6 @@ class Webwatchr
     config[:verbose] = options[:verbose]
     config[:mode] = options[:mode]
     config[:site] = options[:site]
-    config[:force] = options[:force]
     config[:test] = options[:test]
 
     Config.set_config(config)
@@ -251,7 +223,7 @@ class Webwatchr
     unless File.exist?(log_dir)
       FileUtils.mkdir_p(log_dir)
     end
-    log_out_file = if config[:verbose]
+    log_out_file = if config[:verbose] || config[:test]
                      $stdout
                    else
                      File.join(log_dir, 'webwatchr.log')

@@ -32,7 +32,7 @@ class Site
     @extra_headers = {}
     @alert_only = alert_only
     @http_ver = http_ver
-    @rand_sleep = rand_sleep
+    @rand_sleep = rand(rand_sleep).floor
 
     md5 = Digest::MD5.hexdigest(url)
     @state_file_name ||= "last-#{URI.parse(url).hostname}-#{md5}"
@@ -71,17 +71,31 @@ class Site
     return fetch_url1(url, max_redir: max_redir)
   end
 
+  # Helper methonds for generating HTML emails
+
   def get_email_url()
     return @url
   end
 
   def get_email_subject()
-    # Generates the subject of the email to be sent
     subject = "Update from #{self.class}"
     if @comment
       subject += " (#{@comment})"
     end
     return subject
+  end
+
+  def generate_html_content()
+    return nil unless @content
+
+    message_html = Site::HTML_HEADER.dup
+    message_html += @content
+    return message_html
+  end
+
+  # Helper methods to generate Telegram content
+  def generate_telegram_message_pieces()
+    return [@content]
   end
 
   def fetch_url2(url)
@@ -199,7 +213,7 @@ class Site
   def load_state_file()
     if File.exist?(@state_file)
       begin
-        return JSON.parse(File.read(@state_file))
+        return JSON.parse(File.read(@state_file), create_additions: true)
       rescue JSON::ParserError
       end
     end
@@ -245,7 +259,7 @@ class Site
   end
 
   def should_update?(prevous_time)
-    return @config[:force] || Time.now().to_i >= prevous_time + @wait
+    return Time.now().to_i >= prevous_time + @wait
   end
 
   def get_new(_previous_content = nil)
@@ -253,7 +267,8 @@ class Site
     return @content
   end
 
-  def update()
+  def update(test: false)
+    @test = test
     do_stuff()
   rescue Site::RedirectError
     msg = "Error parsing page #{@url}, too many redirects"
@@ -298,8 +313,12 @@ class Site
     end
     previous_content = previous_state["content"]
     if should_update?(previous_state["time"]) or @test
-      logger.info "Time to update #{@url}" unless @test
-      sleep(@rand_sleep) if @rand_sleep > 0 and not @test
+      if @rand_sleep > 0 and not @test
+        logger.info "Time to update #{@url} (sleeping #{@rand_sleep} sec)"
+        sleep(@rand_sleep)
+      else
+        logger.info "Time to update #{@url}"
+      end
       pull_things()
       new_stuff = get_new(previous_content)
       @did_stuff = true
@@ -316,39 +335,72 @@ class Site
       else
         logger.info "Nothing new for #{@url}"
       end
-      update_state_file({})
+      update_state_file({}) unless @test
     else
       @did_stuff = true
       logger.info "Too soon to update #{@url}"
     end
   end
 
-  def get_html_content()
-    message_html = Site::HTML_HEADER.dup
-    message_html += @content
-    return message_html
-  end
-
   class SimpleString < Site
-    def get_new(previous_content = nil)
-      new_stuff = nil
-      @content = get_content()
-      unless @content
-        return nil
+    class ResultObject
+      attr_accessor :message
+
+      def initialize(message = '')
+        @message = message
       end
 
-      if @content != previous_content
-        new_stuff = @content
+      def to_telegram()
+        return @message
       end
-      return new_stuff
+
+      def to_s
+        return @message
+      end
+
+      def to_html()
+        return @message
+      end
+
+      def to_json(*args)
+        {
+          JSON.create_id => self.class.name,
+          'message' => @message
+        }.to_json(*args)
+      end
+
+      def self.json_create(object)
+        new(*object['message'])
+      end
+
+      def ==(other)
+        self.class == other.class &&
+          @message == other.message
+      end
     end
 
-    def get_html_content()
+    def get_new(previous_content = nil)
+      # Is a ResultObject
+      if @content
+        raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class < ResultObject
+      else
+        @content = get_content()
+      end
+      return nil if @content == previous_content
+      
+      return @content
+    end
+
+    def generate_html_content()
       return nil unless @content
 
       message_html = Site::HTML_HEADER.dup
-      message_html += @content
+      message_html += @content.to_html
       return message_html
+    end
+
+    def generate_telegram_message_pieces()
+      return [@content.to_telegram]
     end
   end
 
@@ -356,7 +408,7 @@ class Site
     begin
       require "diffy"
 
-      def get_html_content()
+      def generate_html_content()
         diff_html = Site::HTML_HEADER.dup
         diff_html += "<head><style>"
         diff_html += Diffy::CSS
@@ -371,7 +423,7 @@ class Site
       end
     rescue LoadError
       require "test/unit/diff"
-      def get_html_content()
+      def generate_html_content()
         diff_html = Site::HTML_HEADER.dup
         diff_html += @diffed.to_s
         diff_html += "</body></html>"
@@ -465,7 +517,7 @@ class Site
       save_state_file(state)
     end
 
-    def get_html_content()
+    def generate_html_content()
       message_html = Site::HTML_HEADER.dup
       message_html << "<ul style='list-style-type: none;'>\n"
       @content.each do |item|
@@ -487,6 +539,24 @@ class Site
       end
       message_html += "</ul>"
       return message_html
+    end
+
+    def generate_telegram_message_pieces()
+      msg_pieces = []
+      @content.each do |item|
+        line = item["title"]
+        if item["url"]
+          if line
+            line += ": #{item['url']}"
+          else
+            line = item["url"]
+          end
+
+          line += ": #{item['url']}"
+        end
+        msg_pieces << line
+      end
+      return msg_pieces
     end
   end
 end

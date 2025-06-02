@@ -46,7 +46,7 @@ class CNE < Site::SimpleString
     else
       return "No result from CNE API for #{@track_id}"
     end
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

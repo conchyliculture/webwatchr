@@ -31,7 +31,7 @@ class YanWen < Site::SimpleString
       res = ["<ul>"] << res << ["</ul>"]
       return res.join("\n")
     end
-    return nil
+    return ResultObject.new(nil)
   end
 end
 

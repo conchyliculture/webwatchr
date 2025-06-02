@@ -65,7 +65,7 @@ class USPSAPI < Site::SimpleString
       res << "<li>#{deet.text}</li>"
     end
     res << "</ul>"
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

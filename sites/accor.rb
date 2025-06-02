@@ -91,7 +91,7 @@ class Accor < Site::SimpleString
   end
 
   def get_content
-    return @html_content.join("\n")
+    return ResultObject.new(@html_content.join("\n"))
   end
 end
 

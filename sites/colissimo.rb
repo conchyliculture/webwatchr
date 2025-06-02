@@ -29,7 +29,7 @@ class Colissimo < Site::SimpleString
     @parsed_content['shipment']['event'].each do |e|
       res << "#{e['date']}: #{e['label']}"
     end
-    return res.join("\n")
+    return ResultObject.new(res.join("\n"))
   end
 end
 

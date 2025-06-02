@@ -8,7 +8,7 @@ module Galaxus
       article = @parsed_content.css("article.pd-product")
       price = article.css("div.product-price").text
       product_text = article.css('h1.product-name span').map() { |x| x.text.strip }.join(' ')
-      return "#{product_text} #{price.strip()} CHF"
+      return ResultObject.new("#{product_text} #{price.strip()} CHF")
     end
   end
 
