@@ -12,29 +12,18 @@ module Webwatchr
       def self.create(&block)
         new.instance_eval(&block)
       end
+
+      def initialize
+        @config = {}
+      end
+
+      def set(key, val)
+        @config[key] = val
+        self
+      end
     end
 
     class EmailAlert < Base
-      def smtp_port(val)
-        @smtp_port = val
-        return self
-      end
-
-      def smtp_server(val)
-        @smtp_server = val
-        return self
-      end
-
-      def from_addr(val)
-        @from = val
-        return self
-      end
-
-      def dest_addr(val)
-        @to = val
-        return self
-      end
-
       def alert(site)
         raise StandardError, "Need to pass a Site instance" unless site
 
@@ -43,8 +32,8 @@ module Webwatchr
         formatted_content = site.generate_html_content()
 
         msgstr = <<~END_OF_MESSAGE
-          From: #{@from}
-          To: #{@to}
+          From: #{@config[:from_addr]}
+          To: #{@config[:dest_addr]}
           MIME-Version: 1.0
           Content-type: text/html; charset=UTF-8
           Subject: [Webwatchr] #{subject}
@@ -55,31 +44,21 @@ module Webwatchr
         END_OF_MESSAGE
 
         begin
-          Net::SMTP.start(@smtp_server, @smtp_port, starttls: false) do |smtp|
-            raise StandardError, "from address cannot be nil" unless @from
+          Net::SMTP.start(@config[:smtp_server], @config[:smtp_port], starttls: false) do |smtp|
+            raise StandardError, "from address cannot be nil" unless @config[:from_addr]
 
-            smtp.send_message(msgstr, @from, @to)
-            logger.debug("Sending mail to #{@to}")
+            smtp.send_message(msgstr, @config[:from_addr], @config[:dest_addr])
+            logger.debug("Sending mail to #{@config[:dest_addr]}")
           end
         rescue Net::SMTPFatalError => e
-          logger.error "Couldn't send email from #{@from} to #{@to}. #{@smtp_server}:#{@smtp_port} said #{e.message}"
+          logger.error "Couldn't send email from #{@config[:from_addr]} to #{@config[:dest_addr]}. #{@config[:smtp_server]}:#{@config[:smtp_port]} said #{e.message}"
         end
       end
     end
 
     class TelegramAlert < Base
-      def token(val)
-        @token = val
-        self
-      end
-
-      def chat_id(val)
-        @chat_id = val
-        self
-      end
-
       def alert(site)
-        bot = Telegram::Bot::Client.new(@token)
+        bot = Telegram::Bot::Client.new(@config[:token])
         msg_pieces = [site.get_email_subject]
         msg_pieces << site.get_email_url()
 
@@ -90,11 +69,8 @@ module Webwatchr
         }
 
         split_msg.each do |m|
-          bot.api.send_message(chat_id: @chat_id, text: m)
+          bot.api.send_message(chat_id: @config[:chat_id], text: m)
         end
-      rescue LoadError => e
-        puts "Please open README.md to see how to make Telegram alerting work"
-        raise e
       end
     end
   end

@@ -26,6 +26,19 @@ class Site
     @url.dup
   end
 
+  def self.create(&block)
+    new.instance_eval(&block)
+  end
+
+  def method_missing(attr, *args) # rubocop:disable Style/MissingRespondToMissing
+    if args.empty?
+      instance_variable_get("@#{attr}")
+    else
+      instance_variable_set("@#{attr}", *args)
+      self
+    end
+  end
+
   def initialize()
     #  def initialize(url:, every: nil, post_data: nil, post_json: nil, comment: nil, useragent: nil, http_ver: 1, alerters: [], rand_sleep: 0)
     #@config = Config.config || { "last_dir" => File.join(File.dirname(__FILE__), "..", ".lasts") }

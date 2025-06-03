@@ -3,8 +3,6 @@ require "json"
 require "mechanize"
 
 class PostCH < Site::SimpleString
-  attr_accessor :track_id
-
   def url
     "https://www.post.ch/api/TrackAndTrace/Get?sc_lang=en&id=#{@track_id}"
   end
@@ -106,6 +104,6 @@ end
 
 # Example:
 #
-# PostCH.new(
-#     track_id: "99.10.100000.100000003",
-# )
+#  update PostCH do
+#    track_id "LS203038460CH"
+#  end

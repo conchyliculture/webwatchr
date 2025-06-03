@@ -59,11 +59,11 @@ module Webwatchr
       end
     end
 
-    def update(site_class)
-      site = site_class.new
+    def update(site_class, &block)
+      site = site_class.create(&block)
       site.alerters = @alerts
       logger.info "Running #{site.name}"
-      yield site
+      site.instance_eval(&block)
       Timeout.timeout(config["site_timeout"]) {
         #        site.config = config
         site.update(test: PARAMS[:test])
