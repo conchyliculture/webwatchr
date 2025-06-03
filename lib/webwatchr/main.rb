@@ -59,7 +59,11 @@ module Webwatchr
     warn "Copy config.json.template to config.json and update it to your needs, or specify a config file with --config"
     exit
   end
-  PARAMS[:config] = JSON.parse(File.read(PARAMS[:config_file]))
+  #PARAMS[:config] = JSON.parse(File.read(PARAMS[:config_file]))
 
+  PARAMS[:cache_dir] = File.join(__dir__, "..", "..", ".cache")
+  PARAMS[:last_dir] = File.join(__dir__, "..", "..", ".lasts")
+  PARAMS[:log_dir] = File.join(__dir__, "..", "..", "logs")
+  PARAMS[:pid_file] = File.join(__dir__, "..", "..", "webwatchr.pid")
   require "webwatchr/base"
 end

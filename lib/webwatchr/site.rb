@@ -18,7 +18,8 @@ class Site
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
   #  attr_accessor :state_file, :url, :wait, :name, :test
-  attr_accessor :config, :comment, :url, :useragent, :alerters, :rand_sleep, :every
+  attr_accessor :alerters, :rand_sleep, :every, :lastdir, :cache_dir
+  #attr_accessor :comment, :url, :useragent, :alerters, :rand_sleep, :every
 
   attr_writer :name
 
@@ -42,7 +43,6 @@ class Site
   def initialize()
     #  def initialize(url:, every: nil, post_data: nil, post_json: nil, comment: nil, useragent: nil, http_ver: 1, alerters: [], rand_sleep: 0)
     #@config = Config.config || { "last_dir" => File.join(File.dirname(__FILE__), "..", ".lasts") }
-    @config = {}
     #    @comment = comment
     #    @post_data = post_data
     #    @post_json = post_json
@@ -273,25 +273,14 @@ class Site
     return @content
   end
 
-  def update(test: false)
-    logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
-
+  def update(cache_dir:, last_dir:, test: false)
     md5 = Digest::MD5.hexdigest(url)
-    @state_file_name ||= "last-#{URI.parse(url).hostname}-#{md5}"
-    @cache_dir ||= "cache-#{URI.parse(url).hostname}-#{md5}"
-    @state_file = if @config and @config["last_dir"]
-                    File.join(@config["last_dir"], @state_file_name)
-                  else
-                    File.join(".lasts", @state_file_name)
-                  end
-    @cache_dir = if @config and @config["cache_dir"]
-                   File.join(@config["cache_dir"], @cache_dir)
-                 else
-                   File.join(".cache", @cache_dir)
-                 end
+    @cache_dir = File.join(cache_dir, "cache-#{URI.parse(url).hostname}-#{md5}")
+    @state_file = File.join(last_dir, "last-#{URI.parse(url).hostname}-#{md5}")
     state = load_state_file()
     @wait = every || state["wait"] || 60 * 60
     @test = test
+    logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
 
     do_stuff()
   rescue Site::RedirectError

@@ -13,21 +13,20 @@ module Webwatchr
     end
 
     def running?
-      return (File.exist?(config["pid_file"]) and not PARAMS[:site])
+      return (File.exist?(PARAMS[:pid_file]) and not PARAMS[:site])
+    end
+
+    def set(key, val)
+      PARAMS[key] = val
+      self
     end
 
     def setup_logs
-      log_dir = config["log_dir"] || "logs"
-      unless File.absolute_path?(log_dir)
-        log_dir = File.join(File.absolute_path(Dir.getwd()), log_dir)
-      end
-      unless File.exist?(log_dir)
-        FileUtils.mkdir_p(log_dir)
-      end
+      FileUtils.mkdir_p(PARAMS[:log_dir])
       log_out_file = if PARAMS[:verbose] || PARAMS[:test]
                        $stdout
                      else
-                       File.join(log_dir, 'webwatchr.log')
+                       File.join(PARAMS[:log_dir], 'webwatchr.log')
                      end
       log_out_file_rotation = 'weekly'
       log_level = $VERBOSE ? Logger::DEBUG : Logger::INFO
@@ -35,23 +34,11 @@ module Webwatchr
       MyLog.instance.configure(log_out_file, log_out_file_rotation, log_level)
     end
 
-    def config
-      PARAMS[:config]
-    end
-
     def init()
       logger.debug("Starting WebWatchr")
 
-      current_dir = File.dirname(__FILE__)
-
-      unless config["last_dir"]
-        config["last_dir"] = File.join(current_dir, ".lasts")
-      end
-      unless config["cache_dir"]
-        config["cache_dir"] = File.join(current_dir, ".cache")
-      end
-      FileUtils.mkdir_p(config["last_dir"])
-      FileUtils.mkdir_p(config["cache_dir"])
+      FileUtils.mkdir_p(PARAMS[:last_dir])
+      FileUtils.mkdir_p(PARAMS[:cache_dir])
 
       Dir[File.join(__dir__, '..', 'sites', '*.rb')].sort.each do |site_path|
         logger.debug("Loading #{site_path}")
@@ -61,12 +48,13 @@ module Webwatchr
 
     def update(site_class, &block)
       site = site_class.create(&block)
+
       site.alerters = @alerts
+
       logger.info "Running #{site.name}"
       site.instance_eval(&block)
-      Timeout.timeout(config["site_timeout"]) {
-        #        site.config = config
-        site.update(test: PARAMS[:test])
+      Timeout.timeout(PARAMS[:site_timeout]) {
+        site.update(test: PARAMS[:test], cache_dir: PARAMS[:cache_dir], last_dir: PARAMS[:last_dir])
       }
     rescue Net::OpenTimeout, Errno::ENETUNREACH, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Zlib::BufError, Errno::ECONNREFUSED, SocketError, Net::ReadTimeout => e
       logger.warn "Failed pulling #{site}: #{e.message}"
@@ -93,13 +81,13 @@ module Webwatchr
       end
 
       begin
-        File.open(config["pid_file"], 'w+') { |f|
+        File.open(PARAMS[:pid_file], 'w+') { |f|
           f.puts($$)
           init()
         }
       ensure
-        if File.exist?(config["pid_file"])
-          FileUtils.rm config["pid_file"]
+        if File.exist?(PARAMS[:pid_file])
+          FileUtils.rm PARAMS[:pid_file]
         end
       end
     end
