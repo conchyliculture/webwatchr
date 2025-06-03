@@ -1,5 +1,5 @@
 require "test/unit"
-require_relative "../../sites/postch"
+require_relative "../../lib/sites/postch"
 
 class PostCHTests < Test::Unit::TestCase
   def test_messages

@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 require "fileutils"
 require "logger"
-require_relative "../lib/site"
+require_relative "../lib/webwatchr/site"
 require "test/unit"
 
 class BaseWebrickTest < Test::Unit::TestCase
