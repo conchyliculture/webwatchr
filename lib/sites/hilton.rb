@@ -82,7 +82,7 @@ class Hilton < Site::SimpleString
     end
     url = "https://m.hilton.io/graphql/customer?type=ShopMultiPropAvailQuery&operationName=shopMultiPropAvail_hotelSummaryOption&origin=HotelSearchResultsFragment&pod=android"
     headers = @base_headers.dup
-    headers["authorization"] = "Bearer #{beared}"
+    headers["authorization"] = "Bearer #{bearer}"
     headers["forter-mobile-uid"] = @device_id
     headers["x-hilton-anonymous"] = "true"
     headers["dx-platform"] = "mobile"
