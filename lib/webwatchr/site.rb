@@ -17,9 +17,7 @@ class Site
   HTML_HEADER = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n".freeze
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
-  #  attr_accessor :state_file, :url, :wait, :name, :test
-  attr_accessor :url, :alerters, :rand_sleep, :every, :lastdir, :cache_dir
-  #attr_accessor :comment, :url, :useragent, :alerters, :rand_sleep, :every
+  attr_accessor :url, :alerters, :rand_sleep, :every, :lastdir, :cache_dir, :state_file, :comment
 
   attr_writer :name
 
@@ -213,7 +211,7 @@ class Site
   end
 
   def load_state_file()
-    if File.exist?(@state_file)
+    if @state_file and File.exist?(@state_file)
       begin
         return JSON.parse(File.read(@state_file), create_additions: true)
       rescue JSON::ParserError
@@ -274,7 +272,7 @@ class Site
     @cache_dir = File.join(cache_dir, "cache-#{URI.parse(@url).hostname}-#{md5}")
     @state_file = File.join(last_dir, "last-#{URI.parse(@url).hostname}-#{md5}")
     state = load_state_file()
-    @wait = every || state["wait"] || 60 * 60
+    @wait = @every || state["wait"] || 60 * 60
     @test = test
     logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
 
@@ -465,7 +463,7 @@ class Site
   end
 
   class Articles < Site
-    def initialize(url:, every: 60 * 60, post_data: nil, comment: nil, useragent: nil, alert_only: [], http_ver: 1, rand_sleep: 0)
+    def initialize
       super
       @content = []
     end
