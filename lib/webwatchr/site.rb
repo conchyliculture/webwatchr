@@ -239,7 +239,7 @@ class Site
     save_state_file(state)
   end
 
-  def alert(_new_content)
+  def alert()
     logger.debug "Alerting new stuff"
     @alerters.each do |a|
       a.alert(self)
@@ -335,7 +335,7 @@ class Site
         if @test
           logger.info "Would have alerted with new stuff:\n#{new_stuff}"
         else
-          alert(new_stuff)
+          alert()
           update_state_file({
                               "content" => new_stuff,
                               "previous_content" => previous_content
@@ -462,15 +462,6 @@ class Site
       end
       return new_stuff
     end
-
-    #    def alert(_new_content)
-    #      logger.debug "Alerting new stuff"
-    #      @config["alert_procs"].each do |alert_name, p|
-    #        if @alert_only.empty? or @alert_only.include?(alert_name)
-    #          p.call({ site: self })
-    #        end
-    #      end
-    #    end
   end
 
   class Articles < Site
