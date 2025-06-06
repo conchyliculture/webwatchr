@@ -1,3 +1,4 @@
+require "net/smtp"
 require 'telegram/bot'
 require_relative "./logger"
 
@@ -10,7 +11,11 @@ module Webwatchr
       end
 
       def self.create(&block)
-        new.instance_eval(&block)
+        if block
+          new.instance_eval(&block)
+        else
+          new
+        end
       end
 
       def initialize
@@ -71,6 +76,13 @@ module Webwatchr
         split_msg.each do |m|
           bot.api.send_message(chat_id: @config[:chat_id], text: m)
         end
+      end
+    end
+
+    class StdoutAlert < Base
+      def alert(site)
+        msg = "Update rom #{site.url}\n#{site.generate_html_content}"
+        puts(msg)
       end
     end
   end

@@ -3,21 +3,24 @@ require "json"
 require "mechanize"
 
 class PostCH < Site::SimpleString
-  def url
-    "https://www.post.ch/api/TrackAndTrace/Get?sc_lang=en&id=#{@track_id}"
+  def track_id(track_id)
+    # Sets the Track ID & URL
+    @track_id = track_id
+    @url = "https://www.post.ch/api/TrackAndTrace/Get?sc_lang=en&id=#{@track_id}"
+    self
   end
 
   def initialize
+    super()
     @events = []
     @mechanize = Mechanize.new()
     @mechanize.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
     @text_messages = {}
-    super()
   end
 
   def code_to_message(code)
     @text_messages = JSON.parse(@mechanize.get("https://service.post.ch/ekp-web/core/rest/translations/en/shipment-text-messages").body)['shipment-text--'] if @text_messages == {}
-    @text_messages.each do |k, v| # W: Unused block argument - `v`. If it's necessary, use `_` or `_v` as an argument …
+    @text_messages.each do |k, v|
       ccode = code.split('.')
       kk = k.split('.')
       0.upto(ccode.size()) do |i|

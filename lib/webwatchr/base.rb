@@ -47,6 +47,11 @@ module Webwatchr
     end
 
     def update(site_class, &block)
+      if (PARAMS[:mode] == :single) && site_class.to_s != PARAMS[:site]
+        logger.info("Running in single site mode, skipping #{site_class} (!= #{PARAMS[:site]})")
+        return
+      end
+
       site = site_class.create(&block)
 
       site.alerters = @alerts
@@ -99,6 +104,9 @@ module Webwatchr
         @alerts.append(alert)
       when :telegram
         alert = Alerting::TelegramAlert.create(&block)
+        @alerts.append(alert)
+      when :stdout
+        alert = Alerting::StdoutAlert.create()
         @alerts.append(alert)
       else
         raise StandardError, "Unknown alert type: #{type}."

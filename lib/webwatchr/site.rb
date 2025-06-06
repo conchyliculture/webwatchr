@@ -18,7 +18,7 @@ class Site
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
   #  attr_accessor :state_file, :url, :wait, :name, :test
-  attr_accessor :alerters, :rand_sleep, :every, :lastdir, :cache_dir
+  attr_accessor :url, :alerters, :rand_sleep, :every, :lastdir, :cache_dir
   #attr_accessor :comment, :url, :useragent, :alerters, :rand_sleep, :every
 
   attr_writer :name
@@ -77,7 +77,7 @@ class Site
   # Helper methonds for generating HTML emails
 
   def get_email_url()
-    return url
+    return @url
   end
 
   def get_email_subject()
@@ -171,7 +171,6 @@ class Site
                      end
         end
 
-        @url = location
         logger.debug "Redirecting to #{location}"
         return fetch_url(location, max_redir: max_redir - 1)
       end
@@ -183,9 +182,9 @@ class Site
           raise Site::RedirectError
         end
 
-        @url = "#{uri.scheme}://#{uri.hostname}:#{uri.port}#{::Regexp.last_match(1)}"
+        url = "#{uri.scheme}://#{uri.hostname}:#{uri.port}#{::Regexp.last_match(1)}"
         logger.debug "Redirecting to #{location}"
-        return fetch_url(@url, max_redir: max_redir - 1)
+        return fetch_url(url, max_redir: max_redir - 1)
       end
 
       html = if html and response["Content-Encoding"]
@@ -245,11 +244,6 @@ class Site
     @alerters.each do |a|
       a.alert(self)
     end
-    #     @config["alert_procs"].each do |alert_name, p|
-    #       if @alert_only.empty? or @alert_only.include?(alert_name)
-    #         p.call(site: self)
-    #       end
-    #     end
   end
 
   def content()
@@ -274,9 +268,11 @@ class Site
   end
 
   def update(cache_dir:, last_dir:, test: false)
-    md5 = Digest::MD5.hexdigest(url)
-    @cache_dir = File.join(cache_dir, "cache-#{URI.parse(url).hostname}-#{md5}")
-    @state_file = File.join(last_dir, "last-#{URI.parse(url).hostname}-#{md5}")
+    raise StandardError, "Didn't set URL for site #{self}" unless @url
+
+    md5 = Digest::MD5.hexdigest(@url)
+    @cache_dir = File.join(cache_dir, "cache-#{URI.parse(@url).hostname}-#{md5}")
+    @state_file = File.join(last_dir, "last-#{URI.parse(@url).hostname}-#{md5}")
     state = load_state_file()
     @wait = every || state["wait"] || 60 * 60
     @test = test
@@ -347,6 +343,9 @@ class Site
         end
       else
         logger.info "Nothing new for #{@url}"
+        if @test
+          logger.info "Current state is still :\n#{@content}"
+        end
       end
       update_state_file({}) unless @test
     else
