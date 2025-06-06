@@ -2,8 +2,6 @@
 
 Silly script to periodically check webpage changes.
 
-No bullshit gem from hell.
-
 1. run script every minute from cron
 2. pulls data for every Website to check, if the last time we did that is long ago
 4. if content is different, from the last time, alerts you with the new content (email, telegram)
@@ -11,23 +9,13 @@ No bullshit gem from hell.
 # Installation
 
 ```shell
-apt-get install ruby ruby-mechanize ruby-curb ruby-nokogiri 
+
+$ bundle install
 
 # if you want fancier Diffs, for DiffString objects, apt install ruby-diffy
 
 git clone https://github.com/conchyliculture/webwatchr/
 cd webwatchr
-cp config.json.template config.json
-
-# Take a breath here, it's going to be alright
-# I take no responsibility if you hate me after you ran that
-rvm implode
-gem uninstall --all
-sudo apt-get remove -y --purge rubygems-integration rubygems rake bundler
-sudo find / -name ".rvm" -exec rm -rf "{}" \;
-```
-
-Then edit `config.json` to your needs
 
 And then edit `todo.rb`, so that it looks like:
 
