@@ -6,8 +6,10 @@ module Webwatchr
   module Alerting
     class Base
       include Loggable
-      def update()
-        raise StandardError, "Implement me lol"
+      REQUIRED_SETTINGS = []
+      def validate
+        missing_settings = REQUIRED_SETTINGS - @config.to_a.select { |s| s[1] }.map { |s| s[0] }
+        raise StandardError, "Missing required settings for #{self.class}: #{missing_settings}" unless missing_settings.empty?
       end
 
       def self.create(&block)
@@ -16,6 +18,11 @@ module Webwatchr
         else
           new
         end
+      end
+
+      def alert(site)
+        raise StandardError, "Need to pass a Site instance" unless site
+        validate
       end
 
       def initialize
@@ -29,8 +36,22 @@ module Webwatchr
     end
 
     class EmailAlert < Base
+      REQUIRED_SETTINGS = %i[from_addr dest_addr smtp_server smtp_port]
+      # This class will send you email if content changes.
+      #
+      # ==== Examples
+      #
+      # Webwatchr::Main.new do
+      #     add_default_alert :email do
+      #       set :smtp_port, 25
+      #       set :smtp_server, "localhost"
+      #       set :dest_addr, "dest@email.eu"
+      #       set :from_addr, "source@email.eu"
+      #     end
+      #     ....
+      # "end"
       def alert(site)
-        raise StandardError, "Need to pass a Site instance" unless site
+        super(site)
 
         subject = site.get_email_subject() || "Update from #{site.class}"
 
@@ -62,7 +83,21 @@ module Webwatchr
     end
 
     class TelegramAlert < Base
+      REQUIRED_SETTINGS = %i[token chat_id]
+      # This class will use a Telegram bot to send you a message if content changes.
+      #
+      # ==== Examples
+      #
+      # Webwatchr::Main.new do
+      #     ...
+      #     add_default_alert :telegram do
+      #       set :token, "95123456YU:AArestoftoken"
+      #       set :chat_id, 123456789
+      #     end
+      #     ....
+      # "end"
       def alert(site)
+        super(site)
         bot = Telegram::Bot::Client.new(@config[:token])
         msg_pieces = [site.get_email_subject]
         msg_pieces << site.get_email_url()
@@ -81,6 +116,7 @@ module Webwatchr
 
     class StdoutAlert < Base
       def alert(site)
+        super(site)
         msg = "Update rom #{site.url}\n#{site.generate_html_content}"
         puts(msg)
       end

@@ -1,3 +1,5 @@
+require "fileutils"
+
 module Webwatchr
   require_relative "alerting"
   class Main
