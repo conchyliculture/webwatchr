@@ -82,17 +82,32 @@ class BskyBase < Site::Articles
 end
 
 class BskyAccount < BskyBase
-  def initialize(account:, regex: nil, username: nil, password: nil, reposts: false, every: 30 * 60)
-    super(
-      url: "https://bsky.app/profile/#{account}",
-      every: every
-    )
-    @reposts = reposts
+  # Parses Bluesky "profile" pages and returns every post
+  #
+  # ==== Examples
+  #
+  # Webwatchr::Main.new do
+  #     upsate BskyAccount do
+  #          account "theonion.com"
+  #          # Optional settings
+  #          set reposts, false   # Disable reposts
+  #          set regex, /fun/     # Only posts where the text matches the regex
+  #     end
+  #     ....
+  # "end"
+
+  attr_accessor :reposts, :regex
+
+  def account(account)
     @account = account
+    @url = "https://bsky.app/profile/#{account}"
+    self
+  end
+
+  def initialize
+    super()
+    @reposts = true
     @mechanize = Mechanize.new()
-    @regex = regex
-    @username = username
-    @password = password
     @json_results_key = "feed"
   end
 
@@ -101,13 +116,17 @@ class BskyAccount < BskyBase
     path = "/xrpc/app.bsky.feed.getAuthorFeed?actor=#{did}&filter=posts_and_author_threads&limit=30"
     resp = _api_get(path)
     @parsed_content = JSON.parse(resp.body)
+    f = File.open("/tmp/qsd", 'w')
+    f.write(resp.body)
+    f.close
   end
 
   def get_content
     @parsed_content['feed'].each do |p|
       post = p['post']
       next if @regex and (text !~ @regex)
-      next if !@reposts and (post['author']['handle'] != @account)
+
+      next if !@reposts && (post['author']['handle'] != @account)
 
       art = _article_from_post(post)
       add_article(art)
@@ -138,9 +157,6 @@ class BskySearch < BskyBase
     }
     resp = _api_get("/xrpc/app.bsky.feed.searchPosts?q=#{@keyword}&limit=30&sort=top", headers: headers)
     @parsed_content = JSON.parse(resp.body)
-    f = File.new("/tmp/bskyyy", "w")
-    f.write(resp.body)
-    f.close
   end
 
   def get_content

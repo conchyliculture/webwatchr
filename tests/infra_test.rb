@@ -2,21 +2,8 @@
 require "fileutils"
 require "logger"
 require_relative "../lib/webwatchr/site"
-require_relative "../lib/webwatchr/alerting"
+require_relative "./helpers"
 require "test/unit"
-
-class TestAlerter < Webwatchr::Alerting::Base
-  attr_accessor :result
-
-  def initialize
-    super()
-    @result = nil
-  end
-
-  def alert(site)
-    @result = site.content
-  end
-end
 
 class BaseWebrickTest < Test::Unit::TestCase
   require "webrick"
@@ -174,7 +161,6 @@ class TestArraySites < BaseWebrickTest
     url = "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_array_file]}"
     wait = 10 * 60
 
-    called = false
     c = TestArraySite.new
     c.url = url
     a = TestAlerter.new()

@@ -21,6 +21,10 @@ class Site
 
   attr_writer :name
 
+  def set(name, value)
+    instance_variable_set("@#{name}", value) # W: Prefer string interpolation to strin…
+  end
+
   def name
     @url.dup
   end
@@ -39,13 +43,6 @@ class Site
   end
 
   def initialize()
-    #  def initialize(url:, every: nil, post_data: nil, post_json: nil, comment: nil, useragent: nil, http_ver: 1, alerters: [], rand_sleep: 0)
-    #@config = Config.config || { "last_dir" => File.join(File.dirname(__FILE__), "..", ".lasts") }
-    #    @comment = comment
-    #    @post_data = post_data
-    #    @post_json = post_json
-    #    @test = false
-    #    @url = url
     @useragent = Site::DEFAULT_USER_AGENT
     @extra_headers = {}
     @alerters = []
