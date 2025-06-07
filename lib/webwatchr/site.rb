@@ -22,7 +22,7 @@ class Site
   attr_writer :name
 
   def set(name, value)
-    instance_variable_set("@#{name}", value) # W: Prefer string interpolation to strin…
+    instance_variable_set("@#{name}", value)
   end
 
   def name
