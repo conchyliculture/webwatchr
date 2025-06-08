@@ -70,7 +70,7 @@ Webwatchr::Main.new do
   update SomeSimpleSite
 
   update PostCH do
-    track_id "LS234567890CH"
+    track_id "LS123476US"
   end
 end
 ```
@@ -83,35 +83,28 @@ Run the cron often:
 
 # Supported websites
 
+List of sites that are somewhat maintained are [listed here](https://github.com/conchyliculture/webwatchr).
+
+Some examples:
+
 * Bluesky
 * Bandcamp merch pages
 * Package tracking (DHL, Colissimo, i-parcel, Royalmail, PostNL, UPS, USPS, etc.)
-* etc.
-
-# Add a new site to watch
-
-## Watch the whole HTML source of a page
-
-
-## Test your new site
 
 
 ## Force a site check, ignoring the 'wait' parameter
 
 This can be useful to run a site update at a specific time/day with a crontab, instead of every specified amount of time. You can force update a website using the -s flag:
 ```bash
-ruby webwatchr.rb -s SiteClass
+ruby webwatchr.rb -t -s SiteClass
 ```
 
 # FAQ
-
-## POST?
-
-If you need to actually fetch your URL using a POST HTTP request, add `post_data` as argument to Site.new(), when instanciating your new class:
-
 ## Tests?
 
-There is like, two! run `rake`
+There are like like, two! 
+
+Run `rake`
 
 ## Logs ?
 
@@ -120,6 +113,8 @@ Call `logger`, as you would a classic `Logger` object in your `mysite.rb`.
 ## Alerting
 
 Email is the main method of alerting, but you can also set webwatchr to talk to you on Telegram through a bot.
+
+### Email
 
 First make a bot and grab a token following the [Telegram procedure](https://core.telegram.org/bots#6-botfather).
 
