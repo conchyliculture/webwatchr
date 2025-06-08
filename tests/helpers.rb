@@ -17,6 +17,7 @@ class ArticleSiteTest < Test::Unit::TestCase
 end
 
 class TestAlerter < Webwatchr::Alerting::Base
+  IDENTIFIER = :testtest
   attr_accessor :result
 
   def initialize
