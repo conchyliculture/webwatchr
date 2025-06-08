@@ -30,7 +30,11 @@ class Site
   end
 
   def self.create(&block)
-    new.instance_eval(&block)
+    if block
+      new.instance_eval(&block)
+    else
+      new
+    end
   end
 
   def method_missing(attr, *args) # rubocop:disable Style/MissingRespondToMissing
@@ -402,12 +406,16 @@ class Site
       return nil unless @content
 
       message_html = Site::HTML_HEADER.dup
-      message_html += @content.to_html
+      if @content.instance_of?(ResultObject)
+        message_html += @content.to_html
+      else
+        message_html += @content
+      end
       return message_html
     end
 
     def generate_telegram_message_pieces()
-      return [@content.to_telegram]
+      return [@content.instance_of?(ResultObject) ? @content.to_telegram : @content]
     end
   end
 

@@ -6,8 +6,9 @@ class BskyBase < Site::Articles
     'public.api.bsky.app'
   ].freeze
   API_PRIVATE_HOSTS = [
-    'oysterling.us-west.host.bsky.network',
-    'amanita.us-east.host.bsky.network'
+    'scalycap.us-west.host.bsky.network'
+    #'oysterling.us-west.host.bsky.network'
+    #    'amanita.us-east.host.bsky.network'
   ].freeze
 
   def _get_bearer()
@@ -30,21 +31,12 @@ class BskyBase < Site::Articles
     end
   end
 
-  def _api_get(path, headers: nil)
-    last_api_error = nil
+  def _api_get(path, params: [], headers: nil)
     api_hosts = @bearer ? API_PRIVATE_HOSTS : API_PUBLIC_HOSTS
-    api_hosts.shuffle.each do |api_host|
-      url = "https://#{api_host}#{path}"
-      begin
-        resp = @mechanize.get(url, [], nil, headers)
-      rescue StandardError => e
-        last_api_error = e
-        logger.debug("Got error with querying #{path} for API endpoint #{api_host}, trying another one")
-        next
-      end
-      return resp
-    end
-    raise Site::ParseError, "Error querying #{path}: #{last_api_error}"
+    api_host = api_hosts.sample
+    url = "https://#{api_host}#{path}"
+    resp = @mechanize.get(url, params, nil, headers)
+    return resp
   end
 
   def _profile_to_did(account)
@@ -87,14 +79,14 @@ class BskyAccount < BskyBase
   # ==== Examples
   #
   # Webwatchr::Main.new do
-  #     upsate BskyAccount do
+  #     update BskyAccount do
   #          account "theonion.com"
   #          # Optional settings
-  #          set reposts, false   # Disable reposts
-  #          set regex, /fun/     # Only posts where the text matches the regex
+  #          set "reposts", false   # Disable reposts
+  #          set "regex", /fun/     # Only posts where the text matches the regex
   #     end
   #     ....
-  # "end"
+  # end
 
   attr_accessor :reposts, :regex
 
@@ -124,6 +116,7 @@ class BskyAccount < BskyBase
   def get_content
     @parsed_content['feed'].each do |p|
       post = p['post']
+      text = post['record']['text']
       next if @regex and (text !~ @regex)
 
       next if !@reposts && (post['author']['handle'] != @account)
@@ -135,27 +128,43 @@ class BskyAccount < BskyBase
 end
 
 class BskySearch < BskyBase
-  def initialize(keyword:, username: nil, password: nil, reposts: false, every: 30 * 60)
-    super(
-      url: "https://bsky.app/search?#{keyword}",
-      every: every
-    )
-    @reposts = reposts
+  # Runs a search on Bluesky for a keyword
+  #
+  # ==== Examples
+  #
+  # Webwatchr::Main.new do
+  #     update BskyAccount do
+  #          keyword "#danemark"
+  #          # Mandatory settings, you need to be logged in to search
+  #          set "username", "username"
+  #          set "password", "password"
+  #     end
+  #     ....
+  # end
+  attr_accessor :username, :password
+
+  def keyword(keyword)
     @keyword = keyword
+    @url = "https://bsky.app/search?#{keyword}"
+    self
+  end
+
+  def initialize
+    super()
     @mechanize = Mechanize.new()
-    #  @mechanize.log = logger
-    @username = username
-    @password = password
     @json_results_key = "posts"
-    raise StandardError, 'Need both username & password to run searches' unless @password and @username
   end
 
   def pull_things
+    raise StandardError, 'Need both username & password to run searches' unless @password and @username
+
     @bearer ||= _get_bearer()
     headers = {
       "authorization" => "Bearer #{@bearer}"
     }
-    resp = _api_get("/xrpc/app.bsky.feed.searchPosts?q=#{@keyword}&limit=30&sort=top", headers: headers)
+
+    params = { "q" => "#danemark", "limit" => 30, "sort" => "top" }
+    resp = _api_get("/xrpc/app.bsky.feed.searchPosts", params: params.to_a, headers: headers)
     @parsed_content = JSON.parse(resp.body)
   end
 

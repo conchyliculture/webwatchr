@@ -59,7 +59,9 @@ module Webwatchr
       site.alerters = @alerts
 
       logger.info "Running #{site.name}"
-      site.instance_eval(&block)
+      if block
+        site.instance_eval(&block)
+      end
       Timeout.timeout(PARAMS[:site_timeout]) {
         site.update(test: PARAMS[:test], cache_dir: PARAMS[:cache_dir], last_dir: PARAMS[:last_dir])
       }
@@ -78,7 +80,6 @@ module Webwatchr
       msg += e.backtrace.join("\n")
       logger.debug e.backtrace.join("\n")
       warn msg
-      raise e
     end
 
     def run!
