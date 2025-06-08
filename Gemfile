@@ -6,6 +6,7 @@ gem "curb"
 gem "mechanize"
 gem "net-smtp"
 gem "nokogiri"
+gem "rake"
 gem "rdbg"
 gem "rubocop"
 gem 'telegram-bot-ruby', '~> 2.1'
