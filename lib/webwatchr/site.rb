@@ -413,7 +413,7 @@ class Site
       return nil unless @content
 
       message_html = Site::HTML_HEADER.dup
-      if @content.instance_of?(ResultObject)
+      if @content.is_a?(ResultObject)
         message_html += @content.to_html
       else
         message_html += @content
@@ -422,7 +422,7 @@ class Site
     end
 
     def generate_telegram_message_pieces()
-      return [@content.instance_of?(ResultObject) ? @content.to_telegram : @content]
+      return [@content.is_a?(ResultObject) ? @content.to_telegram : @content]
     end
   end
 
