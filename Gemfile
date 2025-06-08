@@ -10,3 +10,4 @@ gem "rake"
 gem "rdbg"
 gem "rubocop"
 gem 'telegram-bot-ruby', '~> 2.1'
+gem 'test-unit'
