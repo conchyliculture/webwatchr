@@ -20,20 +20,20 @@ module Webwatchr
     OptionParser.new { |o|
       o.banner = "WebWatchr is a script to poll websites and alert on changes.
   Exemple uses:
-   * Updates all webpages according to their 'wait' value, and compare against internal state, and update it.
+   * Updates all registered Sites, and compare against internal state, and update it.
       ruby #{__FILE__}
-   * Updates sites-available/site.rb, ignoring 'wait' value, and compare against internal state, and update it.
-      ruby #{__FILE__} -s site.rb
+   * Updates one specific Site, lue, and compare against internal state, and update it.
+      ruby #{__FILE__} -s SiteClass
 
   Usage: ruby #{__FILE__} "
-      o.on("-sSITE", "--site=SITE", "Run WebWatcher on one site only. It has to be the name of the class for that site.") do |val|
+      o.on("-sSITE", "--site=SITE", "Run Webwatchr on one site only. It has to be the name of the class for that site.") do |val|
         PARAMS[:site] = val
         PARAMS[:mode] = :single
       end
       o.on("-v", "--verbose", "Be verbose (output to STDOUT instead of logfile") do
         PARAMS[:verbose] = true
       end
-      o.on("-t", "--test", "Check website and return what we've parsed") do
+      o.on("-t", "--test", "Check website (ignoring wait time) and show what we've parsed") do
         PARAMS[:test] = true
       end
       o.on("-h", "--help", "Prints this help") {
