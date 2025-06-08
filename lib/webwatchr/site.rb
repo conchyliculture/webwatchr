@@ -238,7 +238,9 @@ class Site
   def alert()
     logger.debug "Alerting new stuff"
     @alerters.each do |alerter|
-      alerter.alert(self) unless @alert_only.include?(alerter.class::IDENTIFIER)
+      if @alert_only.empty? or @alert_only.include?(alerter.class::IDENTIFIER)
+        alerter.alert(self)
+      end
     end
   end
 
