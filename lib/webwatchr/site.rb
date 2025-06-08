@@ -23,6 +23,7 @@ class Site
 
   def set(name, value)
     instance_variable_set("@#{name}", value)
+    self
   end
 
   def name
