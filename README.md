@@ -6,7 +6,8 @@ Silly script to periodically check webpage changes.
 2. pulls data for every Website to check, if the last time we did that is long ago
 4. if content is different, from the last time, alerts you with the new content (email, telegram)
 
-# Installation
+
+## Installation
 
 ```shell
 
@@ -81,7 +82,7 @@ Run the cron often:
 */5 * * * * cd /home/poil/my_fav_scripts/; ruby dsl.rb
 ```
 
-# Supported websites
+## Supported websites
 
 List of sites that are somewhat maintained are [listed here](https://github.com/conchyliculture/webwatchr).
 
@@ -92,6 +93,18 @@ Some examples:
 * Package tracking (DHL, Colissimo, i-parcel, Royalmail, PostNL, UPS, USPS, etc.)
 
 
+## Command line options
+
+From `--help`:
+
+```
+  Usage: ruby /home/renzokuken/scripts/webwatchr/lib/webwatchr/main.rb
+    -s, --site=SITE                  Run Webwatchr on one site only. It has to be the name of the class for that site.
+    -v, --verbose                    Be verbose (output to STDOUT instead of logfile
+    -t, --test                       Check website (ignoring wait time) and show what we've parsed
+    -h, --help                       Prints this help
+```
+
 ## Force a site check, ignoring the 'wait' parameter
 
 This can be useful to run a site update at a specific time/day with a crontab, instead of every specified amount of time. You can force update a website using the -s flag:
@@ -99,24 +112,44 @@ This can be useful to run a site update at a specific time/day with a crontab, i
 ruby webwatchr.rb -t -s SiteClass
 ```
 
-# FAQ
-## Tests?
+## FAQ
+### Tests?
 
-There are like like, two! 
+There are like like, two!
 
 Run `rake`
 
-## Logs ?
+### Logs ?
 
 Call `logger`, as you would a classic `Logger` object in your `mysite.rb`.
 
-## Alerting
+### Alerting
 
 Email is the main method of alerting, but you can also set webwatchr to talk to you on Telegram through a bot.
 
-### Email
+#### Email
+
+In your Main block, add
+
+```ruby
+add_default_alert :email do
+  set :smtp_port, 25
+  set :smtp_server, "localhost"
+  set :from_addr, "webwatchr@domain.eu"
+  set :dest_addr, "admin@domain.eu"
+end
+```
+
+#### Telegram
 
 First make a bot and grab a token following the [Telegram procedure](https://core.telegram.org/bots#6-botfather).
 
 You also need to know the `chat_id` for its discussion with you. The code in [there](https://github.com/atipugin/telegram-bot-ruby/blob/master/examples/bot.rb) can help you.
 
+then in your Main block, add
+
+```ruby
+add_default_alert :telegram do
+  set :token, "12345:LONGTOKEN09876543"
+  set :chat_id, 1234567890
+end
