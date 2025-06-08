@@ -106,19 +106,20 @@ if ARGV.empty?
 end
 
 entries = HARParser.new(File.read(ARGV[0])).entries
+
 if ARGV.size == 1
   entries.each_with_index do |e, index|
     next unless e.text?
 
     puts "= Entry #{index} =================="
-    puts e.to_s
+    puts e
   end
 else
   case ARGV[1]
   when "all"
     entries.each_with_index do |e, index|
       puts "= Entry #{index} =================="
-      puts e.to_s
+      puts e
     end
   when /^(\d+)$/
     entry_number = Regexp.last_match(1).to_i
