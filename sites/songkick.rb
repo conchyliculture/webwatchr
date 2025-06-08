@@ -1,11 +1,12 @@
 require_relative "../lib/site"
 
 class Songkick < Site::Articles
-  def initialize(**kwargs)
-    super
+  def full_url(url)
+    @url = url
     unless @url.end_with?("/calendar")
       logger.warn("Songkick should end with /calendar to get all concerts")
     end
+    return self
   end
 
   def get_content()
@@ -25,10 +26,3 @@ class Songkick < Site::Articles
     end
   end
 end
-
-# # example
-#
-# Songkick.new(
-#     url: "https://www.songkick.com/artists/7214659-carpenter-brut/calendar",
-#     comment: "CarpenterBrut concerts",
-#     )
