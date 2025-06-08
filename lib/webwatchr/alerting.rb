@@ -6,7 +6,7 @@ module Webwatchr
   module Alerting
     class Base
       include Loggable
-      REQUIRED_SETTINGS = []
+      REQUIRED_SETTINGS = [].freeze
       def validate
         missing_settings = REQUIRED_SETTINGS - @config.to_a.select { |s| s[1] }.map { |s| s[0] }
         raise StandardError, "Missing required settings for #{self.class}: #{missing_settings}" unless missing_settings.empty?
@@ -22,6 +22,7 @@ module Webwatchr
 
       def alert(site)
         raise StandardError, "Need to pass a Site instance" unless site
+
         validate
       end
 
@@ -36,7 +37,7 @@ module Webwatchr
     end
 
     class EmailAlert < Base
-      REQUIRED_SETTINGS = %i[from_addr dest_addr smtp_server smtp_port]
+      REQUIRED_SETTINGS = %i[from_addr dest_addr smtp_server smtp_port].freeze
       # This class will send you email if content changes.
       #
       # ==== Examples
@@ -83,7 +84,7 @@ module Webwatchr
     end
 
     class TelegramAlert < Base
-      REQUIRED_SETTINGS = %i[token chat_id]
+      REQUIRED_SETTINGS = %i[token chat_id].freeze
       # This class will use a Telegram bot to send you a message if content changes.
       #
       # ==== Examples
