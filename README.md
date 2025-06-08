@@ -2,8 +2,6 @@
 
 Silly script to periodically check webpage changes.
 
-No bullshit gem from hell.
-
 1. run script every minute from cron
 2. pulls data for every Website to check, if the last time we did that is long ago
 4. if content is different, from the last time, alerts you with the new content (email, telegram)
@@ -11,126 +9,114 @@ No bullshit gem from hell.
 # Installation
 
 ```shell
-apt-get install ruby ruby-mechanize ruby-curb ruby-nokogiri 
 
-bundle install --system
+$ gem install webwatchr
 
-# if you want fancier Diffs, for DiffString objects you can apt install ruby-diffy
-
-git clone https://github.com/conchyliculture/webwatchr/
-cd webwatchr
-cp config.json.template config.json
+# if you want fancier Diffs, for DiffString objects, apt install ruby-diffy
 ```
 
-Then edit `config.json` to your needs
+And then make your own `dsl.rb` script. Example:
 
-And then edit `todo.rb`, so that it looks like:
+```ruby
+require "webwatchr"
 
-Run the cron often:
-
-```
-*/5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb
-```
-
-# Supported websites
-
-* Bluesky
-* Bandcamp merch pages
-* Package tracking (DHL, Colissimo, i-parcel, Royalmail, PostNL, UPS, USPS, etc.)
-* [Noquarterprod](https://www.noquarterprod.com)
-* [Qwertee](https://www.qwertee.com)
-* many many more
-
-Some of these have been such a pain in the ass to scrape, I resorted to use their (usually terrible) APIs (ie: USPS)
-
-# Add a new site to watch
-
-## Watch the whole HTML source of a page
-
-The file `lib/site.rb` provide two base methods you can choose from:
-
-* `SimpleString`, if you're interested in checking when a string changes
-* `Articles`, when you're interested in new "articles" showing up (but, for example, don't care that old articles disappear)
-
-
-In both case, `get_content()` is the one that will be run to generate what needs to be diff'ed.
-
-Either directly in `todo.rb`, or as a standalone file in `sites/`, you could declare a new class
-
-```
-class MySite < Site::SimpleString
+class SomeSimpleSite < Site::SimpleString
   def initialize()
-    super(url: 'https://somewhere.com', every: 60*60, comment: "that cool site")
+    @url = "https://somesimplesite.com/shops"
+    super()
   end
+
+  # Implement this function, to return what you want to compare every run
   def get_content
-     return @parsed_content.css('div.info').map(&:text)
+    res = ""
+    @parsed_content.css("div.shop-main a").map do |a|
+      url = "https://somesimplesite.com/shop/#{a['href']}"
+      if a.css('img')[0]['src'] == "soldout.png"
+        next
+      end
+
+      res << "#{url}\n"
+    end
+    res == "" ? nil : res
+  end
+end
+
+Webwatchr::Main.new do
+  # Some configuration, first for the alerting
+
+  # Send emails
+  add_default_alert :email do
+    set :smtp_port, 25
+    set :smtp_server, "localhost"
+    set :from_addr, "webwatchr@domain.eu"
+    set :dest_addr, "admin@domain.eu"
+  end
+
+  # Use telegram bot to send you messages
+  add_default_alert :telegram do
+    set :token, "12345:LONGTOKEN09876543"
+    set :chat_id, 1234567890
+  end
+
+  # # Just outputs update to the terminal
+  # add_default_alert :stdout
+
+  update BskySearch do
+    set "username", "toto"
+    set "password", "toto"
+    keyword "#danemark"
+  end
+
+  update SomeSimpleSite
+
+  update PostCH do
+    track_id "LS123476US"
   end
 end
 ```
 
-and add `SimpleSite.new()` to the `SITES_TO_WATCH` array in `todo.rb`.
+Run the cron often:
 
-For `Articles`, instead of returning a String, call `add_article()`.
+```
+*/5 * * * * cd /home/poil/my_fav_scripts/; ruby dsl.rb
+```
 
-A few other methods that are helpful to know of, if you need to do more complicated stuff (like, authentication, etc.):
+# Supported websites
 
-* `pull_things()` is called with no arguments, and sets up `@html_content` (which by default is just the html body of the page)
-* `parse_content()` is called to set up `@parsed_content` (by default, using `Nokogiri::HTML.parse()`)
-* `to_html()` method is a helper for formatting your content.
+List of sites that are somewhat maintained are [listed here](https://github.com/conchyliculture/webwatchr).
 
+Some examples:
 
-## Test your new site
-
-Run `ruby webwatchr.rb -s mysite.rb -t -v`
-
-It will run, and display what it would alert you with, without updating the state.
+* Bluesky
+* Bandcamp merch pages
+* Package tracking (DHL, Colissimo, i-parcel, Royalmail, PostNL, UPS, USPS, etc.)
 
 
 ## Force a site check, ignoring the 'wait' parameter
 
 This can be useful to run a site update at a specific time/day with a crontab, instead of every specified amount of time. You can force update a website using the -s flag:
 ```bash
-ruby webwatchr.rb -s lol.rb -f
+ruby webwatchr.rb -t -s SiteClass
 ```
 
 # FAQ
-
-## POST?
-
-If you need to actually fetch your URL using a POST HTTP request, add `post_data` as argument to Site.new(), when instanciating your new class:
-
 ## Tests?
 
-There is like, two! run `ruby tests/test.rb`
+There are like like, two! 
+
+Run `rake`
 
 ## Logs ?
 
 Call `logger`, as you would a classic `Logger` object in your `mysite.rb`.
 
-Set the log file in config.json under the "log" key
-
 ## Alerting
 
 Email is the main method of alerting, but you can also set webwatchr to talk to you on Telegram through a bot.
+
+### Email
 
 First make a bot and grab a token following the [Telegram procedure](https://core.telegram.org/bots#6-botfather).
 
 You also need to know the `chat_id` for its discussion with you. The code in [there](https://github.com/atipugin/telegram-bot-ruby/blob/master/examples/bot.rb) can help you.
 
-Install some dependencies from the one and only repo you should kind of trust:
-
-```
-apt install ruby-virtus ruby-inflecto ruby-faraday
-```
-
-Then grab the code for the Telegram bot client. Run this from inside the current dir:
-
-```
-CURDIR="$(pwd)"
-cd /tmp
-git clone https://github.com/atipugin/telegram-bot-ruby
-mv telegram-bot-ruby/lib/telegram "webwatchr/lib/"
-cd -
-```
-
-Then edit the config.json file accordingly.
