@@ -74,7 +74,7 @@ module Webwatchr
       warn msg
       raise e
     rescue StandardError => e
-      msg = "Issue with #{site} : #{e}\n"
+      msg = "Issue with #{site_class} : #{e}\n"
       msg += "#{e.message}\n"
       logger.error msg
       msg += e.backtrace.join("\n")
