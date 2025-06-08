@@ -3,6 +3,7 @@ require "fileutils"
 require "logger"
 require_relative "../lib/webwatchr/site"
 require_relative "./helpers"
+require "tmpdir"
 require "test/unit"
 
 class BaseWebrickTest < Test::Unit::TestCase

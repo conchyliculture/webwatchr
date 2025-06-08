@@ -1,4 +1,5 @@
 require "fileutils"
+require "tmpdir"
 require "test/unit"
 
 require_relative "../lib/webwatchr/alerting"
