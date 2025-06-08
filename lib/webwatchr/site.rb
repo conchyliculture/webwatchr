@@ -50,15 +50,11 @@ class Site
     @useragent = Site::DEFAULT_USER_AGENT
     @extra_headers = {}
     @alerters = []
+    @alert_only = []
     @http_ver = 1
     @rand_sleep = 0
     @did_stuff = false
     @every = 3600
-  end
-
-  def get_cache_dir()
-    FileUtils.mkdir_p(@cache_dir)
-    return @cache_dir
   end
 
   def set_http_header(key, value)
@@ -240,8 +236,8 @@ class Site
 
   def alert()
     logger.debug "Alerting new stuff"
-    @alerters.each do |a|
-      a.alert(self)
+    @alerters.each do |alerter|
+      alerter.alert(self) unless @alert_only.include?(alerter.class::IDENTIFIER)
     end
   end
 
@@ -255,6 +251,16 @@ class Site
 
   def get_content()
     return @html_content
+  end
+
+  def alert_only(alerter_identifiers)
+    if alerter_identifiers.instance_of?(Symbol)
+      @alert_only = [alerter_identifiers]
+    elsif alerter_identifiers.instance_of(Array)
+      @alert_only = alerter_identifiers
+    else
+      raise StandardError, "unknown type of provided alerter identifier #{alerter_identifiers}"
+    end
   end
 
   def should_update?(prevous_time)

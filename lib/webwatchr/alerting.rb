@@ -38,6 +38,7 @@ module Webwatchr
 
     class EmailAlert < Base
       REQUIRED_SETTINGS = %i[from_addr dest_addr smtp_server smtp_port].freeze
+      IDENTIFIER = :email
       # This class will send you email if content changes.
       #
       # ==== Examples
@@ -84,6 +85,7 @@ module Webwatchr
     end
 
     class TelegramAlert < Base
+      IDENTIFIER = :telegram
       REQUIRED_SETTINGS = %i[token chat_id].freeze
       # This class will use a Telegram bot to send you a message if content changes.
       #
@@ -116,6 +118,7 @@ module Webwatchr
     end
 
     class StdoutAlert < Base
+      IDENTIFIER = :stdout
       def alert(site)
         super(site)
         msg = "Update rom #{site.url}\n#{site.generate_html_content}"
