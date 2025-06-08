@@ -20,14 +20,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: ruby/setup-ruby@v1
+    - uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@ec02537da5712d66d4d50a0f33b7eb52773b5ed1
       with:
-        bundler-cache: true
-        ruby-version: head
-    - name: apt install
-      run: sudo apt-get install libcurl4 libcurl3-gnutls libcurl4-openssl-dev -y
-    - name: Install Dependencies
-      run: gem install nokogiri mechanize curb diffy webrick
-    - name: Run tests
-      run: ruby tests/tests.rb
+        ruby-version: '3.1' # Not needed with a .ruby-version file
+    - run: bundle install
+    - run: bundle exec rake
