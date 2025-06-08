@@ -262,6 +262,7 @@ class Site
     else
       raise StandardError, "unknown type of provided alerter identifier #{alerter_identifiers}"
     end
+    self
   end
 
   def should_update?(prevous_time)
