@@ -6,23 +6,14 @@
 # For more information see: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
 
 name: Ruby
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+on: [push, pull_request]
 jobs:
   test:
-
-    name: Ruby latest
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-    - uses: ruby/setup-ruby@ec02537da5712d66d4d50a0f33b7eb52773b5ed1
+    - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.1' # Not needed with a .ruby-version file
+        ruby-version: '3.3' # Not needed with a .ruby-version file
     - run: bundle install
     - run: bundle exec rake
