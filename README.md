@@ -10,19 +10,75 @@ Silly script to periodically check webpage changes.
 
 ```shell
 
-$ bundle install
+$ gem install webwatchr
 
 # if you want fancier Diffs, for DiffString objects, apt install ruby-diffy
+```
 
-git clone https://github.com/conchyliculture/webwatchr/
-cd webwatchr
+And then make your own `dsl.rb` script. Example:
 
-And then edit `todo.rb`, so that it looks like:
+```ruby
+require "webwatchr"
+
+class SomeSimpleSite < Site::SimpleString
+  def initialize()
+    @url = "https://somesimplesite.com/shops"
+    super()
+  end
+
+  # Implement this function, to return what you want to compare every run
+  def get_content
+    res = ""
+    @parsed_content.css("div.shop-main a").map do |a|
+      url = "https://somesimplesite.com/shop/#{a['href']}"
+      if a.css('img')[0]['src'] == "soldout.png"
+        next
+      end
+
+      res << "#{url}\n"
+    end
+    res == "" ? nil : res
+  end
+end
+
+Webwatchr::Main.new do
+  # Some configuration, first for the alerting
+
+  # Send emails
+  add_default_alert :email do
+    set :smtp_port, 25
+    set :smtp_server, "localhost"
+    set :from_addr, "webwatchr@domain.eu"
+    set :dest_addr, "admin@domain.eu"
+  end
+
+  # Use telegram bot to send you messages
+  add_default_alert :telegram do
+    set :token, "12345:LONGTOKEN09876543"
+    set :chat_id, 1234567890
+  end
+
+  # # Just outputs update to the terminal
+  # add_default_alert :stdout
+
+  update BskySearch do
+    set "username", "toto"
+    set "password", "toto"
+    keyword "#danemark"
+  end
+
+  update SomeSimpleSite
+
+  update PostCH do
+    track_id "LS234567890CH"
+  end
+end
+```
 
 Run the cron often:
 
 ```
-*/5 * * * * cd /home/poil/my_fav_scripts/webwatchr; ruby webwatchr.rb
+*/5 * * * * cd /home/poil/my_fav_scripts/; ruby dsl.rb
 ```
 
 # Supported websites
@@ -30,7 +86,7 @@ Run the cron often:
 * Bluesky
 * Bandcamp merch pages
 * Package tracking (DHL, Colissimo, i-parcel, Royalmail, PostNL, UPS, USPS, etc.)
-* many many more
+* etc.
 
 # Add a new site to watch
 
