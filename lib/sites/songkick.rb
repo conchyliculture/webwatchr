@@ -9,8 +9,8 @@ class Songkick < Site::Articles
     return self
   end
 
-  def get_content()
-    events = @parsed_content.css('ol.event-listings')[0]
+  def extract_articles()
+    events = @parsed_html.css('ol.event-listings')[0]
     events.css('li').each do |event|
       j = JSON.parse(event.css('script')[0].text)[0]
       date = j["startDate"]

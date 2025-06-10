@@ -5,8 +5,8 @@ require_relative "../../lib/sites/songkick"
 class SongkickTests < ArticleSiteTest
   class SongkickTest < Songkick
     def pull_things
-      @html_content = File.read(File.join(__dir__, "data/songkick"))
-      @parsed_content = Nokogiri::HTML.parse(@html_content)
+      @website_html = File.read(File.join(__dir__, "data/songkick"))
+      @parsed_html = Nokogiri::HTML.parse(@website_html)
     end
   end
 

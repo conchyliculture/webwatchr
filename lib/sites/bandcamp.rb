@@ -10,12 +10,12 @@ class BandcampMerch < Site::Articles
     self
   end
 
-  def get_content()
-    if @html_content =~ /You are being redirected, please follow <a href="([^"]+)"/
+  def extract_articles()
+    if @website_html =~ /You are being redirected, please follow <a href="([^"]+)"/
       new_url = ::Regexp.last_match(1)
-      @html_content = Net::HTTP.get(URI.parse(new_url))
-      @parsed_content = Nokogiri::HTML.parse(@html_content)
-      item = @parsed_content.css('div#merch-item')
+      @website_html = Net::HTTP.get(URI.parse(new_url))
+      @parsed_html = Nokogiri::HTML.parse(@website_html)
+      item = @parsed_html.css('div#merch-item')
       if item.css(".notable").text == "Sold Out"
         logger.debug "That item is sold out =("
         return
@@ -30,11 +30,7 @@ class BandcampMerch < Site::Articles
                     "title" => title
                   })
     else
-      f = File.new("/tmp/b", "w")
-      f.write(@html_content)
-      f.close
-
-      @parsed_content.css('ol.merch-grid li').each do |xx|
+      @parsed_html.css('ol.merch-grid li').each do |xx|
         unless xx.css('p.sold-out').empty?
           logger.debug "That item is sold out =("
           next

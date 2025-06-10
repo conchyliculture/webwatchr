@@ -27,6 +27,12 @@ class TestAlerter < Webwatchr::Alerting::Base
   end
 
   def alert(site)
-    @result = site.content
+    if site.is_a?(Site::Articles)
+      @result = site.articles
+    elsif site.is_a?(Site::SimpleString)
+      @result = site.content
+    else
+      raise StandardError, "Unknown Site class being tests: #{site.class}"
+    end
   end
 end
