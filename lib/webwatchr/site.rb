@@ -407,7 +407,7 @@ class Site
 
     def get_diff(previous_content = nil)
       # Is a ResultObject
-      @content ||= get_content()
+      @content ||= extract_content()
       return nil if @content == previous_content
 
       return @content
