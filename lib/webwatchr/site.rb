@@ -74,6 +74,10 @@ class Site
     @update_interval = 3600
   end
 
+  def display_optional_state
+    puts "We parsed the website and extracted content #{@content}"
+  end
+
   def set_http_header(key, value)
     @extra_headers[key] = value
   end
@@ -359,7 +363,7 @@ class Site
       else
         logger.info "Nothing new for #{@url}"
         if @test
-          logger.info "Current state is still :\n#{@content}"
+          display_optional_state()
         end
       end
     else
@@ -406,7 +410,6 @@ class Site
     end
 
     def get_diff(previous_content = nil)
-      # Is a ResultObject
       @content ||= extract_content()
       return nil if @content == previous_content
 
@@ -484,7 +487,7 @@ class Site
   # And you want to know when knew, previously unseen Articles appear.
   # For example, a shop.
   #
-  # You need to make sure to call add_articles() with instances of Article.
+  # You need to make sure to call add_article() with instances of Article.
   class Articles < Site
     class Article < Hash
     end
@@ -492,11 +495,16 @@ class Site
     def initialize
       super
       @articles = []
+      @found_articles = 0
     end
 
     def content
       log.error("Do not use site.content on an instance of Site::Articles in #{caller}")
       return @articles
+    end
+
+    def display_optional_state
+      puts "We parsed the website and extracted #{@found_articles} articles"
     end
 
     def validate(article)
@@ -508,13 +516,14 @@ class Site
 
     def add_article(article)
       logger.debug "Found article #{article['id']}"
+      @found_articles += 1
       validate(article)
       article['_timestamp'] = Time.now().to_i
-      @articles << article
+      @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
     end
 
     def extract_articles()
-      raise StandardError, "Please implement extract_articles(). Use @parsed_html and call add_articles()."
+      raise StandardError, "Please implement extract_articles(). Use @parsed_html and call add_article()."
     end
 
     def get_diff(previous_articles)
@@ -523,10 +532,10 @@ class Site
         return nil
       end
 
-      new_stuff = @articles.dup
+      new_stuff = @articles
       if previous_articles
         previous_ids = previous_articles.map { |art| art['id'] }
-        new_stuff = new_stuff.delete_if { |article| previous_ids.include?(article['id']) }
+        new_stuff = @articles.delete_if { |article| previous_ids.include?(article['id']) }
       end
       if (not new_stuff) or new_stuff.empty?
         return nil
