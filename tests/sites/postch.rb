@@ -1,9 +1,9 @@
 require "test/unit"
-require_relative "../../sites/postch"
+require_relative "../../lib/sites/postch"
 
 class PostCHTests < Test::Unit::TestCase
   def test_messages
-    p = PostCH.new(track_id: 'whatev')
+    p = PostCH.new
     [
       ["LETTER.*.90.620", "Consignment recorded by the foreign sender (data delivered)"],
       ["LETTER.*.90.913", "Arrival at the processing/collection point"],

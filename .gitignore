@@ -8,3 +8,4 @@ TODO
 *.log
 *.swp
 lib/telegram
+*.gem
