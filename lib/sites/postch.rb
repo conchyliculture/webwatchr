@@ -16,6 +16,7 @@ class PostCH < Site::SimpleString
     @mechanize = Mechanize.new()
     @mechanize.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
     @text_messages = {}
+    @parsed_json = nil
   end
 
   def code_to_message(code)
@@ -69,11 +70,11 @@ class PostCH < Site::SimpleString
     resp = @mechanize.get("https://service.post.ch/ekp-web/api/shipment/id/#{identity}/events", nil, nil, headers)
 
     json_content = JSON.parse(resp.body)
-    @parsed_content = []
+    @parsed_json = []
 
     json_content.each do |event|
       event['description'] = code_to_message(event['eventCode'])
-      @parsed_content << event
+      @parsed_json << event
     end
   end
 
@@ -89,7 +90,7 @@ class PostCH < Site::SimpleString
   end
 
   def get_content()
-    evs = @parsed_content.map { |e|
+    evs = @parsed_json.map { |e|
       e['timestamp'] = DateTime.strptime(e['timestamp'], "%Y-%m-%dT%H:%M:%S%Z")
       e
     }

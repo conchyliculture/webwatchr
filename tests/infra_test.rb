@@ -61,11 +61,11 @@ class TestSimpleStringSite < BaseWebrickTest
   class TestStringSite < Site::SimpleString
     def initialize
       super()
-      @wait = 3600
+      @update_interval = 3600
     end
 
-    def get_content()
-      return ResultObject.new(@parsed_content.css("div.content").text)
+    def extract_content()
+      return ResultObject.new(@parsed_html.css("div.content").text)
     end
   end
 
@@ -77,15 +77,12 @@ class TestSimpleStringSite < BaseWebrickTest
       f.write whole_html
     end
     url = "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_string_file]}"
-    wait = 10 * 60
 
     c = TestStringSite.new
     c.url = url
     a = TestAlerter.new()
     c.alerters = [a]
     assert { c.load_state_file() == {} }
-    assert { c.should_update?(-9_999_999_999_999) }
-    assert { c.should_update?((Time.now() - wait + 30).to_i) == false }
     html = c.fetch_url(url)
     assert { whole_html == html }
     assert { c.parse_noko(html).css("title").text == "test" }
@@ -99,9 +96,8 @@ class TestSimpleStringSite < BaseWebrickTest
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
     first_pass_content = Site::HTML_HEADER + content_html
-    assert { c.content.to_html == content_html }
     assert { c.generate_html_content == first_pass_content }
-    assert { a.result == c.content }
+    assert { a.result.message == c.content.message }
 
     File.open(File.join(TEST_CONFIG[:wwwroot], TEST_CONFIG[:content_is_string_file]), "w+") do |f|
       f.write whole_html.gsub("</div>", " new ! </div>")
@@ -121,7 +117,7 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.generate_html_content.nil? }
     assert { c.name == url }
 
-    c.every = 0
+    c.update_interval = 0
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
@@ -133,7 +129,7 @@ class TestSimpleStringSite < BaseWebrickTest
     result_last.delete("time")
     assert { result_last["url"] == url }
     assert { result_last["content"].message == "#{content_html} new ! " }
-    assert { result_last["wait"] == 0 }
+    assert { result_last["wait_at_least"] == 0 }
   end
 end
 
@@ -141,14 +137,14 @@ class TestArraySites < BaseWebrickTest
   class TestArraySite < Site::Articles
     def initialize
       super()
-      @wait = 3600
+      @update_interval = 3600
     end
 
-    def get_content()
+    def extract_articles()
       res = []
-      @parsed_content.css("div").each do |x|
+      @parsed_html.css("div").each do |x|
         a, b = x.text.split("-").map(&:strip)
-        add_article({ "id" => a, "url" => a, "title" => b })
+        add_article(Article["id" => a, "url" => a, "title" => b])
       end
       return res
     end
@@ -160,15 +156,12 @@ class TestArraySites < BaseWebrickTest
       f.write whole_html
     end
     url = "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_array_file]}"
-    wait = 10 * 60
 
     c = TestArraySite.new
     c.url = url
     a = TestAlerter.new()
     c.alerters = [a]
     assert { c.load_state_file() == {} }
-    assert { c.should_update?(-9_999_999_999_999) }
-    assert { !c.should_update?((Time.now() - wait + 30).to_i) }
     html = c.fetch_url(url)
     assert { html == whole_html }
     assert { c.parse_noko(html).css("title").text == "test" }
@@ -189,16 +182,14 @@ class TestArraySites < BaseWebrickTest
       "<li id='fi'><a href='fi'>fu</a></li>",
       "</ul>"
     ].join("\n")
-    c.content.each { |x| x.delete('_timestamp') }
+    c.articles.each { |x| x.delete('_timestamp') }
     assert {
-      c.content == [
+      c.articles == [
         { "id" => "lol", "url" => "lol", "title" => "lilo" },
         { "id" => "fi", "url" => "fi", "title" => "fu" }
       ]
     }
     assert { c.generate_html_content == expected_html }
-
-    result = ""
 
     File.open(File.join(TEST_CONFIG[:wwwroot], TEST_CONFIG[:content_is_array_file]), "a+") do |f|
       f.write "<div>new! - new </div>"
@@ -207,45 +198,36 @@ class TestArraySites < BaseWebrickTest
     c.url = url
     a = TestAlerter.new()
     c.alerters = [a]
-    # Second run don't d anything because we shouldn't rerun
+    # Second run don't do anything because we shouldn't rerun
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "INFO -- TestArraySites::TestArraySite: Too soon to update #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
-    assert { result == "" }
 
-    result = ""
-
-    c.content.each { |x| x.delete('_timestamp') }
-
-    c.every = 0
+    c.update_interval = 0
     # This time we set new things, and wait is 0 so we are good to go
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "DEBUG -- TestArraySites::TestArraySite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
+
     expected_html = Site::HTML_HEADER.dup + [
       "<ul style='list-style-type: none;'>",
       "<li id='new!'><a href='new!'>new</a></li>",
       "</ul>"
     ].join("\n")
 
-    c.content.each { |x| x.delete('_timestamp') }
-    assert { c.content == [{ "id" => "new!", "url" => "new!", "title" => "new" }] }
+    c.articles.each { |x| x.delete('_timestamp') }
+    assert { c.articles == [{ "id" => "new!", "url" => "new!", "title" => "new" }] }
     assert { c.generate_html_content == expected_html }
     expected_last = { "url" => "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_array_file]}",
-                      "previous_content" => [{ "id" => "lol", "url" => "lol", "title" => "lilo" },
-                                             { "id" => "fi", "url" => "fi", "title" => "fu" }],
-                      "wait" => 0,
+                      "wait_at_least" => 0,
                       "content" => [{ "id" => "lol", "title" => "lilo", "url" => "lol" },
                                     { "id" => "fi", "title" => "fu", "url" => "fi" },
                                     { "id" => "new!", "title" => "new", "url" => "new!" }] }
     result_last = JSON.parse(File.read(c.state_file))
     result_last.delete("time")
     result_last["content"].each do |item|
-      item.delete("_timestamp")
-    end
-    result_last["previous_content"].each do |item|
       item.delete("_timestamp")
     end
     assert { expected_last == result_last }
@@ -256,8 +238,8 @@ class TestArraySites < BaseWebrickTest
     c.url = url
     a = TestAlerter.new()
     c.alerters = [a]
-    c.every = 0
-    # Now, we don't call the alert Proc because we have no new things
+    c.update_interval = 0
+    # Now, we don't call the alerters because we have no new things
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "INFO -- TestArraySites::TestArraySite: Nothing new for #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]

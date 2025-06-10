@@ -6,6 +6,22 @@ require "net/http"
 require "nokogiri"
 require_relative "./logger"
 
+# Base class for a Site to be watched
+#
+# Handles pulling data from websites as well as storing the state and when to update next.
+#
+# == Overview
+#
+# - update() is called, which loads the saved state file
+# - do_stuff() is called and checks whether or not we should update (aka: if the last time was long enough ago)
+# - if it is time, we call pull_things(), which can be overloaded, but by default just ;
+#    - fetches @url, and stores it in @website_html
+#    - parses @website_html, with Nokogiri, into @parsed_html
+#    - calls extract_content(), which is the method that extract what we are interested in the webpage.
+#     Its results will get compared with the previous execution's results.
+#     This is the one you should reimplement at the very least (unless you want to compare against the whole HTML body).
+#  - get_diff() is the method that will do the comparison, and its return value, if not nil, will trigger alerting
+#  - Each Alerter object in @alerters will be called, if needed.
 class Site
   include Loggable
   class ParseError < StandardError
@@ -17,7 +33,7 @@ class Site
   HTML_HEADER = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n".freeze
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
-  attr_accessor :url, :alerters, :rand_sleep, :every, :lastdir, :cache_dir, :state_file, :comment
+  attr_accessor :url, :alerters, :rand_sleep, :update_interval, :lastdir, :cache_dir, :state_file, :comment
 
   attr_writer :name
 
@@ -55,7 +71,7 @@ class Site
     @http_ver = 1
     @rand_sleep = 0
     @did_stuff = false
-    @every = 3600
+    @update_interval = 3600
   end
 
   def set_http_header(key, value)
@@ -85,18 +101,21 @@ class Site
   end
 
   def generate_html_content()
-    return nil unless @content
+    raise StandardError, "We called generate_html_content, but there is no @content" unless @content
 
     message_html = Site::HTML_HEADER.dup
     message_html += @content
     return message_html
   end
 
-  # Helper methods to generate Telegram content
+  # Helper methods to generate Telegram messages
   def generate_telegram_message_pieces()
+    raise StandardError, "We called generate_telegram_message_pieces, but there is no @content" unless @content
+
     return [@content]
   end
 
+  # Uses Curb to query websites with HTTP/2
   def fetch_url2(url)
     require "curb"
 
@@ -193,10 +212,6 @@ class Site
     return html
   end
 
-  def parse_content(html)
-    return parse_noko(html)
-  end
-
   def parse_noko(html)
     noko = Nokogiri::HTML(html)
     meta = noko.css("meta")
@@ -224,13 +239,9 @@ class Site
     end
   end
 
+  # Takes the old state file, and updates it with the values passed in hash
   def update_state_file(hash)
     previous_state = load_state_file()
-    previous_state.update({
-                            "time" => Time.now.to_i,
-                            "url" => @url,
-                            "wait" => @wait
-                          })
     state = previous_state.update(hash)
     save_state_file(state)
   end
@@ -244,18 +255,6 @@ class Site
     end
   end
 
-  def content()
-    unless @did_stuff
-      raise StandardError, 'Trying to access @content, but we have not pulled any data yet'
-    end
-
-    return @content
-  end
-
-  def get_content()
-    return @html_content
-  end
-
   def alert_only(alerter_identifiers)
     if alerter_identifiers.instance_of?(Symbol)
       @alert_only = [alerter_identifiers]
@@ -267,12 +266,8 @@ class Site
     self
   end
 
-  def should_update?(prevous_time)
-    return Time.now().to_i >= prevous_time + @wait
-  end
-
-  def get_new(_previous_content = nil)
-    @content = get_content()
+  # This method compares the previous stored content, with the new one, and returns what is new.
+  def get_diff(_)
     return @content
   end
 
@@ -282,73 +277,84 @@ class Site
     md5 = Digest::MD5.hexdigest(@url)
     @cache_dir = File.join(cache_dir, "cache-#{URI.parse(@url).hostname}-#{md5}")
     @state_file = File.join(last_dir, "last-#{URI.parse(@url).hostname}-#{md5}")
-    state = load_state_file()
-    @wait = @every || state["wait"] || 60 * 60
     @test = test
     logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
 
     do_stuff()
   rescue Site::RedirectError
     msg = "Error parsing page #{@url}, too many redirects"
-    msg += ". Will retry in #{@wait} + 30 minutes"
+    msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait" => @wait + 30 * 60 })
+    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
   rescue Site::ParseError => e
     msg = "Error parsing page #{@url}"
     if e.message
       msg += " with error : #{e.message}"
     end
-    msg += ". Will retry in #{@wait} + 30 minutes"
+    msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait" => @wait + 30 * 60 })
+    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
   rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
     msg = "Network error on #{@url}"
     if e.message
       msg += " : #{e.message}"
     end
-    msg += ". Will retry in #{@wait} + 30 minutes"
+    msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait" => @wait + 30 * 60 })
+    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
   end
 
+  def extract_content()
+    return @website_html
+  end
+
+  # By default, we pull html from the @url, we parse it with Nokogiri
   def pull_things()
-    @html_content = fetch_url(@url)
-    @parsed_content = parse_content(@html_content)
+    @website_html = fetch_url(@url)
+    @parsed_html = parse_noko(@website_html)
+    @content = extract_content()
   end
 
   def do_stuff()
-    new_stuff = false
+    # Prepare previous_state, with defaults, that can be overriden with what we may find in the state_file
     previous_state = {
       "time" => -9_999_999_999_999,
       "content" => nil
     }
-    state = load_state_file()
-    if state
-      previous_state.update(state)
+    old_state = load_state_file()
+    delay_between_updates = @update_interval || old_state["wait_at_least"] || 60
+    if old_state
+      previous_state.update(old_state)
     end
-    previous_content = previous_state["content"]
-    if should_update?(previous_state["time"]) or @test
+
+    if @test or (Time.now().to_i >= previous_state['time'] + delay_between_updates)
       if @rand_sleep > 0 and not @test
         logger.info "Time to update #{@url} (sleeping #{@rand_sleep} sec)"
         sleep(@rand_sleep)
       else
         logger.info "Time to update #{@url}"
       end
+
       pull_things()
-      new_stuff = get_new(previous_content)
+
+      new_stuff = get_diff(previous_state['content'])
       @did_stuff = true
       if new_stuff
         if @test
           logger.info "Would have alerted with new stuff:\n#{new_stuff}"
         else
           alert()
-          update_state_file({
-                              "content" => new_stuff,
-                              "previous_content" => previous_content
-                            })
+          update_state_file(
+            {
+              "time" => Time.now.to_i,
+              "url" => @url,
+              "wait_at_least" => @update_interval,
+              "content" => new_stuff
+            }
+          )
         end
       else
         logger.info "Nothing new for #{@url}"
@@ -356,7 +362,6 @@ class Site
           logger.info "Current state is still :\n#{@content}"
         end
       end
-      update_state_file({}) unless @test
     else
       @did_stuff = true
       logger.info "Too soon to update #{@url}"
@@ -400,13 +405,9 @@ class Site
       end
     end
 
-    def get_new(previous_content = nil)
+    def get_diff(previous_content = nil)
       # Is a ResultObject
-      if @content
-        raise StandardError, "The result of get_content() should be a ResultObject if the Site class is SimpleString" unless @content.class < ResultObject
-      else
-        @content = get_content()
-      end
+      @content ||= get_content()
       return nil if @content == previous_content
 
       return @content
@@ -429,86 +430,101 @@ class Site
     end
   end
 
-  class DiffString < SimpleString
-    begin
-      require "diffy"
+  ## For use when you want to parse a site, and are only interested is having
+  # a nice looking "Diff" between the new and the previous state
+  #  class DiffString < SimpleString
+  #    begin
+  #      require "diffy"
+  #
+  #      def generate_html_content()
+  #        diff_html = Site::HTML_HEADER.dup
+  #        diff_html += "<head><style>"
+  #        diff_html += Diffy::CSS
+  #        diff_html += "</style><body>"
+  #        diff_html += @diffed.to_s(:html)
+  #        diff_html += "</body></html>"
+  #        return diff_html
+  #      end
+  #
+  #      def get_differ(previous, new)
+  #        return Diffy::Diff.new(previous, new)
+  #      end
+  #    rescue LoadError
+  #      require "test/unit/diff"
+  #      def generate_html_content()
+  #        diff_html = Site::HTML_HEADER.dup
+  #        diff_html += @diffed.to_s
+  #        diff_html += "</body></html>"
+  #        return diff_html
+  #      end
+  #
+  #      def get_differ(previous, new)
+  #        return new unless previous
+  #
+  #        return Test::Unit::Diff.unified(previous, new)
+  #      end
+  #    end
+  #
+  #    def get_diff(previous_content = nil)
+  #      new_stuff = nil
+  #      @content = extract_content()
+  #      unless @content
+  #        return nil
+  #      end
+  #
+  #      if @content != previous_content
+  #        @diffed = get_differ(previous_content, @content)
+  #        new_stuff = @diffed.to_s
+  #      end
+  #      return new_stuff
+  #    end
+  #  end
 
-      def generate_html_content()
-        diff_html = Site::HTML_HEADER.dup
-        diff_html += "<head><style>"
-        diff_html += Diffy::CSS
-        diff_html += "</style><body>"
-        diff_html += @diffed.to_s(:html)
-        diff_html += "</body></html>"
-        return diff_html
-      end
-
-      def get_differ(previous, new)
-        return Diffy::Diff.new(previous, new)
-      end
-    rescue LoadError
-      require "test/unit/diff"
-      def generate_html_content()
-        diff_html = Site::HTML_HEADER.dup
-        diff_html += @diffed.to_s
-        diff_html += "</body></html>"
-        return diff_html
-      end
-
-      def get_differ(previous, new)
-        return new unless previous
-
-        return Test::Unit::Diff.unified(previous, new)
-      end
-    end
-
-    def get_new(previous_content = nil)
-      new_stuff = nil
-      @content = get_content()
-      unless @content
-        return nil
-      end
-
-      if @content != previous_content
-        @diffed = get_differ(previous_content, @content)
-        new_stuff = @diffed.to_s
-      end
-      return new_stuff
-    end
-  end
-
+  ## For use when you want to parse a site that has Articles
+  # And you want to know when knew, previously unseen Articles appear.
+  # For example, a shop.
+  #
+  # You need to make sure to call add_articles() with instances of Article.
   class Articles < Site
+    class Article < Hash
+    end
+
     def initialize
       super
-      @content = []
+      @articles = []
     end
 
-    def validate(item)
-      raise StandardError, "Needs at least \"id\" key" unless item["id"]
+    def validate(article)
+      id = article['id']
+      raise StandardError, "Article needs an \"id\", which is used as identifier" unless id
 
-      id = item["id"]
       raise StandardError, "\"id\" key needs to be a String and not #{id.class}" unless id.is_a?(String)
     end
 
-    def add_article(item)
-      logger.debug "Found article #{item['id']}"
-      validate(item)
-      item["_timestamp"] = Time.now().to_i
-      @content << item unless @content.map { |x| x['id'] }.include?(item['id'])
+    def add_article(article)
+      logger.debug "Found article #{article['id']}"
+      validate(article)
+      article['_timestamp'] = Time.now().to_i
+      # TODO: maybe make a Set
+      @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
     end
 
-    def get_new(previous_content)
+    def extract_articles()
+      raise StandardError, "Please implement extract_articles(). Use @parsed_html and call add_articles()."
+    end
+
+    def get_diff(previous_articles)
       new_stuff = []
-      get_content()
-      unless @content
+      extract_articles()
+      unless @articles
         return nil
       end
 
-      if previous_content
-        previous_ids = previous_content.map { |h| h["id"] }
-        new_stuff = @content.delete_if { |item| previous_ids.include?(item["id"]) }
+      if previous_articles
+        previous_ids = previous_articles.map { |art| art['id'] }
+        new_stuff = @articles.delete_if { |article| previous_ids.include?(article['id']) }
       else
-        new_stuff = @content
+        new_stuff = @articles
       end
       if (not new_stuff) or new_stuff.empty?
         return nil
@@ -517,18 +533,14 @@ class Site
       return new_stuff
     end
 
+    # Here we want to store every article we ever found
     def update_state_file(hash)
-      hash_content = hash["content"]
-      hash.delete("content")
       previous_state = load_state_file()
-      previous_state.update({
-                              "time" => Time.now.to_i,
-                              "url" => @url,
-                              "wait" => @wait
-                            })
+      hash_articles = hash["content"]
+      hash.delete('content')
       state = previous_state.update(hash)
-      if hash_content
-        (previous_state["content"] ||= []).concat(hash_content)
+      if hash_articles
+        (previous_state["content"] ||= []).concat(hash_articles)
       end
       save_state_file(state)
     end
@@ -536,18 +548,18 @@ class Site
     def generate_html_content()
       message_html = Site::HTML_HEADER.dup
       message_html << "<ul style='list-style-type: none;'>\n"
-      @content.each do |item|
-        msg = "<li id='#{item['id']}'>"
-        if item["url"]
-          msg += "<a href='#{item['url']}'>"
+      @articles.each do |article|
+        msg = "<li id='#{article['id']}'>"
+        if article['url']
+          msg += "<a href='#{article['url']}'>"
         end
-        if item["img_src"]
-          msg += "<img style='width:100px' src='#{item['img_src']}'/>"
+        if article["img_src"]
+          msg += "<img style='width:100px' src='#{article['img_src']}'/>"
         end
-        if item["title"]
-          msg += item['title'].to_s
+        if article["title"]
+          msg += article['title'].to_s
         end
-        if item["url"]
+        if article["url"]
           msg += "</a>"
         end
         msg += "</li>\n"
@@ -559,16 +571,16 @@ class Site
 
     def generate_telegram_message_pieces()
       msg_pieces = []
-      @content.each do |item|
-        line = item["title"]
-        if item["url"]
+      @articles.each do |article|
+        line = article["title"]
+        if article["url"]
           if line
-            line += ": #{item['url']}"
+            line += ": #{article['url']}"
           else
-            line = item["url"]
+            line = article["url"]
           end
 
-          line += ": #{item['url']}"
+          line += ": #{article['url']}"
         end
         msg_pieces << line
       end

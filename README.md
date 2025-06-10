@@ -30,7 +30,7 @@ class SomeSimpleSite < Site::SimpleString
   # Implement this function, to return what you want to compare every run
   def get_content
     res = ""
-    @parsed_content.css("div.shop-main a").map do |a|
+    @parsed_html.css("div.shop-main a").map do |a|
       url = "https://somesimplesite.com/shop/#{a['href']}"
       if a.css('img')[0]['src'] == "soldout.png"
         next

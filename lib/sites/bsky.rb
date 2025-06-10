@@ -107,14 +107,11 @@ class BskyAccount < BskyBase
     did = _profile_to_did(@account)
     path = "/xrpc/app.bsky.feed.getAuthorFeed?actor=#{did}&filter=posts_and_author_threads&limit=30"
     resp = _api_get(path)
-    @parsed_content = JSON.parse(resp.body)
-    f = File.open("/tmp/qsd", 'w')
-    f.write(resp.body)
-    f.close
+    @parsed_json = JSON.parse(resp.body)
   end
 
-  def get_content
-    @parsed_content['feed'].each do |p|
+  def extract_articles
+    @parsed_json['feed'].each do |p|
       post = p['post']
       text = post['record']['text']
       next if @regex and (text !~ @regex)
@@ -165,11 +162,11 @@ class BskySearch < BskyBase
 
     params = { "q" => "#danemark", "limit" => 30, "sort" => "top" }
     resp = _api_get("/xrpc/app.bsky.feed.searchPosts", params: params.to_a, headers: headers)
-    @parsed_content = JSON.parse(resp.body)
+    @parsed_json = JSON.parse(resp.body)
   end
 
-  def get_content
-    @parsed_content['posts'].each do |post|
+  def extract_articles
+    @parsed_json['posts'].each do |post|
       add_article(_article_from_post(post))
     end
   end

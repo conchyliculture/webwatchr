@@ -5,13 +5,13 @@ require_relative "../../lib/sites/bsky"
 class BskyTests < ArticleSiteTest
   class BskyAccountTest < BskyAccount
     def pull_things
-      @parsed_content = JSON.parse(File.read(File.join(__dir__, "data/bsky_account")))
+      @parsed_json = JSON.parse(File.read(File.join(__dir__, "data/bsky_account")))
     end
   end
 
   class BskySearchTest < BskySearch
     def pull_things
-      @parsed_content = JSON.parse(File.read(File.join(__dir__, "data/bsky_search")))
+      @parsed_json = JSON.parse(File.read(File.join(__dir__, "data/bsky_search")))
     end
   end
 
@@ -23,15 +23,16 @@ class BskyTests < ArticleSiteTest
     p.alerters = [alert]
     fakeupdate(p)
 
-    assert_equal alert.result.size, 30
+    assert_equal alert.result.size, 29
     first_result = alert.result[0]
     first_result.delete("_timestamp")
     assert_equal first_result, {
       "id" =>
-  "at://did:plc:a4pqq234yw7fqbddawjo7y35/app.bsky.feed.post/3lqy25osxdq2h",
+  "at://did:plc:a4pqq234yw7fqbddawjo7y35/app.bsky.feed.post/3lr7lkkxazk2p",
       "title" =>
-  "2025-06-07T00:00:02.000Z: “Boys, your father wanted me to tell you that you won’t be seeing your Uncle Elon anymore because he is now in a million pieces,” said Susie Wiles theonion.com/weeping...",
-      "url" => "https://bsky.app/profile/theonion.com/post/3lqy25osxdq2h"
+  "2025-06-10T00:00:00.000Z: “We’re requiring all men to head to their doctors and have them undo these terrible, terrible procedures,” the president said in an address from the Oval Office\n" +
+  "theonion.com/trump-i...",
+      "url" => "https://bsky.app/profile/theonion.com/post/3lr7lkkxazk2p"
     }
   end
 
@@ -48,10 +49,11 @@ class BskyTests < ArticleSiteTest
     first_result.delete("_timestamp")
     assert_equal first_result, {
       "id" =>
-  "at://did:plc:a4pqq234yw7fqbddawjo7y35/app.bsky.feed.post/3lqxyhy34wm2c",
+  "at://did:plc:a4pqq234yw7fqbddawjo7y35/app.bsky.feed.post/3lr7lkkxazk2p",
       "title" =>
-  "2025-06-06T23:30:00.000Z: “Ever since Christ was executed in broad daylight in the middle of Golgotha, questions have swirled about the mysterious circumstances surrounding his death, but no longer,” said the Bishop Of Rome theonion.com/new-pop...",
-      "url" => "https://bsky.app/profile/theonion.com/post/3lqxyhy34wm2c"
+  "2025-06-10T00:00:00.000Z: “We’re requiring all men to head to their doctors and have them undo these terrible, terrible procedures,” the president said in an address from the Oval Office\n" +
+  "theonion.com/trump-i...",
+      "url" => "https://bsky.app/profile/theonion.com/post/3lr7lkkxazk2p"
     }
   end
 
@@ -63,7 +65,7 @@ class BskyTests < ArticleSiteTest
     p.alerters = [alert]
     fakeupdate(p)
 
-    assert_equal alert.result.size, 3
+    assert_equal alert.result.size, 1
   end
 
   def test_search
