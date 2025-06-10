@@ -494,6 +494,11 @@ class Site
       @articles = []
     end
 
+    def content
+      log.error("Do not use site.content on an instance of Site::Articles in #{caller}")
+      return @articles
+    end
+
     def validate(article)
       id = article['id']
       raise StandardError, "Article needs an \"id\", which is used as identifier" unless id
@@ -505,8 +510,7 @@ class Site
       logger.debug "Found article #{article['id']}"
       validate(article)
       article['_timestamp'] = Time.now().to_i
-      # TODO: maybe make a Set
-      @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
+      @articles << article
     end
 
     def extract_articles()
@@ -514,17 +518,15 @@ class Site
     end
 
     def get_diff(previous_articles)
-      new_stuff = []
       extract_articles()
       unless @articles
         return nil
       end
 
+      new_stuff = @articles.dup
       if previous_articles
         previous_ids = previous_articles.map { |art| art['id'] }
-        new_stuff = @articles.delete_if { |article| previous_ids.include?(article['id']) }
-      else
-        new_stuff = @articles
+        new_stuff = new_stuff.delete_if { |article| previous_ids.include?(article['id']) }
       end
       if (not new_stuff) or new_stuff.empty?
         return nil
