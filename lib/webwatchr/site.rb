@@ -271,7 +271,7 @@ class Site
   end
 
   # This method compares the previous stored content, with the new one, and returns what is new.
-  def get_diff(_)
+  def get_diff()
     return @content
   end
 
@@ -344,21 +344,13 @@ class Site
 
       pull_things()
 
-      new_stuff = get_diff(previous_state['content'])
+      new_stuff = get_diff()
       @did_stuff = true
       if new_stuff
         if @test
           logger.info "Would have alerted with new stuff:\n#{new_stuff}"
         else
           alert()
-          update_state_file(
-            {
-              "time" => Time.now.to_i,
-              "url" => @url,
-              "wait_at_least" => @update_interval,
-              "content" => new_stuff
-            }
-          )
         end
       else
         logger.info "Nothing new for #{@url}"
@@ -409,10 +401,18 @@ class Site
       end
     end
 
-    def get_diff(previous_content = nil)
+    def get_diff()
       @content ||= extract_content()
+      previous_content = load_state_file()["content"]
       return nil if @content == previous_content
 
+      update_state_file(
+        {
+          "time" => Time.now.to_i,
+          "wait_at_least" => @update_interval,
+          "content" => @content
+        }
+      )
       return @content
     end
 
@@ -468,7 +468,7 @@ class Site
   #      end
   #    end
   #
-  #    def get_diff(previous_content = nil)
+  #    def get_diff()
   #      new_stuff = nil
   #      @content = extract_content()
   #      unless @content
@@ -526,17 +526,25 @@ class Site
       raise StandardError, "Please implement extract_articles(). Use @parsed_html and call add_article()."
     end
 
-    def get_diff(previous_articles)
+    def get_diff()
       extract_articles()
       unless @articles
         return nil
       end
 
       new_stuff = @articles
+      previous_articles = load_state_file()["articles"]
       if previous_articles
         previous_ids = previous_articles.map { |art| art['id'] }
         new_stuff = @articles.delete_if { |article| previous_ids.include?(article['id']) }
       end
+      update_state_file(
+        {
+          "time" => Time.now.to_i,
+          "wait_at_least" => @update_interval,
+          "articles" => (previous_articles || []).concat(@articles)
+        }
+      )
       if (not new_stuff) or new_stuff.empty?
         return nil
       end
@@ -547,12 +555,7 @@ class Site
     # Here we want to store every article we ever found
     def update_state_file(hash)
       previous_state = load_state_file()
-      hash_articles = hash["content"]
-      hash.delete('content')
       state = previous_state.update(hash)
-      if hash_articles
-        (previous_state["content"] ||= []).concat(hash_articles)
-      end
       save_state_file(state)
     end
 
