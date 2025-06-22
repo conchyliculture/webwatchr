@@ -176,7 +176,7 @@ class Site
       end
       response = http.request(req)
       case response.code
-      when "301", "302"
+      when "301", "302", "303"
         if max_redir == 0
           raise Site::RedirectError
         end
