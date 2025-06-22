@@ -331,7 +331,7 @@ class Site
     old_state = load_state_file()
     delay_between_updates = old_state["wait_at_least"] || @update_interval || 60
     if old_state
-      previous_state.update!(old_state)
+      previous_state.update(old_state)
     end
 
     if @test or (Time.now().to_i >= previous_state['time'] + delay_between_updates)
