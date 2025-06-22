@@ -290,7 +290,7 @@ class Site
     msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
   rescue Site::ParseError => e
     msg = "Error parsing page #{@url}"
     if e.message
@@ -299,7 +299,7 @@ class Site
     msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
   rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
     msg = "Network error on #{@url}"
     if e.message
@@ -308,7 +308,7 @@ class Site
     msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
   end
 
   def extract_content()
