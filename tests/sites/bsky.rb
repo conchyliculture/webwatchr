@@ -58,7 +58,7 @@ class BskyTests < ArticleSiteTest
   end
 
   def test_regex
-    p = BskyAccount.new
+    p = BskyAccountTest.new
     p.account("theonion.com")
     p.set("regex", /christ/i)
     alert = TestAlerter.new()

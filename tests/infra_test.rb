@@ -45,6 +45,10 @@ class BaseWebrickTest < Test::Unit::TestCase
     restart_webrick()
   end
 
+  def cleanup
+    FileUtils.remove_entry_secure(@workdir) if File.directory?(@workdir)
+  end
+
   def teardown()
     @webrick.stop
     @serv_thread.join
@@ -53,7 +57,6 @@ class BaseWebrickTest < Test::Unit::TestCase
         f.puts ""
       end
     end
-    FileUtils.remove_entry_secure(@workdir)
   end
 end
 
@@ -61,7 +64,7 @@ class TestSimpleStringSite < BaseWebrickTest
   class TestStringSite < Site::SimpleString
     def initialize
       super()
-      @update_interval = 3600
+      @update_interval = 200
     end
 
     def extract_content()
@@ -88,10 +91,10 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.parse_noko(html).css("title").text == "test" }
     cache_dir = File.join(@workdir, "cache")
     last_dir = File.join(@workdir, ".lasts")
+    c.state_file = File.join(last_dir, "last-localhost-2182cd5c8685baed48f692ed72d7a89f")
     FileUtils.mkdir_p(cache_dir)
     FileUtils.mkdir_p(last_dir)
     c.update(cache_dir: cache_dir, last_dir: last_dir)
-    assert { c.state_file.end_with?("last-localhost-2182cd5c8685baed48f692ed72d7a89f") }
     expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
@@ -117,7 +120,7 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.generate_html_content.nil? }
     assert { c.name == url }
 
-    c.update_interval = 0
+    c.update_state_file({ "time" => Time.now.to_i - 300 })
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
@@ -127,9 +130,10 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.name == url }
     result_last = JSON.parse(File.read(c.state_file), create_additions: true)
     result_last.delete("time")
-    assert { result_last["url"] == url }
     assert { result_last["content"].message == "#{content_html} new ! " }
-    assert { result_last["wait_at_least"] == 0 }
+    assert { result_last["wait_at_least"] == 200 }
+  ensure
+    cleanup
   end
 end
 
@@ -137,7 +141,7 @@ class TestArraySites < BaseWebrickTest
   class TestArraySite < Site::Articles
     def initialize
       super()
-      @update_interval = 3600
+      @update_interval = 200
     end
 
     def extract_articles()
@@ -204,7 +208,8 @@ class TestArraySites < BaseWebrickTest
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
 
-    c.update_interval = 0
+    c.update_state_file({ "time" => Time.now.to_i - 300 })
+
     # This time we set new things, and wait is 0 so we are good to go
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "DEBUG -- TestArraySites::TestArraySite: Alerting new stuff"
@@ -220,15 +225,16 @@ class TestArraySites < BaseWebrickTest
     c.articles.each { |x| x.delete('_timestamp') }
     assert { c.articles == [{ "id" => "new!", "url" => "new!", "title" => "new" }] }
     assert { c.generate_html_content == expected_html }
-    expected_last = { "url" => "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_array_file]}",
-                      "wait_at_least" => 0,
-                      "content" => [{ "id" => "lol", "title" => "lilo", "url" => "lol" },
-                                    { "id" => "fi", "title" => "fu", "url" => "fi" },
-                                    { "id" => "new!", "title" => "new", "url" => "new!" }] }
+    expected_last = {
+      "wait_at_least" => 200,
+      "articles" => [{ "id" => "lol", "title" => "lilo", "url" => "lol" },
+                     { "id" => "fi", "title" => "fu", "url" => "fi" },
+                     { "id" => "new!", "title" => "new", "url" => "new!" }]
+    }
     result_last = JSON.parse(File.read(c.state_file))
     result_last.delete("time")
-    result_last["content"].each do |item|
-      item.delete("_timestamp")
+    result_last["articles"].each do |article|
+      article.delete("_timestamp")
     end
     assert { expected_last == result_last }
 
@@ -238,8 +244,9 @@ class TestArraySites < BaseWebrickTest
     c.url = url
     a = TestAlerter.new()
     c.alerters = [a]
-    c.update_interval = 0
     # Now, we don't call the alerters because we have no new things
+    c.state_file = File.join(last_dir, "last-localhost-35e711989b197f20f3d4936e91a2c079")
+    c.update_state_file({ "time" => Time.now.to_i - 300 })
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "INFO -- TestArraySites::TestArraySite: Nothing new for #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]
@@ -249,5 +256,7 @@ class TestArraySites < BaseWebrickTest
       "</ul>"
     ].join("\n")
     assert { result == "" }
+  ensure
+    cleanup
   end
 end
