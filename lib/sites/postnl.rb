@@ -19,6 +19,7 @@ class PostNL < Site::SimpleString
 
   def initialize
     super()
+    @update_interval = 6 * 60 * 60
     @parsed_json = nil
   end
 
