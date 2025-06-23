@@ -300,7 +300,7 @@ class Site
     logger.error msg
     warn msg
     update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
-  rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
+  rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
     msg = "Network error on #{@url}"
     if e.message
       msg += " : #{e.message}"
