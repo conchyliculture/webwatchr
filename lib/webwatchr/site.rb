@@ -74,6 +74,10 @@ class Site
     @update_interval = 3600
   end
 
+  def display_optional_state
+    puts "We parsed the website and extracted content #{@content}"
+  end
+
   def set_http_header(key, value)
     @extra_headers[key] = value
   end
@@ -172,7 +176,7 @@ class Site
       end
       response = http.request(req)
       case response.code
-      when "301", "302"
+      when "301", "302", "303"
         if max_redir == 0
           raise Site::RedirectError
         end
@@ -267,7 +271,7 @@ class Site
   end
 
   # This method compares the previous stored content, with the new one, and returns what is new.
-  def get_diff(_)
+  def get_diff()
     return @content
   end
 
@@ -286,7 +290,7 @@ class Site
     msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
   rescue Site::ParseError => e
     msg = "Error parsing page #{@url}"
     if e.message
@@ -295,8 +299,8 @@ class Site
     msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
-  rescue Errno::ECONNREFUSED, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+  rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
     msg = "Network error on #{@url}"
     if e.message
       msg += " : #{e.message}"
@@ -304,7 +308,7 @@ class Site
     msg += ". Will retry in #{@update_interval} + 30 minutes"
     logger.error msg
     warn msg
-    update_state_file({ "wait_at_least" => @update_interval + 30 * 60 })
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
   end
 
   def extract_content()
@@ -325,7 +329,7 @@ class Site
       "content" => nil
     }
     old_state = load_state_file()
-    delay_between_updates = @update_interval || old_state["wait_at_least"] || 60
+    delay_between_updates = old_state["wait_at_least"] || @update_interval || 60
     if old_state
       previous_state.update(old_state)
     end
@@ -340,26 +344,18 @@ class Site
 
       pull_things()
 
-      new_stuff = get_diff(previous_state['content'])
+      new_stuff = get_diff()
       @did_stuff = true
       if new_stuff
         if @test
           logger.info "Would have alerted with new stuff:\n#{new_stuff}"
         else
           alert()
-          update_state_file(
-            {
-              "time" => Time.now.to_i,
-              "url" => @url,
-              "wait_at_least" => @update_interval,
-              "content" => new_stuff
-            }
-          )
         end
       else
         logger.info "Nothing new for #{@url}"
         if @test
-          logger.info "Current state is still :\n#{@content}"
+          display_optional_state()
         end
       end
     else
@@ -405,11 +401,18 @@ class Site
       end
     end
 
-    def get_diff(previous_content = nil)
-      # Is a ResultObject
-      @content ||= get_content()
+    def get_diff()
+      @content ||= extract_content()
+      previous_content = load_state_file()["content"]
       return nil if @content == previous_content
 
+      update_state_file(
+        {
+          "time" => Time.now.to_i,
+          "wait_at_least" => @update_interval,
+          "content" => @content
+        }
+      )
       return @content
     end
 
@@ -465,7 +468,7 @@ class Site
   #      end
   #    end
   #
-  #    def get_diff(previous_content = nil)
+  #    def get_diff()
   #      new_stuff = nil
   #      @content = extract_content()
   #      unless @content
@@ -484,7 +487,7 @@ class Site
   # And you want to know when knew, previously unseen Articles appear.
   # For example, a shop.
   #
-  # You need to make sure to call add_articles() with instances of Article.
+  # You need to make sure to call add_article() with instances of Article.
   class Articles < Site
     class Article < Hash
     end
@@ -492,11 +495,16 @@ class Site
     def initialize
       super
       @articles = []
+      @found_articles = 0
     end
 
     def content
       log.error("Do not use site.content on an instance of Site::Articles in #{caller}")
       return @articles
+    end
+
+    def display_optional_state
+      puts "We parsed the website and extracted #{@found_articles} articles"
     end
 
     def validate(article)
@@ -508,26 +516,35 @@ class Site
 
     def add_article(article)
       logger.debug "Found article #{article['id']}"
+      @found_articles += 1
       validate(article)
       article['_timestamp'] = Time.now().to_i
-      @articles << article
+      @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
     end
 
     def extract_articles()
-      raise StandardError, "Please implement extract_articles(). Use @parsed_html and call add_articles()."
+      raise StandardError, "Please implement extract_articles(). Use @parsed_html and call add_article()."
     end
 
-    def get_diff(previous_articles)
+    def get_diff()
       extract_articles()
       unless @articles
         return nil
       end
 
-      new_stuff = @articles.dup
+      new_stuff = @articles
+      previous_articles = load_state_file()["articles"]
       if previous_articles
         previous_ids = previous_articles.map { |art| art['id'] }
-        new_stuff = new_stuff.delete_if { |article| previous_ids.include?(article['id']) }
+        new_stuff = @articles.delete_if { |article| previous_ids.include?(article['id']) }
       end
+      update_state_file(
+        {
+          "time" => Time.now.to_i,
+          "wait_at_least" => @update_interval,
+          "articles" => (previous_articles || []).concat(@articles)
+        }
+      )
       if (not new_stuff) or new_stuff.empty?
         return nil
       end
@@ -538,12 +555,7 @@ class Site
     # Here we want to store every article we ever found
     def update_state_file(hash)
       previous_state = load_state_file()
-      hash_articles = hash["content"]
-      hash.delete('content')
       state = previous_state.update(hash)
-      if hash_articles
-        (previous_state["content"] ||= []).concat(hash_articles)
-      end
       save_state_file(state)
     end
 

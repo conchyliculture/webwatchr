@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "webwatchr"
-  s.version     = "0.0.2"
+  s.version     = "0.0.3"
   s.summary     = "Scrapes stuff and tells you of updates."
   s.description = "Scrapes stuff and tells you of updates. Exciting!"
   s.authors     = ["Renzo"]
