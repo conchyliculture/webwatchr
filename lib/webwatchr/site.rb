@@ -365,6 +365,56 @@ class Site
   end
 
   class SimpleString < Site
+    class ListResult < ResultObject
+      attr_accessor :elements
+
+      def initialize(*elements)
+        @elements = elements
+        super()
+      end
+
+      def <<(elem)
+        @elements << elem
+      end
+
+      def to_telegram()
+        msg = []
+        @elements.each do |elem|
+          msg << " * #{elem}"
+        end
+        return msg.join("\n")
+      end
+
+      def to_s
+        return to_telegram
+      end
+
+      def to_html()
+        msg = ["<ul>"]
+        @elements.each do |elem|
+          msg << "<li>#{elem}</li>"
+        end
+        msg << ["</ul>"]
+        return msg.join("\n")
+      end
+
+      def to_json(*args)
+        {
+          JSON.create_id => self.class.name,
+          'elements' => @elements
+        }.to_json(*args)
+      end
+
+      def self.json_create(object)
+        new(*object['elements'])
+      end
+
+      def ==(other)
+        self.class == other.class &&
+          @elements.sort == other.elements.sort
+      end
+    end
+
     class ResultObject
       attr_accessor :message
 
