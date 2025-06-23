@@ -38,7 +38,7 @@ class PostNL < Site::SimpleString
       }
     )
     if resp.body =~ /API calls quota exceeded!/
-      raise Site::ParseError, "resp.body"
+      raise Site::ParseError, resp.body
     end
 
     @parsed_json = JSON.parse(resp.body)
