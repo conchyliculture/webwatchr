@@ -365,6 +365,42 @@ class Site
   end
 
   class SimpleString < Site
+    class ResultObject
+      attr_accessor :message
+
+      def initialize(message = '')
+        @message = message
+      end
+
+      def to_telegram()
+        return @message
+      end
+
+      def to_s
+        return @message
+      end
+
+      def to_html()
+        return @message
+      end
+
+      def to_json(*args)
+        {
+          JSON.create_id => self.class.name,
+          'message' => @message
+        }.to_json(*args)
+      end
+
+      def self.json_create(object)
+        new(*object['message'])
+      end
+
+      def ==(other)
+        self.class == other.class &&
+          @message == other.message
+      end
+    end
+
     class ListResult < ResultObject
       attr_accessor :elements
 
@@ -412,42 +448,6 @@ class Site
       def ==(other)
         self.class == other.class &&
           @elements.sort == other.elements.sort
-      end
-    end
-
-    class ResultObject
-      attr_accessor :message
-
-      def initialize(message = '')
-        @message = message
-      end
-
-      def to_telegram()
-        return @message
-      end
-
-      def to_s
-        return @message
-      end
-
-      def to_html()
-        return @message
-      end
-
-      def to_json(*args)
-        {
-          JSON.create_id => self.class.name,
-          'message' => @message
-        }.to_json(*args)
-      end
-
-      def self.json_create(object)
-        new(*object['message'])
-      end
-
-      def ==(other)
-        self.class == other.class &&
-          @message == other.message
       end
     end
 
