@@ -45,7 +45,7 @@ class PostNL < Site::SimpleString
   end
 
   def extract_content()
-    res = []
+    res = Site::SimpleString::ListResult.new()
     @parsed_json['data']['items'][0]['events'].each do |event|
       msg = "#{event['datetime_local']}: #{event['status_description']}"
       if event['country_code']
@@ -54,6 +54,6 @@ class PostNL < Site::SimpleString
       res << msg
     end
 
-    return ResultObject.new(res.join(""))
+    return res
   end
 end
