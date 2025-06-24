@@ -113,6 +113,7 @@ class TestSimpleStringSite < BaseWebrickTest
     end
     url = "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_string_file]}"
 
+    # First pull, there is new stuff to see
     c = TestStringSite.new
     c.url = url
     a = TestAlerter.new()
@@ -134,6 +135,7 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.generate_html_content == first_pass_content }
     assert { a.result.message == c.content.message }
 
+    # Second pull, there is new stuff to see, but we haven't waited long enough
     File.open(File.join(TEST_CONFIG[:wwwroot], TEST_CONFIG[:content_is_string_file]), "w+") do |f|
       f.write whole_html.gsub("</div>", " new ! </div>")
     end
@@ -144,6 +146,8 @@ class TestSimpleStringSite < BaseWebrickTest
     FileUtils.mkdir_p(cache_dir)
     FileUtils.mkdir_p(last_dir)
     c.update(cache_dir: cache_dir, last_dir: last_dir)
+    result_last = JSON.parse(File.read(c.state_file), create_additions: true)
+    assert { result_last['time'] == Time.now.to_i }
     c.comment = "lol"
     expected_error = "INFO -- TestSimpleStringSite::TestStringSite: Too soon to update #{url}"
     last_error = @logger_test_io.string.split("\n")[-1]
@@ -152,7 +156,9 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.generate_html_content.nil? }
     assert { c.name == url }
 
-    c.update_state_file({ "time" => Time.now.to_i - 300 })
+    # Third pull, there is new stuff to see, and we have waited long enough
+    now_minus_some = Time.now.to_i - 300
+    c.update_state_file({ "time" => now_minus_some })
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "DEBUG -- TestSimpleStringSite::TestStringSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
@@ -161,7 +167,22 @@ class TestSimpleStringSite < BaseWebrickTest
     assert { c.generate_html_content == "#{first_pass_content} new ! " }
     assert { c.name == url }
     result_last = JSON.parse(File.read(c.state_file), create_additions: true)
-    result_last.delete("time")
+    assert { result_last['time'] == Time.now.to_i }
+    assert { result_last["content"].message == "#{content_html} new ! " }
+    assert { result_last["wait_at_least"] == 200 }
+
+    # 4th pull, there is no new stuff to see, and we have waited long enough
+    now_minus_some = Time.now.to_i - 300
+    c.update_state_file({ "time" => now_minus_some })
+    c.update(cache_dir: cache_dir, last_dir: last_dir)
+    expected_error = "INFO -- TestSimpleStringSite::TestStringSite: Nothing new for #{url}"
+    last_error = @logger_test_io.string.split("\n")[-1]
+    assert { last_error.end_with?(expected_error) }
+    assert { c.content.to_html == "#{content_html} new ! " }
+    assert { c.generate_html_content == "#{first_pass_content} new ! " }
+    assert { c.name == url }
+    result_last = JSON.parse(File.read(c.state_file), create_additions: true)
+    assert { result_last['time'] == Time.now.to_i }
     assert { result_last["content"].message == "#{content_html} new ! " }
     assert { result_last["wait_at_least"] == 200 }
   ensure

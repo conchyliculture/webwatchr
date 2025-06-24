@@ -454,7 +454,6 @@ class Site
     def get_diff()
       @content ||= extract_content()
       previous_content = load_state_file()["content"]
-      return nil if @content == previous_content
 
       update_state_file(
         {
@@ -463,6 +462,8 @@ class Site
           "content" => @content
         }
       )
+      return nil if @content == previous_content
+
       return @content
     end
 
