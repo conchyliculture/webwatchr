@@ -78,18 +78,8 @@ class PostCH < Site::SimpleString
     end
   end
 
-  def get_html_content()
-    res = []
-    res << Site::HTML_HEADER
-    res << "<ul>"
-    @events.each do |e|
-      res << "<li>#{e}</li>"
-    end
-    res << "</ul>"
-    return res.join("\n")
-  end
-
-  def get_content()
+  def extract_content()
+    res = Site::SimpleString::ListResult.new()
     evs = @parsed_json.map { |e|
       e['timestamp'] = DateTime.strptime(e['timestamp'], "%Y-%m-%dT%H:%M:%S%Z")
       e
@@ -99,10 +89,10 @@ class PostCH < Site::SimpleString
       if event['city'] and event['city'] != ""
         msg += " (#{event['city']} #{event['zip']})"
       end
-      @events << msg
+      res << msg
     end
 
-    return ResultObject.new(@events.join("\n"))
+    return res
   end
 end
 

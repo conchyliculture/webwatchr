@@ -60,6 +60,38 @@ class BaseWebrickTest < Test::Unit::TestCase
   end
 end
 
+class TestResultObjects < BaseWebrickTest
+  class TestStringList < Site::SimpleString
+    def extract_content()
+      res = Site::SimpleString::ListResult.new
+      res << "first string"
+      res << "second string"
+      return res
+    end
+  end
+
+  def test_list_result
+    url = "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_string_file]}"
+
+    c = TestStringList.new
+    c.url = url
+    a = TestAlerter.new()
+    c.alerters = [a]
+    assert { c.load_state_file() == {} }
+    cache_dir = File.join(@workdir, "cache")
+    last_dir = File.join(@workdir, ".lasts")
+    c.state_file = File.join(last_dir, "last-localhost-2182cd5c8685baed48f692ed72d7a89f")
+    FileUtils.mkdir_p(cache_dir)
+    FileUtils.mkdir_p(last_dir)
+    c.update(cache_dir: cache_dir, last_dir: last_dir)
+    first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<ul>\n<li>first string</li>\n<li>second string</li>\n</ul>"
+    assert { c.generate_html_content == first_pass_content }
+    first_pass_content_telegram = [" * first string\n * second string"]
+    assert { c.generate_telegram_message_pieces == first_pass_content_telegram }
+    assert { a.result.message == c.content.message }
+  end
+end
+
 class TestSimpleStringSite < BaseWebrickTest
   class TestStringSite < Site::SimpleString
     def initialize
