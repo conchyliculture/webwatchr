@@ -513,7 +513,7 @@ class Site
       end
 
       def get_differ(previous, new)
-        return Test::Unit::Diff.unified(previous, new)
+        return Test::Unit::Diff.unified(previous || "", new || "")
       end
     end
 
@@ -535,7 +535,11 @@ class Site
       )
 
       unless previous_content
-        return @content.message
+        if @content.is_a?(ResultObject)
+          return @content.message
+        else
+          return @content
+        end
       end
 
       if @content != previous_content
