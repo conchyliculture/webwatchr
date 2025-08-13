@@ -486,53 +486,64 @@ class Site
 
   ## For use when you want to parse a site, and are only interested is having
   # a nice looking "Diff" between the new and the previous state
-  #  class DiffString < SimpleString
-  #    begin
-  #      require "diffy"
-  #
-  #      def generate_html_content()
-  #        diff_html = Site::HTML_HEADER.dup
-  #        diff_html += "<head><style>"
-  #        diff_html += Diffy::CSS
-  #        diff_html += "</style><body>"
-  #        diff_html += @diffed.to_s(:html)
-  #        diff_html += "</body></html>"
-  #        return diff_html
-  #      end
-  #
-  #      def get_differ(previous, new)
-  #        return Diffy::Diff.new(previous, new)
-  #      end
-  #    rescue LoadError
-  #      require "test/unit/diff"
-  #      def generate_html_content()
-  #        diff_html = Site::HTML_HEADER.dup
-  #        diff_html += @diffed.to_s
-  #        diff_html += "</body></html>"
-  #        return diff_html
-  #      end
-  #
-  #      def get_differ(previous, new)
-  #        return new unless previous
-  #
-  #        return Test::Unit::Diff.unified(previous, new)
-  #      end
-  #    end
-  #
-  #    def get_diff()
-  #      new_stuff = nil
-  #      @content = extract_content()
-  #      unless @content
-  #        return nil
-  #      end
-  #
-  #      if @content != previous_content
-  #        @diffed = get_differ(previous_content, @content)
-  #        new_stuff = @diffed.to_s
-  #      end
-  #      return new_stuff
-  #    end
-  #  end
+  class DiffString < SimpleString
+    begin
+      require "diffy"
+
+      def generate_html_content()
+        diff_html = Site::HTML_HEADER.dup
+        diff_html += "<head><style>"
+        diff_html += Diffy::CSS
+        diff_html += "</style><body>"
+        diff_html += @diffed.to_s(:html)
+        diff_html += "</body></html>"
+        return diff_html
+      end
+
+      def get_differ(previous, new)
+        return Diffy::Diff.new(previous, new)
+      end
+    rescue LoadError
+      require "test/unit/diff"
+      def generate_html_content()
+        diff_html = Site::HTML_HEADER.dup
+        diff_html += @diffed.to_s
+        diff_html += "</body></html>"
+        return diff_html
+      end
+
+      def get_differ(previous, new)
+        return Test::Unit::Diff.unified(previous, new)
+      end
+    end
+
+    def get_diff()
+      @content ||= extract_content()
+      unless @content
+        return nil
+      end
+
+      previous_content = load_state_file()["content"]
+      @diffed = get_differ(previous_content, @content)
+
+      update_state_file(
+        {
+          "time" => Time.now.to_i,
+          "wait_at_least" => @update_interval,
+          "content" => @content
+        }
+      )
+
+      unless previous_content
+        return @content.message
+      end
+
+      if @content != previous_content
+        new_stuff = @diffed.to_s
+      end
+      return new_stuff
+    end
+  end
 
   ## For use when you want to parse a site that has Articles
   # And you want to know when knew, previously unseen Articles appear.

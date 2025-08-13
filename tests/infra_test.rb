@@ -313,3 +313,69 @@ class TestArraySites < BaseWebrickTest
     cleanup
   end
 end
+
+class TestDiffStringSite < BaseWebrickTest
+  class TestDiffSite < Site::DiffString
+    def initialize
+      super()
+      @update_interval = 0
+    end
+
+    def extract_content()
+      return ResultObject.new(@parsed_html.css("div.content").text)
+    end
+  end
+
+  def test_content_is_string
+    content_html = "Line1\nLine2\nLine3"
+    whole_html = Site::HTML_HEADER.dup
+    whole_html += "<title>test</title><div class='content'>#{content_html}</div>"
+    File.open(File.join(TEST_CONFIG[:wwwroot], TEST_CONFIG[:content_is_string_file]), "w") do |f|
+      f.write whole_html
+    end
+    url = "http://localhost:#{TEST_CONFIG[:wwwport]}/#{TEST_CONFIG[:content_is_string_file]}"
+
+    # First pull, there is new stuff to see
+    c = TestDiffSite.new
+    c.url = url
+    a = TestAlerter.new()
+    c.alerters = [a]
+    assert { c.load_state_file() == {} }
+    html = c.fetch_url(url)
+    assert { whole_html == html }
+    cache_dir = File.join(@workdir, "cache")
+    last_dir = File.join(@workdir, ".lasts")
+    c.state_file = File.join(last_dir, "last-localhost-2182cd5c8685baed48f692ed72d7a89f")
+    FileUtils.mkdir_p(cache_dir)
+    FileUtils.mkdir_p(last_dir)
+    c.update(cache_dir: cache_dir, last_dir: last_dir)
+    expected_error = "DEBUG -- TestDiffStringSite::TestDiffSite: Alerting new stuff"
+    last_error = @logger_test_io.string.split("\n")[-1]
+    assert { last_error.end_with?(expected_error) }
+    first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<head><style>.diff{overflow:auto;}\n.diff ul{background:#fff;overflow:auto;font-size:13px;list-style:none;margin:0;padding:0;display:table;width:100%;}\n.diff del, .diff ins{display:block;text-decoration:none;}\n.diff li{padding:0; display:table-row;margin: 0;height:1em;}\n.diff li.ins{background:#dfd; color:#080}\n.diff li.del{background:#fee; color:#b00}\n.diff li:hover{background:#ffc}\n/* try 'whitespace:pre;' if you don't want lines to wrap */\n.diff del, .diff ins, .diff span{white-space:pre-wrap;font-family:courier;}\n.diff del strong{font-weight:normal;background:#fcc;}\n.diff ins strong{font-weight:normal;background:#9f9;}\n.diff li.diff-comment { display: none; }\n.diff li.diff-block-info { background: none repeat scroll 0 0 gray; }\n</style><body><div class=\"diff\">\n  <ul>\n    <li class=\"ins\"><ins>Line1</ins></li>\n    <li class=\"ins\"><ins>Line2</ins></li>\n    <li class=\"ins\"><ins>Line3</ins></li>\n  </ul>\n</div>\n</body></html>"
+    assert { c.generate_html_content == first_pass_content }
+    assert { a.result.message == c.content.message }
+
+    # Second pull, there is new stuff to see
+    File.open(File.join(TEST_CONFIG[:wwwroot], TEST_CONFIG[:content_is_string_file]), "w+") do |f|
+      f.write whole_html.gsub(content_html, "#{content_html}\nLine4!")
+    end
+    c = TestDiffSite.new
+    c.url = url
+    cache_dir = File.join(@workdir, "cache")
+    last_dir = File.join(@workdir, ".lasts")
+    FileUtils.mkdir_p(cache_dir)
+    FileUtils.mkdir_p(last_dir)
+    c.update(cache_dir: cache_dir, last_dir: last_dir)
+    result_last = JSON.parse(File.read(c.state_file), create_additions: true)
+    assert { result_last['time'] == Time.now.to_i }
+    c.comment = "lol"
+    expected_error = "DEBUG -- TestDiffStringSite::TestDiffSite: Alerting new stuff"
+    last_error = @logger_test_io.string.split("\n")[-1]
+    assert { last_error.end_with?(expected_error) }
+    first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<head><style>.diff{overflow:auto;}\n.diff ul{background:#fff;overflow:auto;font-size:13px;list-style:none;margin:0;padding:0;display:table;width:100%;}\n.diff del, .diff ins{display:block;text-decoration:none;}\n.diff li{padding:0; display:table-row;margin: 0;height:1em;}\n.diff li.ins{background:#dfd; color:#080}\n.diff li.del{background:#fee; color:#b00}\n.diff li:hover{background:#ffc}\n/* try 'whitespace:pre;' if you don't want lines to wrap */\n.diff del, .diff ins, .diff span{white-space:pre-wrap;font-family:courier;}\n.diff del strong{font-weight:normal;background:#fcc;}\n.diff ins strong{font-weight:normal;background:#9f9;}\n.diff li.diff-comment { display: none; }\n.diff li.diff-block-info { background: none repeat scroll 0 0 gray; }\n</style><body><div class=\"diff\">\n  <ul>\n    <li class=\"unchanged\"><span>Line1</span></li>\n    <li class=\"unchanged\"><span>Line2</span></li>\n    <li class=\"del\"><del>Line3</del></li>\n    <li class=\"ins\"><ins>Line3</ins></li>\n    <li class=\"ins\"><ins><strong>Line4!</strong></ins></li>\n    <li class=\"ins\"><ins><strong></strong></ins></li>\n  </ul>\n</div>\n</body></html>"
+    assert { c.generate_html_content == first_pass_content }
+  ensure
+    cleanup
+  end
+end
