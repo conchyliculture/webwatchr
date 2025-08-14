@@ -513,7 +513,9 @@ class Site
       end
 
       def get_differ(previous, new)
-        return Test::Unit::Diff.unified(previous || "", new || "")
+        p = (previous.is_a?(SimpleString::ResultObject) ? previous.message : previous) || ""
+        n = (new.is_a?(SimpleString::ResultObject) ? new.message : new) || ""
+        return Test::Unit::Diff.unified(p, n)
       end
     end
 

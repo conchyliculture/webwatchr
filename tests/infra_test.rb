@@ -351,9 +351,16 @@ class TestDiffStringSite < BaseWebrickTest
     c.update(cache_dir: cache_dir, last_dir: last_dir)
     expected_error = "DEBUG -- TestDiffStringSite::TestDiffSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
+
     assert { last_error.end_with?(expected_error) }
-    first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<head><style>.diff{overflow:auto;}\n.diff ul{background:#fff;overflow:auto;font-size:13px;list-style:none;margin:0;padding:0;display:table;width:100%;}\n.diff del, .diff ins{display:block;text-decoration:none;}\n.diff li{padding:0; display:table-row;margin: 0;height:1em;}\n.diff li.ins{background:#dfd; color:#080}\n.diff li.del{background:#fee; color:#b00}\n.diff li:hover{background:#ffc}\n/* try 'whitespace:pre;' if you don't want lines to wrap */\n.diff del, .diff ins, .diff span{white-space:pre-wrap;font-family:courier;}\n.diff del strong{font-weight:normal;background:#fcc;}\n.diff ins strong{font-weight:normal;background:#9f9;}\n.diff li.diff-comment { display: none; }\n.diff li.diff-block-info { background: none repeat scroll 0 0 gray; }\n</style><body><div class=\"diff\">\n  <ul>\n    <li class=\"ins\"><ins>Line1</ins></li>\n    <li class=\"ins\"><ins>Line2</ins></li>\n    <li class=\"ins\"><ins>Line3</ins></li>\n  </ul>\n</div>\n</body></html>"
-    assert { c.generate_html_content == first_pass_content }
+    begin
+      require "diffy"
+      first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<head><style>.diff{overflow:auto;}\n.diff ul{background:#fff;overflow:auto;font-size:13px;list-style:none;margin:0;padding:0;display:table;width:100%;}\n.diff del, .diff ins{display:block;text-decoration:none;}\n.diff li{padding:0; display:table-row;margin: 0;height:1em;}\n.diff li.ins{background:#dfd; color:#080}\n.diff li.del{background:#fee; color:#b00}\n.diff li:hover{background:#ffc}\n/* try 'whitespace:pre;' if you don't want lines to wrap */\n.diff del, .diff ins, .diff span{white-space:pre-wrap;font-family:courier;}\n.diff del strong{font-weight:normal;background:#fcc;}\n.diff ins strong{font-weight:normal;background:#9f9;}\n.diff li.diff-comment { display: none; }\n.diff li.diff-block-info { background: none repeat scroll 0 0 gray; }\n</style><body><div class=\"diff\">\n  <ul>\n    <li class=\"ins\"><ins>Line1</ins></li>\n    <li class=\"ins\"><ins>Line2</ins></li>\n    <li class=\"ins\"><ins>Line3</ins></li>\n  </ul>\n</div>\n</body></html>"
+      assert { c.generate_html_content == first_pass_content }
+    rescue LoadError
+      first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n---\n+++\n@@ -1,0 +1,3 @@ Line1\n+Line1\n+Line2\n+Line3</body></html>"
+      assert { c.generate_html_content == first_pass_content }
+    end
     assert { a.result.message == c.content.message }
 
     # Second pull, there is new stuff to see
@@ -373,8 +380,14 @@ class TestDiffStringSite < BaseWebrickTest
     expected_error = "DEBUG -- TestDiffStringSite::TestDiffSite: Alerting new stuff"
     last_error = @logger_test_io.string.split("\n")[-1]
     assert { last_error.end_with?(expected_error) }
-    first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<head><style>.diff{overflow:auto;}\n.diff ul{background:#fff;overflow:auto;font-size:13px;list-style:none;margin:0;padding:0;display:table;width:100%;}\n.diff del, .diff ins{display:block;text-decoration:none;}\n.diff li{padding:0; display:table-row;margin: 0;height:1em;}\n.diff li.ins{background:#dfd; color:#080}\n.diff li.del{background:#fee; color:#b00}\n.diff li:hover{background:#ffc}\n/* try 'whitespace:pre;' if you don't want lines to wrap */\n.diff del, .diff ins, .diff span{white-space:pre-wrap;font-family:courier;}\n.diff del strong{font-weight:normal;background:#fcc;}\n.diff ins strong{font-weight:normal;background:#9f9;}\n.diff li.diff-comment { display: none; }\n.diff li.diff-block-info { background: none repeat scroll 0 0 gray; }\n</style><body><div class=\"diff\">\n  <ul>\n    <li class=\"unchanged\"><span>Line1</span></li>\n    <li class=\"unchanged\"><span>Line2</span></li>\n    <li class=\"del\"><del>Line3</del></li>\n    <li class=\"ins\"><ins>Line3</ins></li>\n    <li class=\"ins\"><ins><strong>Line4!</strong></ins></li>\n    <li class=\"ins\"><ins><strong></strong></ins></li>\n  </ul>\n</div>\n</body></html>"
-    assert { c.generate_html_content == first_pass_content }
+    begin
+      require "diffy"
+      first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n<head><style>.diff{overflow:auto;}\n.diff ul{background:#fff;overflow:auto;font-size:13px;list-style:none;margin:0;padding:0;display:table;width:100%;}\n.diff del, .diff ins{display:block;text-decoration:none;}\n.diff li{padding:0; display:table-row;margin: 0;height:1em;}\n.diff li.ins{background:#dfd; color:#080}\n.diff li.del{background:#fee; color:#b00}\n.diff li:hover{background:#ffc}\n/* try 'whitespace:pre;' if you don't want lines to wrap */\n.diff del, .diff ins, .diff span{white-space:pre-wrap;font-family:courier;}\n.diff del strong{font-weight:normal;background:#fcc;}\n.diff ins strong{font-weight:normal;background:#9f9;}\n.diff li.diff-comment { display: none; }\n.diff li.diff-block-info { background: none repeat scroll 0 0 gray; }\n</style><body><div class=\"diff\">\n  <ul>\n    <li class=\"unchanged\"><span>Line1</span></li>\n    <li class=\"unchanged\"><span>Line2</span></li>\n    <li class=\"del\"><del>Line3</del></li>\n    <li class=\"ins\"><ins>Line3</ins></li>\n    <li class=\"ins\"><ins><strong>Line4!</strong></ins></li>\n    <li class=\"ins\"><ins><strong></strong></ins></li>\n  </ul>\n</div>\n</body></html>"
+      assert { c.generate_html_content == first_pass_content }
+    rescue LoadError
+      first_pass_content = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n---\n+++\n@@ -1,3 +1,4 @@ Line1\n Line1\n Line2\n Line3\n+Line4!</body></html>"
+      assert { c.generate_html_content == first_pass_content }
+    end
   ensure
     cleanup
   end
