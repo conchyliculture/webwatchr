@@ -245,6 +245,8 @@ class Site
 
   # Takes the old state file, and updates it with the values passed in hash
   def update_state_file(hash)
+    return if @test
+
     previous_state = load_state_file()
     state = previous_state.update(hash)
     save_state_file(state)
@@ -622,6 +624,8 @@ class Site
 
     # Here we want to store every article we ever found
     def update_state_file(hash)
+      return if @test
+
       previous_state = load_state_file()
       state = previous_state.update(hash)
       save_state_file(state)
