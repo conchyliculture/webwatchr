@@ -50,7 +50,7 @@ module Webwatchr
 
     def update(site_class, &block)
       if (PARAMS[:mode] == :single) && site_class.to_s != PARAMS[:site]
-        logger.info("Running in single site mode, skipping #{site_class} (!= #{PARAMS[:site]})")
+        logger.debug("Running in single site mode, skipping #{site_class} (!= #{PARAMS[:site]})")
         return
       end
 
