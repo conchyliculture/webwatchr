@@ -14,7 +14,7 @@ end
 module Webwatchr
   include Loggable
 
-  PARAMS = { mode: :normal, test: false } # rubocop:disable Style/MutableConstant
+  PARAMS = { mode: :normal, test: false, verbose: false, debug: false } # rubocop:disable Style/MutableConstant
 
   if ARGV.any?
     OptionParser.new { |o|
@@ -30,7 +30,10 @@ module Webwatchr
         PARAMS[:site] = val
         PARAMS[:mode] = :single
       end
-      o.on("-v", "--verbose", "Be verbose (output to STDOUT instead of logfile") do
+      o.on("-v", "--verbose", "Be verbose (output to STDOUT instead of logfile. Repeat for debug level.") do
+        if PARAMS[:verbose]
+          PARAMS[:debug] = true
+        end
         PARAMS[:verbose] = true
       end
       o.on("-t", "--test", "Check website (ignoring wait time) and show what we've parsed") do

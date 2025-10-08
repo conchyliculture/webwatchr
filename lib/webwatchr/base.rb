@@ -33,6 +33,10 @@ module Webwatchr
       log_out_file_rotation = 'weekly'
       log_level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
+      if PARAMS[:debug]
+        log_level = Logger::DEBUG
+      end
+
       MyLog.instance.configure(log_out_file, log_out_file_rotation, log_level)
     end
 
