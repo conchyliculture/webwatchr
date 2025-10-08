@@ -590,7 +590,7 @@ class Site
     def add_article(article)
       logger.debug "Found article #{article['id']}"
       validate(article)
-      @found_articles += 1
+      @parsed_articles += 1
       article['_timestamp'] = Time.now().to_i
       @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
     end
