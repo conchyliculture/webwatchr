@@ -565,7 +565,7 @@ class Site
     def initialize
       super
       @articles = []
-      @found_articles = 0
+      @parsed_articles = 0
     end
 
     def content
@@ -574,7 +574,10 @@ class Site
     end
 
     def display_optional_state
-      puts "We parsed the website and extracted #{@found_articles} articles"
+      puts "We parsed the website and extracted #{@parsed_articles} articles. Of these, the previously unknown ones are: "
+      @articles.each do |art|
+        puts art
+      end
     end
 
     def validate(article)
@@ -586,8 +589,8 @@ class Site
 
     def add_article(article)
       logger.debug "Found article #{article['id']}"
-      @found_articles += 1
       validate(article)
+      @found_articles += 1
       article['_timestamp'] = Time.now().to_i
       @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
     end
