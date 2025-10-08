@@ -574,10 +574,16 @@ class Site
     end
 
     def display_optional_state
-      puts "We parsed the website and extracted #{@parsed_articles} articles. Of these, the previously unknown ones are: "
-      @articles.each do |art|
-        puts art
+      message = "We parsed the website and extracted #{@parsed_articles} articles."
+      if @articles.empty?
+        message += " And they were all previously known"
+      else
+        message += " Of these, the previously unknown ones are: "
+        @articles.each do |art|
+          message += " - #{art}\n"
+        end
       end
+      puts message
     end
 
     def validate(article)
