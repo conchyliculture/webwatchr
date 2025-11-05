@@ -5,9 +5,9 @@ require "json"
 class Quickpac < Site::SimpleString
   def track_id(track_id)
     case track_id
-    when /^[-1-9]{18}$/
+    when /^[0-9]{18}$/
       @track_id = track_id.scan(/^(..)(..)(......)(........)$/)[-1].join(".")
-    when /^[-1-9]{2}\.[0-9]{2}\.[0-9]{6}\.[0-9]{8}$/
+    when /^[0-9]{2}\.[0-9]{2}\.[0-9]{6}\.[0-9]{8}$/
       @track_id = track_id
     else
       raise Site::ParseError, "track_id should either in fortmat 121212345612345680 or 12.12.123456.12345678"
