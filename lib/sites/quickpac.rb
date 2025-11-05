@@ -15,7 +15,7 @@ class Quickpac < Site::SimpleString
     @url = "https://parcelsearch.quickpac.ch/api/ParcelSearch/GetPublicTracking/#{track_id}/en/false"
   end
 
-  def get_content()
+  def extract_content()
     @parsed_content = JSON.parse(@website_html)
     res = Site::SimpleString::ListResult.new()
     if not @parsed_content or not @parsed_content["Protocol"]
