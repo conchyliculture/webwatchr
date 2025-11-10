@@ -22,6 +22,10 @@ class Quickpac < Site::SimpleString
       raise Site::ParseError, "Nothing found for #{@track_id}. Check it is correct."
     end
 
+    if @parsed_content["OutlookHeadline"]
+      res << "#{@parsed_content['OutlookHeadline']} #{@parsed_content['OutlookInfo'].join(' ')}"
+    end
+
     @parsed_content["Protocol"].each do |p|
       res << "#{p['Time']}: #{p['StatusText']}"
     end
