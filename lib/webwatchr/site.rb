@@ -277,6 +277,13 @@ class Site
     return @content
   end
 
+  def retry_later(reason, new_delay)
+    msg = "#{reason}\nWill retry in #{new_delay / 60} minutes"
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => new_delay })
+    logger.error msg
+    warn msg
+  end
+
   def update(cache_dir:, last_dir:, test: false)
     raise StandardError, "Didn't set URL for site #{self}" unless @url
 
@@ -288,29 +295,19 @@ class Site
 
     do_stuff()
   rescue Site::RedirectError
-    msg = "Error parsing page #{@url}, too many redirects"
-    msg += ". Will retry in #{@update_interval} + 30 minutes"
-    logger.error msg
-    warn msg
-    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+    retry_later("Error parsing page #{@url}, too many redirects", @update_interval + (30 * 60))
   rescue Site::ParseError => e
     msg = "Error parsing page #{@url}"
     if e.message
       msg += " with error : #{e.message}"
     end
-    msg += ". Will retry in #{@update_interval} + 30 minutes"
-    logger.error msg
-    warn msg
-    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+    retry_later(msg, @update_interval + (30 * 60))
   rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
     msg = "Network error on #{@url}"
     if e.message
       msg += " : #{e.message}"
     end
-    msg += ". Will retry in #{@update_interval} + 30 minutes"
-    logger.error msg
-    warn msg
-    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+    retry_later(msg, @update_interval + (30 * 60))
   end
 
   def extract_content()
