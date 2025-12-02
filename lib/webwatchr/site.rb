@@ -331,7 +331,7 @@ class Site
     if old_state
       previous_state.update(old_state)
     end
-    if old_state["wait_at_least"] > @update_interval
+    if old_state["wait_at_least"] and old_state["wait_at_least"] > @update_interval
       @update_interval = old_state["wait_at_least"]
     end
 
