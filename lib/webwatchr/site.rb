@@ -328,12 +328,14 @@ class Site
       "content" => nil
     }
     old_state = load_state_file()
-    delay_between_updates = old_state["wait_at_least"] || @update_interval || 60
     if old_state
       previous_state.update(old_state)
     end
+    if old_state["wait_at_least"] > @update_interval
+      @update_interval = old_state["wait_at_least"]
+    end
 
-    if @test or (Time.now().to_i >= previous_state['time'] + delay_between_updates)
+    if @test or (Time.now().to_i >= previous_state['time'] + @update_interval)
       if @rand_sleep > 0 and not @test
         logger.info "Time to update #{@url} (sleeping #{@rand_sleep} sec)"
         sleep(@rand_sleep)
