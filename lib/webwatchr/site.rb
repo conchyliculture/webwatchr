@@ -284,6 +284,9 @@ class Site
     warn msg
   end
 
+  def setup; end
+  def cleanup; end
+
   def update(cache_dir:, last_dir:, test: false)
     raise StandardError, "Didn't set URL for site #{self}" unless @url
 
@@ -293,7 +296,9 @@ class Site
     @test = test
     logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
 
+    setup
     do_stuff()
+    cleanup
   rescue Site::RedirectError
     retry_later("Error parsing page #{@url}, too many redirects", @update_interval + (30 * 60))
   rescue Site::ParseError => e
