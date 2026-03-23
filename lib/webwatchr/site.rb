@@ -142,7 +142,11 @@ class Site
       end
     end
 
-    c.perform
+    begin
+      c.perform
+    rescue Curl::Err::TimeoutError => e
+      raise Site::ParserError, "Timeout while parsing #{@url}: #{e}"
+    end
     return c.body_str
   end
 
