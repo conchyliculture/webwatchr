@@ -210,11 +210,16 @@ class Site
         return fetch_url(url, max_redir: max_redir - 1)
       end
 
-      html = if html and response["Content-Encoding"]
-               html.force_encoding(response["Content-Encoding"])
-             else
-               html.encode("UTF-8", "binary", invalid: :replace, undef: :replace, replace: "")
-             end
+      if html
+        if response["Content-Encoding"]
+          html.force_encoding(response["Content-Encoding"])
+        else
+          html.force_encoding('UTF-8')
+          unless html.valid_encoding?
+            html.encode!("UTF-8", invalid: :replace, undef: :replace, replace: "")
+          end
+        end
+      end
     end
     logger.debug "Fetched #{url}"
     return html
