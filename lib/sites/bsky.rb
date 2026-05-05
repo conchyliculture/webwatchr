@@ -108,6 +108,10 @@ class BskyAccount < BskyBase
     path = "/xrpc/app.bsky.feed.getAuthorFeed?actor=#{did}&filter=posts_and_author_threads&limit=30"
     resp = _api_get(path)
     @parsed_json = JSON.parse(resp.body)
+  rescue StandardError => e
+    ex = Site::ParseError.new("Error parsing #{self}: #{e.message}")
+    ex.set_backtrace(e.backtrace)
+    raise ex
   end
 
   def extract_articles
