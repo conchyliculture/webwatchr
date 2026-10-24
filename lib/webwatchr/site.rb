@@ -1,3 +1,4 @@
+require "cgi"
 require "digest/md5"
 require "fileutils"
 require "json"
@@ -47,8 +48,20 @@ class Site
 
   # Don't attach pictures bigger than this
   MAX_IMAGE_SIZE = 5 * 1024 * 1024
-  # Matches remote pictures in HTML. Captures are: what's before the URL, the quote, the URL
-  IMG_SRC_REGEX = %r{(<img\b[^>]*?\bsrc=)(['"])(https?://[^'"]+)\2}i
+  # Matches pictures in HTML. Captures are: what's before the URL, the quote, the URL
+  # webwatchr-image:// URLs are pictures given directly to the site (see Site::Articles#add_article)
+  IMG_SRC_REGEX = %r{(<img\b[^>]*?\bsrc=)(['"])((?:https?|webwatchr-image)://[^'"]+)\2}i
+  IMAGE_MAGICS = {
+    "\x89PNG".b => "image/png",
+    "\xFF\xD8\xFF".b => "image/jpeg",
+    "GIF8".b => "image/gif",
+    "RIFF".b => "image/webp"
+  }.freeze
+
+  # Guesses the content type from the first bytes of a picture
+  def self.guess_image_type(data)
+    return IMAGE_MAGICS.find { |magic, _| data.b.start_with?(magic) }&.last
+  end
 
   HTML_HEADER = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n".freeze
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
@@ -120,6 +133,7 @@ class Site
   #  - use @mechanize as your Mechanize agent; it's used by default, with its cookies
   #  - override fetch_image(url) and use your own session
   #  - call add_image(url, data, content_type) if you already have the picture
+  #    (or add_article(article, image: data) for Site::Articles)
 
   # Downloads one picture. Override this if you need some special authentication.
   #
@@ -133,8 +147,15 @@ class Site
     return fetch_image_net_http(url)
   end
 
-  # Gives the site a picture that was already downloaded
-  def add_image(url, data, content_type, filename: nil)
+  # Gives the site a picture that was already downloaded.
+  # If content_type is nil, it's guessed from the data.
+  def add_image(url, data, content_type = nil, filename: nil)
+    content_type ||= Site.guess_image_type(data)
+    unless content_type
+      logger.warn "Not attaching #{url}: unknown picture type"
+      return
+    end
+
     @images ||= {}
     filename = File.basename(URI(url).path) if filename.nil? || filename.empty?
     filename = "image.#{content_type.split('/').last.split(';').first}" if filename.empty?
@@ -741,12 +762,31 @@ class Site
       raise StandardError, "\"id\" key needs to be a String and not #{id.class}" unless id.is_a?(String)
     end
 
-    def add_article(article)
+    # image: the picture's data, if you already have it. It's only kept in memory, for the alerts.
+    #   If the article has an "img_src", the picture is used for it (and not downloaded).
+    # image_type: the picture's content type. Guessed from the data if nil.
+    def add_article(article, image: nil, image_type: nil)
       logger.debug "Found article #{article['id']}"
       validate(article)
       @parsed_articles += 1
       article['_timestamp'] = Time.now().to_i
-      @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
+      return if @articles.map { |art| art['id'] }.include?(article['id'])
+
+      @articles << article
+      add_image(article["img_src"] || attached_image_url(article), image, image_type) if image
+    end
+
+    # Where the picture given to add_article() is, for an article without "img_src"
+    def attached_image_url(article)
+      return "webwatchr-image://#{CGI.escape(article['id'])}"
+    end
+
+    # The picture to show for this article, if any
+    def image_src(article)
+      return article["img_src"] if article["img_src"]
+
+      url = attached_image_url(article)
+      return image(url) ? url : nil
     end
 
     def extract_articles()
@@ -796,8 +836,8 @@ class Site
         if article['url']
           msg += "<a href='#{article['url']}'>"
         end
-        if article["img_src"]
-          msg += "<img style='width:100px' src='#{article['img_src']}'/>"
+        if (src = image_src(article))
+          msg += "<img style='width:100px' src='#{src}'/>"
         end
         if article["title"]
           msg += article['title'].to_s
@@ -823,7 +863,8 @@ class Site
             line = article["url"]
           end
         end
-        msg_pieces << (article["img_src"] ? Site::Image.new(article["img_src"], caption: line) : line)
+        src = image_src(article)
+        msg_pieces << (src ? Site::Image.new(src, caption: line) : line)
       end
       return msg_pieces
     end

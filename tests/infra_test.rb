@@ -525,6 +525,35 @@ class TestImages < BaseWebrickTest
     assert { c.image("#{@base}pic.png")[:data] == "already there" }
   end
 
+  def test_add_article_with_image
+    c = TestImageArticles.new
+    c.url = @base
+    # No img_src: the picture only lives in memory
+    c.add_article(Site::Articles::Article["id" => "a b", "title" => "attached"], image: PNG)
+    # With img_src: the picture is used for it, instead of downloading it
+    c.add_article(Site::Articles::Article["id" => "c", "title" => "known", "img_src" => "http://localhost:1/c.jpg"], image: "\xFF\xD8\xFFjpeg")
+    # Unknown type: no picture
+    c.add_article(Site::Articles::Article["id" => "d", "title" => "garbage"], image: "garbage")
+
+    attached = "webwatchr-image://a+b"
+    assert { c.image(attached) == { data: PNG, content_type: "image/png", filename: "image.png" } }
+    assert { c.image("http://localhost:1/c.jpg")[:content_type] == "image/jpeg" }
+    assert { c.articles.none? { |art| art.values.include?(PNG) } }
+    assert {
+      c.generate_telegram_message_pieces == [
+        Site::Image.new(attached, caption: "attached"),
+        Site::Image.new("http://localhost:1/c.jpg", caption: "known"),
+        "garbage"
+      ]
+    }
+    assert { c.image_urls == [attached, "http://localhost:1/c.jpg"] }
+    c.fetch_images
+    assert { c.image("http://localhost:1/c.jpg")[:data] == "\xFF\xD8\xFFjpeg".b }
+
+    _html, images = Webwatchr::Alerting::EmailAlert.new.inline_images(c, c.generate_html_content)
+    assert { images.values.map { |i| i[:content_type] } == ["image/png", "image/jpeg"] }
+  end
+
   def test_telegram_pieces
     c = make_site
     assert {
