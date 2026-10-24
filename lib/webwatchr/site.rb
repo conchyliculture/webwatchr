@@ -30,6 +30,26 @@ class Site
   class RedirectError < StandardError
   end
 
+  # A small picture to attach to an alert.
+  # Telegram sends it as a photo (with an optional caption), emails embed it inline.
+  class Image
+    attr_reader :url, :caption
+
+    def initialize(url, caption: nil)
+      @url = url
+      @caption = caption
+    end
+
+    def ==(other)
+      other.is_a?(Image) && @url == other.url && @caption == other.caption
+    end
+  end
+
+  # Don't attach pictures bigger than this
+  MAX_IMAGE_SIZE = 5 * 1024 * 1024
+  # Matches remote pictures in HTML. Captures are: what's before the URL, the quote, the URL
+  IMG_SRC_REGEX = %r{(<img\b[^>]*?\bsrc=)(['"])(https?://[^'"]+)\2}i
+
   HTML_HEADER = "<!DOCTYPE html>\n<meta charset=\"utf-8\">\n".freeze
   DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'.freeze
 
@@ -90,6 +110,108 @@ class Site
     return fetch_url1(url, max_redir: max_redir)
   end
 
+  ## Pictures in alerts
+  #
+  # Before alerting, the site downloads every picture its alert will show
+  # (<img> in generate_html_content(), Site::Image in generate_telegram_message_pieces()),
+  # so alerters never need to access the network, or know how to log in.
+  #
+  # If pictures need you to be logged in, either:
+  #  - use @mechanize as your Mechanize agent; it's used by default, with its cookies
+  #  - override fetch_image(url) and use your own session
+  #  - call add_image(url, data, content_type) if you already have the picture
+
+  # Downloads one picture. Override this if you need some special authentication.
+  #
+  # Returns a Hash with :data & :content_type (and optionally :filename), or nil.
+  def fetch_image(url)
+    if defined?(Mechanize) && @mechanize.is_a?(Mechanize)
+      file = @mechanize.get(url, [], @url)
+      return { data: file.body, content_type: file.response["content-type"] }
+    end
+
+    return fetch_image_net_http(url)
+  end
+
+  # Gives the site a picture that was already downloaded
+  def add_image(url, data, content_type, filename: nil)
+    @images ||= {}
+    filename = File.basename(URI(url).path) if filename.nil? || filename.empty?
+    filename = "image.#{content_type.split('/').last.split(';').first}" if filename.empty?
+    @images[url] = { data: data.b, content_type: content_type, filename: filename }
+  end
+
+  # Returns the downloaded picture for this URL (Hash with :data, :content_type & :filename), or nil
+  def image(url)
+    return (@images || {})[url]
+  end
+
+  # All the picture URLs that the alerts will show
+  def image_urls()
+    urls = []
+    begin
+      urls += (generate_html_content() || "").scan(IMG_SRC_REGEX).map(&:last)
+    rescue StandardError
+      # Nothing to show as HTML
+    end
+    begin
+      urls += generate_telegram_message_pieces().grep(Site::Image).map(&:url)
+    rescue StandardError
+      # Nothing to show in Telegram
+    end
+    return urls.uniq
+  end
+
+  # Downloads all pictures for the alerts, that we don't already have
+  def fetch_images()
+    image_urls.each do |url|
+      next if image(url)
+
+      begin
+        img = fetch_image(url)
+      rescue StandardError => e
+        logger.warn "Couldn't fetch image #{url}: #{e.message}"
+        next
+      end
+      next unless img
+
+      content_type = img[:content_type].to_s
+      data = img[:data]
+      unless content_type.start_with?("image/") && data && data.bytesize <= MAX_IMAGE_SIZE
+        logger.warn "Not attaching #{url}: type #{content_type}, size #{data&.bytesize}"
+        next
+      end
+
+      add_image(url, data, content_type, filename: img[:filename])
+    end
+  end
+
+  # Downloads a picture with Net::HTTP, using this site's User-Agent & headers.
+  def fetch_image_net_http(url, max_redir: 5)
+    uri = URI(url)
+    response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', open_timeout: 10, read_timeout: 20) do |http|
+      req = Net::HTTP::Get.new(uri)
+      req["User-Agent"] = @useragent if @useragent
+      req["Referer"] = @url if @url
+      @extra_headers.each do |k, v|
+        req[k] = v
+      end
+      http.request(req)
+    end
+
+    case response
+    when Net::HTTPRedirection
+      return nil if max_redir == 0
+
+      return fetch_image_net_http(URI.join(url, response["Location"]).to_s, max_redir: max_redir - 1)
+    when Net::HTTPSuccess
+      return { data: response.body, content_type: response["content-type"] }
+    end
+
+    logger.warn "Couldn't fetch image #{url}: HTTP #{response.code}"
+    return nil
+  end
+
   # Helper methonds for generating HTML emails
 
   def get_email_url()
@@ -113,6 +235,8 @@ class Site
   end
 
   # Helper methods to generate Telegram messages
+  #
+  # Returns an Array of String (sent as text) and Site::Image (sent as photos)
   def generate_telegram_message_pieces()
     raise StandardError, "We called generate_telegram_message_pieces, but there is no @content" unless @content
 
@@ -136,7 +260,7 @@ class Site
       if @useragent
         curl.headers['User-Agent'] = @useragent
       end
-      curl.verbose = true
+      #      curl.verbose = true
       @extra_headers.each do |k, v|
         curl.headers[k] = v
       end
@@ -252,6 +376,7 @@ class Site
 
   def alert()
     logger.debug "Alerting new stuff"
+    fetch_images()
     @alerters.each do |alerter|
       if @alert_only.empty? or @alert_only.include?(alerter.class::IDENTIFIER)
         alerter.alert(self)
@@ -366,10 +491,17 @@ class Site
 
   class SimpleString < Site
     class ResultObject
-      attr_accessor :message
+      # images is a list of picture URLs to show alongside the result.
+      # They are not saved in the state, nor used when comparing results.
+      attr_accessor :message, :images
 
       def initialize(message = '')
         @message = message
+        @images = []
+      end
+
+      def images_html()
+        return @images.map { |src| "<img style='width:100px' src='#{src}'/>" }.join("\n")
       end
 
       def to_telegram()
@@ -381,7 +513,7 @@ class Site
       end
 
       def to_html()
-        return @message
+        return [@message, images_html].reject(&:empty?).join("\n")
       end
 
       def to_json(*args)
@@ -431,6 +563,7 @@ class Site
           msg << "<li>#{elem}</li>"
         end
         msg << ["</ul>"]
+        msg << images_html unless @images.empty?
         return msg.join("\n")
       end
 
@@ -480,7 +613,9 @@ class Site
     end
 
     def generate_telegram_message_pieces()
-      return [@content.is_a?(ResultObject) ? @content.to_telegram : @content]
+      return [@content] unless @content.is_a?(ResultObject)
+
+      return [@content.to_telegram] + @content.images.map { |src| Site::Image.new(src) }
     end
   end
 
@@ -644,10 +779,8 @@ class Site
           else
             line = article["url"]
           end
-
-          line += ": #{article['url']}"
         end
-        msg_pieces << line
+        msg_pieces << (article["img_src"] ? Site::Image.new(article["img_src"], caption: line) : line)
       end
       return msg_pieces
     end

@@ -1,4 +1,6 @@
 require "net/smtp"
+require "securerandom"
+require "stringio"
 require 'telegram/bot'
 require_relative "./logger"
 
@@ -57,19 +59,30 @@ module Webwatchr
 
         subject = site.get_email_subject() || "Update from #{site.class}"
 
-        formatted_content = site.generate_html_content()
+        formatted_content, images = inline_images(site, site.generate_html_content() || "")
 
-        msgstr = <<~END_OF_MESSAGE
+        headers = <<~END_OF_HEADERS
           From: #{@config[:from_addr]}
           To: #{@config[:dest_addr]}
           MIME-Version: 1.0
-          Content-type: text/html; charset=UTF-8
           Subject: [Webwatchr] #{subject}
+        END_OF_HEADERS
+        html_part = <<~END_OF_HTML
+          Content-type: text/html; charset=UTF-8
 
           Update from #{site.get_email_url()}
 
           #{formatted_content}
-        END_OF_MESSAGE
+        END_OF_HTML
+
+        msgstr = if images.empty?
+                   headers + html_part
+                 else
+                   boundary = "webwatchr-#{SecureRandom.hex(12)}"
+                   parts = [html_part] + images.map { |cid, img| image_part(cid, img) }
+                   headers + "Content-Type: multipart/related; boundary=\"#{boundary}\"\n\n" +
+                     parts.map { |p| "--#{boundary}\n#{p}" }.join("\n") + "\n--#{boundary}--\n"
+                 end
 
         begin
           Net::SMTP.start(@config[:smtp_server], @config[:smtp_port], starttls: false) do |smtp|
@@ -81,6 +94,37 @@ module Webwatchr
         rescue Net::SMTPFatalError => e
           logger.error "Couldn't send email from #{@config[:from_addr]} to #{@config[:dest_addr]}. #{@config[:smtp_server]}:#{@config[:smtp_port]} said #{e.message}"
         end
+      end
+
+      # Points every remote <img> of the HTML that the site already downloaded (see Site#fetch_images)
+      # to inline attachments instead. Other pictures are left as remote links.
+      #
+      # Returns the new HTML, and a Hash of content-id => image
+      def inline_images(site, html)
+        images = {}
+        cids = {}
+        new_html = html.gsub(Site::IMG_SRC_REGEX) do
+          prefix, quote, url = Regexp.last_match.captures
+          unless cids.key?(url)
+            img = site.image(url)
+            cids[url] = img && "img#{cids.size}.#{SecureRandom.hex(8)}@webwatchr"
+            images[cids[url]] = img if img
+          end
+          cids[url] ? "#{prefix}#{quote}cid:#{cids[url]}#{quote}" : Regexp.last_match(0)
+        end
+        return [new_html, images]
+      end
+
+      def image_part(cid, img)
+        filename = img[:filename].gsub(/[^\w.-]/, '_')
+        return <<~END_OF_PART
+          Content-Type: #{img[:content_type]}; name="#{filename}"
+          Content-Transfer-Encoding: base64
+          Content-ID: <#{cid}>
+          Content-Disposition: inline; filename="#{filename}"
+
+          #{[img[:data]].pack('m')}
+        END_OF_PART
       end
     end
 
@@ -106,6 +150,18 @@ module Webwatchr
         msg_pieces << site.get_email_url()
 
         msg_pieces += site.generate_telegram_message_pieces()
+        # Consecutive text pieces are grouped in as few messages as possible,
+        # pictures are sent one by one, in order.
+        msg_pieces.compact.chunk_while { |a, b| !a.is_a?(Site::Image) && !b.is_a?(Site::Image) }.each do |chunk|
+          if chunk.first.is_a?(Site::Image)
+            send_photo(bot, site, chunk.first)
+          else
+            send_text(bot, chunk)
+          end
+        end
+      end
+
+      def send_text(bot, msg_pieces)
         msg_pieces = msg_pieces.map { |x| x.size > 4096 ? x.split("\n") : x }.flatten()
         split_msg = msg_pieces.each_with_object(['']) { |str, sum|
           sum.last.length + str.length > 4000 ? sum << "#{str}\n" : sum.last << "#{str}\n"
@@ -114,6 +170,21 @@ module Webwatchr
         split_msg.each do |m|
           bot.api.send_message(chat_id: @config[:chat_id], text: m)
         end
+      end
+
+      def send_photo(bot, site, image)
+        caption = image.caption.to_s
+        img = site.image(image.url)
+        if img
+          photo = Faraday::Multipart::FilePart.new(StringIO.new(img[:data]), img[:content_type], img[:filename])
+          bot.api.send_photo(chat_id: @config[:chat_id], photo: photo, caption: caption[0, 1024])
+          send_text(bot, [caption[1024..]]) if caption.size > 1024
+        else
+          send_text(bot, [caption, image.url].reject(&:empty?))
+        end
+      rescue Telegram::Bot::Exceptions::ResponseError => e
+        logger.warn "Telegram refused picture #{image.url}: #{e.message}"
+        send_text(bot, [caption, image.url].reject(&:empty?))
       end
     end
 
