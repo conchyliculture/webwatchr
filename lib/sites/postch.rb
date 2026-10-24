@@ -41,7 +41,12 @@ class PostCH < Site::SimpleString
 
   def pull_things()
     # First we need an anonymous userId
+    @parsed_json = []
     resp = @mechanize.get("https://service.post.ch/ekp-web/api/user", nil, nil, { 'accept' => 'application/json' })
+    if resp.body =~ /<title>Wartungsseite<\/title>/
+      return
+    end
+
     user_id = JSON.parse(resp.body)['userIdentifier']
     csrf_token = resp.header["x-csrf-token"]
 
@@ -70,7 +75,6 @@ class PostCH < Site::SimpleString
     resp = @mechanize.get("https://service.post.ch/ekp-web/api/shipment/id/#{identity}/events", nil, nil, headers)
 
     json_content = JSON.parse(resp.body)
-    @parsed_json = []
 
     json_content.each do |event|
       event['description'] = code_to_message(event['eventCode'])

@@ -266,7 +266,11 @@ class Site
       end
     end
 
-    c.perform
+    begin
+      c.perform
+    rescue Curl::Err::TimeoutError => e
+      raise Site::ParserError, "Timeout while parsing #{@url}: #{e}"
+    end
     return c.body_str
   end
 
@@ -330,11 +334,16 @@ class Site
         return fetch_url(url, max_redir: max_redir - 1)
       end
 
-      html = if html and response["Content-Encoding"]
-               html.force_encoding(response["Content-Encoding"])
-             else
-               html.encode("UTF-8", "binary", invalid: :replace, undef: :replace, replace: "")
-             end
+      if html
+        if response["Content-Encoding"]
+          html.force_encoding(response["Content-Encoding"])
+        else
+          html.force_encoding('UTF-8')
+          unless html.valid_encoding?
+            html.encode!("UTF-8", invalid: :replace, undef: :replace, replace: "")
+          end
+        end
+      end
     end
     logger.debug "Fetched #{url}"
     return html
@@ -369,6 +378,8 @@ class Site
 
   # Takes the old state file, and updates it with the values passed in hash
   def update_state_file(hash)
+    return if @test
+
     previous_state = load_state_file()
     state = previous_state.update(hash)
     save_state_file(state)
@@ -400,6 +411,16 @@ class Site
     return @content
   end
 
+  def retry_later(reason, new_delay)
+    msg = "#{reason}\nWill retry in #{new_delay / 60} minutes"
+    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => new_delay })
+    logger.error msg
+    warn msg
+  end
+
+  def setup; end
+  def cleanup; end
+
   def update(cache_dir:, last_dir:, test: false)
     raise StandardError, "Didn't set URL for site #{self}" unless @url
 
@@ -409,31 +430,23 @@ class Site
     @test = test
     logger.debug "using #{@state_file} to store updates, and #{@cache_dir} for Cache"
 
+    setup
     do_stuff()
+    cleanup
   rescue Site::RedirectError
-    msg = "Error parsing page #{@url}, too many redirects"
-    msg += ". Will retry in #{@update_interval} + 30 minutes"
-    logger.error msg
-    warn msg
-    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+    retry_later("Error parsing page #{@url}, too many redirects", @update_interval + (30 * 60))
   rescue Site::ParseError => e
     msg = "Error parsing page #{@url}"
     if e.message
       msg += " with error : #{e.message}"
     end
-    msg += ". Will retry in #{@update_interval} + 30 minutes"
-    logger.error msg
-    warn msg
-    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+    retry_later(msg, @update_interval + (30 * 60))
   rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Net::ReadTimeout, OpenSSL::SSL::SSLError, Net::OpenTimeout => e
     msg = "Network error on #{@url}"
     if e.message
       msg += " : #{e.message}"
     end
-    msg += ". Will retry in #{@update_interval} + 30 minutes"
-    logger.error msg
-    warn msg
-    update_state_file({ "time" => Time.now.to_i, "wait_at_least" => @update_interval + 30 * 60 })
+    retry_later(msg, @update_interval + (30 * 60))
   end
 
   def extract_content()
@@ -454,12 +467,14 @@ class Site
       "content" => nil
     }
     old_state = load_state_file()
-    delay_between_updates = old_state["wait_at_least"] || @update_interval || 60
     if old_state
       previous_state.update(old_state)
     end
+    if old_state["wait_at_least"] and old_state["wait_at_least"] > @update_interval
+      @update_interval = old_state["wait_at_least"]
+    end
 
-    if @test or (Time.now().to_i >= previous_state['time'] + delay_between_updates)
+    if @test or (Time.now().to_i >= previous_state['time'] + @update_interval)
       if @rand_sleep > 0 and not @test
         logger.info "Time to update #{@url} (sleeping #{@rand_sleep} sec)"
         sleep(@rand_sleep)
@@ -621,53 +636,70 @@ class Site
 
   ## For use when you want to parse a site, and are only interested is having
   # a nice looking "Diff" between the new and the previous state
-  #  class DiffString < SimpleString
-  #    begin
-  #      require "diffy"
-  #
-  #      def generate_html_content()
-  #        diff_html = Site::HTML_HEADER.dup
-  #        diff_html += "<head><style>"
-  #        diff_html += Diffy::CSS
-  #        diff_html += "</style><body>"
-  #        diff_html += @diffed.to_s(:html)
-  #        diff_html += "</body></html>"
-  #        return diff_html
-  #      end
-  #
-  #      def get_differ(previous, new)
-  #        return Diffy::Diff.new(previous, new)
-  #      end
-  #    rescue LoadError
-  #      require "test/unit/diff"
-  #      def generate_html_content()
-  #        diff_html = Site::HTML_HEADER.dup
-  #        diff_html += @diffed.to_s
-  #        diff_html += "</body></html>"
-  #        return diff_html
-  #      end
-  #
-  #      def get_differ(previous, new)
-  #        return new unless previous
-  #
-  #        return Test::Unit::Diff.unified(previous, new)
-  #      end
-  #    end
-  #
-  #    def get_diff()
-  #      new_stuff = nil
-  #      @content = extract_content()
-  #      unless @content
-  #        return nil
-  #      end
-  #
-  #      if @content != previous_content
-  #        @diffed = get_differ(previous_content, @content)
-  #        new_stuff = @diffed.to_s
-  #      end
-  #      return new_stuff
-  #    end
-  #  end
+  class DiffString < SimpleString
+    begin
+      require "diffy"
+
+      def generate_html_content()
+        diff_html = Site::HTML_HEADER.dup
+        diff_html += "<head><style>"
+        diff_html += Diffy::CSS
+        diff_html += "</style><body>"
+        diff_html += @diffed.to_s(:html)
+        diff_html += "</body></html>"
+        return diff_html
+      end
+
+      def get_differ(previous, new)
+        return Diffy::Diff.new(previous, new)
+      end
+    rescue LoadError
+      require "test/unit/diff"
+      def generate_html_content()
+        diff_html = Site::HTML_HEADER.dup
+        diff_html += @diffed.to_s
+        diff_html += "</body></html>"
+        return diff_html
+      end
+
+      def get_differ(previous, new)
+        p = (previous.is_a?(SimpleString::ResultObject) ? previous.message : previous) || ""
+        n = (new.is_a?(SimpleString::ResultObject) ? new.message : new) || ""
+        return Test::Unit::Diff.unified(p, n)
+      end
+    end
+
+    def get_diff()
+      @content ||= extract_content()
+      unless @content
+        return nil
+      end
+
+      previous_content = load_state_file()["content"]
+      @diffed = get_differ(previous_content, @content)
+
+      update_state_file(
+        {
+          "time" => Time.now.to_i,
+          "wait_at_least" => @update_interval,
+          "content" => @content
+        }
+      )
+
+      unless previous_content
+        if @content.is_a?(ResultObject)
+          return @content.message
+        else
+          return @content
+        end
+      end
+
+      if @content != previous_content
+        new_stuff = @diffed.to_s
+      end
+      return new_stuff
+    end
+  end
 
   ## For use when you want to parse a site that has Articles
   # And you want to know when knew, previously unseen Articles appear.
@@ -681,7 +713,7 @@ class Site
     def initialize
       super
       @articles = []
-      @found_articles = 0
+      @parsed_articles = 0
     end
 
     def content
@@ -690,7 +722,16 @@ class Site
     end
 
     def display_optional_state
-      puts "We parsed the website and extracted #{@found_articles} articles"
+      message = "We parsed the website and extracted #{@parsed_articles} articles."
+      if @articles.empty?
+        message += " And they were all previously known"
+      else
+        message += " Of these, the previously unknown ones are: "
+        @articles.each do |art|
+          message += " - #{art}\n"
+        end
+      end
+      puts message
     end
 
     def validate(article)
@@ -702,8 +743,8 @@ class Site
 
     def add_article(article)
       logger.debug "Found article #{article['id']}"
-      @found_articles += 1
       validate(article)
+      @parsed_articles += 1
       article['_timestamp'] = Time.now().to_i
       @articles << article unless @articles.map { |art| art['id'] }.include?(article['id'])
     end
@@ -740,6 +781,8 @@ class Site
 
     # Here we want to store every article we ever found
     def update_state_file(hash)
+      return if @test
+
       previous_state = load_state_file()
       state = previous_state.update(hash)
       save_state_file(state)

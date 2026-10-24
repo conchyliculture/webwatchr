@@ -33,6 +33,10 @@ module Webwatchr
       log_out_file_rotation = 'weekly'
       log_level = $VERBOSE ? Logger::DEBUG : Logger::INFO
 
+      if PARAMS[:debug]
+        log_level = Logger::DEBUG
+      end
+
       MyLog.instance.configure(log_out_file, log_out_file_rotation, log_level)
     end
 
@@ -50,7 +54,7 @@ module Webwatchr
 
     def update(site_class, &block)
       if (PARAMS[:mode] == :single) && site_class.to_s != PARAMS[:site]
-        logger.info("Running in single site mode, skipping #{site_class} (!= #{PARAMS[:site]})")
+        logger.debug("Running in single site mode, skipping #{site_class} (!= #{PARAMS[:site]})")
         return
       end
 
@@ -74,7 +78,7 @@ module Webwatchr
       warn msg
       raise e
     rescue StandardError => e
-      msg = "Issue with #{site_class} : #{e}\n"
+      msg = "Issue with #{site_class} : #{e.class} #{e}\n"
       msg += "#{e.message}\n"
       logger.error msg
       msg += e.backtrace.join("\n")
